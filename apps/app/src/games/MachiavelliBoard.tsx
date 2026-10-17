@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { checkMeld, NO_WILD, type Card, type MachiavelliMove, type MachiavelliView } from '@giochi/engine';
-import { Banner, Opponents, othersOf, PlayerBadge, turnText, useCardWidth, type BoardProps } from './common';
+import { Banner, Opponents, PlayerBadge, seatsFrom, turnText, useCardWidth, type BoardProps } from './common';
 import { MeldRow, MultiHand } from './RummyParts';
 import { DeckPile } from '../ui/cards';
+import { DropZone, type DragPayload } from '../ui/drag';
 import { Button, Row, T } from '../ui/kit';
 import { TableBg } from '../ui/tables';
 import { colors } from '../ui/theme';
@@ -31,8 +32,9 @@ export function MachiavelliBoard({ view, me, names, myTurn, onMove }: BoardProps
   const changed = hand.length !== view.hand.length || JSON.stringify(groups) !== JSON.stringify(initial);
   const editable = myTurn;
 
-  const moveSelectedTo = (target: number | 'new' | 'hand') => {
-    const moving = target === 'hand' ? selected.filter((id) => handOrigin.has(id)) : selected;
+  const moveSelectedTo = (target: number | 'new' | 'hand') => moveTo(selected, target);
+  const moveTo = (ids: string[], target: number | 'new' | 'hand') => {
+    const moving = target === 'hand' ? ids.filter((id) => handOrigin.has(id)) : ids;
     if (!moving.length) return;
     let next = groups.map((g) => g.filter((id) => !moving.includes(id)));
     if (target === 'new') next.push(moving);
@@ -43,22 +45,28 @@ export function MachiavelliBoard({ view, me, names, myTurn, onMove }: BoardProps
     setSelected([]);
   };
 
+  // Trascinando: una carta scelta porta con sé tutte le scelte, sia dalla mano sia dal tavolo.
+  const dragTable = (id: string): DragPayload | null => (editable ? { kind: 'table', ids: selected.includes(id) ? selected : [id] } : null);
+  const fromDrag = (p: DragPayload) => p.kind === 'hand' || p.kind === 'table';
+  const dropTo = (target: number | 'new' | 'hand') => (p: DragPayload) => moveTo(p.ids, target);
+
   const meldOf = (g: string[]) => checkMeld(g.map((id) => byId.get(id)!), NO_WILD);
   const allValid = groups.every((g) => meldOf(g));
 
   return (
     <View style={{ flex: 1 }}>
       <Opponents>
-        {othersOf(view.players, me).map((seat) => (
-          <PlayerBadge key={seat} seat={seat} name={names[seat]} active={view.turn === seat} cards={view.handCounts[seat]} deck="fr" />
+        {seatsFrom(view.players, me).map((seat) => (
+          <PlayerBadge key={seat} seat={seat} isMe={seat === me} name={names[seat]} active={view.turn === seat} cards={view.handCounts[seat]} deck="fr" score={view.handCounts[seat]} scoreLabel="in mano" />
         ))}
       </Opponents>
       <TableBg table="green" rounded style={{ marginHorizontal: 8 }}>
+      <DropZone id="table" style={{ flex: 1 }} radius={16} accepts={(p) => editable && fromDrag(p)} onDrop={dropTo('new')}>
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 8, gap: 8, flexDirection: 'row', flexWrap: 'wrap' }}>
           <View style={{ width: '100%', flexDirection: 'row', alignItems: 'center', gap: 10 }}>
             <DeckPile count={view.stockCount} width={36} deck="fr" />
             <T size={13} color="#ffffffcc" style={{ flex: 1 }}>
-              {editable ? 'Seleziona carte (dalla mano o dal tavolo) e tocca un gruppo per spostarle.' : view.last ? `${names[(view.turn + view.players - 1) % view.players]} ${view.last}` : ''}
+              {editable ? 'Trascina le carte (dalla mano o dal tavolo) su un gruppo o in uno spazio libero; o selezionale e tocca un gruppo.' : view.last ? `${names[(view.turn + view.players - 1) % view.players]} ${view.last}` : ''}
             </T>
           </View>
           {groups.map((g, i) => {
@@ -73,16 +81,28 @@ export function MachiavelliBoard({ view, me, names, myTurn, onMove }: BoardProps
                 selected={selected}
                 onPress={editable && selected.length ? () => moveSelectedTo(i) : undefined}
                 onCardPress={editable ? toggle : undefined}
+                dropId={`g-${i}`}
+                accepts={(p) => editable && fromDrag(p) && !p.ids.every((id) => g.includes(id))}
+                onDrop={dropTo(i)}
+                dragCard={dragTable}
               />
             );
           })}
           {groups.length === 0 && <T color="#ffffff66">Tavolo vuoto: cala la prima combinazione.</T>}
         </ScrollView>
+      </DropZone>
       </TableBg>
       <Banner text={turnText(myTurn, names, view.turn, me)} tone={myTurn ? 'turn' : 'info'} />
       {me !== null && (
         <>
-          <MultiHand cards={hand.map((id) => byId.get(id)!).filter(Boolean)} selected={selected} onToggle={editable ? toggle : undefined} width={handWidth} />
+          <MultiHand
+            cards={hand.map((id) => byId.get(id)!).filter(Boolean)}
+            selected={selected}
+            onToggle={editable ? toggle : undefined}
+            width={handWidth}
+            draggable={editable}
+            dropHere={{ accepts: (p) => editable && p.kind === 'table' && p.ids.some((id) => handOrigin.has(id) && !hand.includes(id)), onDrop: dropTo('hand') }}
+          />
           {editable && (
             <Row gap={8} wrap style={{ justifyContent: 'center', padding: 8 }}>
               {selected.length > 0 && <Button small label="Nuovo gruppo" onPress={() => moveSelectedTo('new')} />}

@@ -3,7 +3,7 @@ import { Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View, type St
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { getSettings, TEXT_SCALE, useIsTv, useSettings } from './settings';
-import { BotAvatar } from './avatars';
+import { SeatAvatar } from './avatars';
 import { colors, font, MIN_TEXT, MIN_TOUCH, OUTLINE, radius, seatColor, seatSymbol, shadow, TV_MIN_TEXT, TV_SCALE } from './theme';
 
 /** Vibrazione leggera al tocco, se attiva nelle impostazioni (P-A11Y-3). */
@@ -28,7 +28,19 @@ export function onColor(bg: string) {
 
 /** Bordo di focus visibile per tastiera e telecomando, non solo colore (V-IN-5). */
 export const focusRing = (focused: boolean): ViewStyle | null =>
-  focused && Platform.OS === 'web' ? ({ outlineColor: colors.focus, outlineWidth: 3, outlineStyle: 'solid', outlineOffset: 3 } as ViewStyle) : null;
+  focused && Platform.OS === 'web' && keyboardNav ? ({ outlineColor: colors.focus, outlineWidth: 3, outlineStyle: 'solid', outlineOffset: 3 } as ViewStyle) : null;
+
+/**
+ * Il bordo di focus serve a chi usa tastiera o telecomando: con mouse e dita non si vede
+ * (come :focus-visible). Si accende al primo tasto e si spegne al primo clic o tocco.
+ */
+let keyboardNav = false;
+if (Platform.OS === 'web' && typeof window !== 'undefined') {
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Tab' || e.key.startsWith('Arrow') || e.key === 'Enter' || e.key === ' ') keyboardNav = true;
+  }, true);
+  window.addEventListener('pointerdown', () => (keyboardNav = false), true);
+}
 
 export function Screen({ children, scroll = true, style }: { children: ReactNode; scroll?: boolean; style?: StyleProp<ViewStyle> }) {
   const tv = useIsTv();
@@ -140,7 +152,7 @@ export function SeatDot({ seat, size = 14 }: { seat: number; size?: number }) {
 export function PlayerTag({ seat, name, size = 15, active, suffix }: { seat: number; name: string; size?: number; active?: boolean; suffix?: string }) {
   return (
     <Row gap={6} style={active ? { borderBottomWidth: 3, borderColor: seatColor(seat) } : undefined}>
-      <BotAvatar name={name} size={Math.round(size * 2.6)} seat={seat} />
+      <SeatAvatar seat={seat} name={name} size={Math.round(size * 2.6)} />
       <SeatDot seat={seat} size={size} />
       <T size={size} weight="800" lines={1}>
         {name}

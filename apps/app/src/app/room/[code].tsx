@@ -2,11 +2,14 @@ import { useEffect, useState } from 'react';
 import { Image, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { router } from 'expo-router';
 import { useKeepAwake } from 'expo-keep-awake';
-import { canControl, GAMES, getGame, playerCounts, type RoomSnapshot } from '@giochi/engine';
+import { assignAvatars, canControl, GAMES, getGame, playerCounts, type RoomSnapshot } from '@giochi/engine';
 import { GameFrame } from '../../games/GameFrame';
 import { clearOnlineError, joinUrl, leaveRoom, send, sendMove, useOnline } from '../../session/online';
 import { GAME_ART } from '../../ui/art';
 import { BotFigure } from '../../ui/avatars';
+import { CharacterPickerModal } from '../../ui/CharacterPicker';
+import { SeatAvatars } from '../../ui/avatars';
+import { getSettings, setSettings } from '../../ui/settings';
 import { Button, Confirm, focusRing, Panel, PlayerTag, Row, Screen, T, tap } from '../../ui/kit';
 import { QrCode } from '../../ui/QrCode';
 import { TvContext } from '../../ui/settings';
@@ -70,6 +73,7 @@ export default function RoomScreen() {
           view={seatView.view}
           me={seatView.me}
           names={seatView.names}
+          avatars={seatView.avatars}
           myTurn={seatView.myTurn}
           active={seatView.active}
           onMove={sendMove}
@@ -120,6 +124,9 @@ function Lobby({ snapshot, myId, isHost, tv, error, onExit, reconnecting }: {
   const allowed = game ? playerCounts(game.meta) : [];
   const canStart = !!game && allowed.includes(total);
   const meIndex = players.findIndex((p) => p.id === myId);
+  const [picking, setPicking] = useState(false);
+  // Le maschere di tutti al tavolo: chi non ha scelto ne riceve una libera, come in partita.
+  const avatars = assignAvatars([...players.map((m) => ({ name: m.name, bot: false, avatar: m.avatar })), ...snapshot.botNames.map((name) => ({ name, bot: true }))]);
   // Codice della stanza almeno all'8% dell'altezza della TV (V-PTY-1).
   const codeSize = Math.max(56, Math.round(height * (tv ? 0.12 : 0.07)));
 
@@ -163,11 +170,13 @@ function Lobby({ snapshot, myId, isHost, tv, error, onExit, reconnecting }: {
           <T size={18} weight="900">
             Al tavolo · {players.length + snapshot.bots}
           </T>
+          <SeatAvatars.Provider value={avatars}>
           {players.map((m, i) => (
             <Row key={m.id} gap={10} style={styles.playerRow}>
               <View style={{ flex: 1 }}>
                 <PlayerTag seat={i} name={m.name} size={18} suffix={m.id === myId ? ' (tu)' : ''} />
               </View>
+              {m.id === myId && <Button small kind="ghost" color={colors.accent} label="Cambia personaggio" onPress={() => setPicking(true)} />}
               {!m.connected && (
                 <T size={13} color={colors.danger} weight="800">
                   📡 si sta ricollegando
@@ -191,6 +200,7 @@ function Lobby({ snapshot, myId, isHost, tv, error, onExit, reconnecting }: {
               ))}
             </Row>
           )}
+          </SeatAvatars.Provider>
           {players.length === 0 && (
             <T color={colors.muted} size={16}>
               ⏳ Aspetto i telefoni…
@@ -267,6 +277,17 @@ function Lobby({ snapshot, myId, isHost, tv, error, onExit, reconnecting }: {
         </T>
       )}
       {reconnecting}
+      <CharacterPickerModal
+        visible={picking}
+        title="Il tuo personaggio"
+        value={meIndex >= 0 ? avatars[meIndex] : null}
+        taken={avatars.filter((_, j) => j !== meIndex)}
+        onPick={(avatar) => {
+          send('avatar', { avatar });
+          setSettings({ ...getSettings(), avatar });
+        }}
+        onClose={() => setPicking(false)}
+      />
       <Confirm visible={leaving} title="Uscire dalla stanza?" message="Potrai rientrare con lo stesso codice." confirmLabel="Esci" onCancel={() => setLeaving(false)} onConfirm={onExit} />
     </Screen>
   );

@@ -2,35 +2,29 @@ import { memo, useEffect } from 'react';
 import Animated, { cancelAnimation, useAnimatedStyle, useSharedValue, withDelay, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
 import { Image, Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import { CARD_BACKS, CARD_FACES } from './deckArt';
+import { CardCorners, NumeralFace } from './suits';
 import Svg, { Path } from 'react-native-svg';
 import { cardName, type Card } from '@giochi/engine';
+import { tapAllowed } from './drag';
 import { focusRing, tap } from './kit';
 import { useReducedMotion } from './settings';
-import { colors, font } from './theme';
-
-const IT_LABEL: Record<number, string> = { 8: 'F', 9: 'C', 10: 'R' };
+import { colors } from './theme';
 
 /** Proporzioni reali dei mazzi: piacentine più strette, francesi più larghe. */
 export function cardRatio(deck: Card['deck']): number {
   return deck === 'it' ? 1.8 : deck === 'fr' ? 1.45 : 1.55;
 }
 
-/**
- * Carte piacentine: le piacentine non hanno indici agli angoli, quindi aggiungiamo un piccolo
- * cartellino col valore per leggerle anche quando sono piccole o sovrapposte (V-ST-1).
- */
-function ItalianFace({ card, w, h }: { card: Card; w: number; h: number }) {
-  return <Image source={CARD_FACES[`it-${card.suit}${card.rank}`]} style={{ position: 'absolute', left: 0, top: 0, width: w, height: h }} resizeMode="stretch" />;
-}
-
-/** Bollino magenta col valore, che esce dal bordo in alto a sinistra senza coprire i semi (spec §4). */
-function ValueBadge({ card, w }: { card: Card; w: number }) {
-  const d = Math.max(20, w * 0.36);
-  const label = IT_LABEL[card.rank] ?? String(card.rank);
+/** Figura coi personaggi: l'immagine riempie la carta, bollino e seme li aggiunge CardCorners. */
+function FigureFace({ card, w, h }: { card: Card; w: number; h: number }) {
+  const key = card.suit === 'j' ? `fr-j${Number(card.id.slice(-1)) % 2}` : `${card.deck}-${card.suit}${card.rank}`;
   return (
-    <View pointerEvents="none" style={[styles.valueBadge, { width: d, height: d, borderRadius: d / 2, left: -d * 0.32, top: -d * 0.32 }]}>
-      <Text style={{ color: '#fff', fontFamily: font.display, fontSize: d * 0.56, lineHeight: d * 0.7 }}>{label}</Text>
-    </View>
+    <>
+      {/* Il personaggio sta un po' più al centro, così gli indici negli angoli restano liberi. */}
+      <View style={[StyleSheet.absoluteFill, { backgroundColor: '#FDFAE8' }]} />
+      <Image source={CARD_FACES[key]} style={{ position: 'absolute', left: w * 0.07, top: h * 0.07, width: w * 0.86, height: h * 0.86 }} resizeMode="stretch" />
+      <CardCorners card={card} w={w} />
+    </>
   );
 }
 
@@ -49,11 +43,6 @@ function Sway({ id, enabled, children }: { id: string; enabled: boolean; childre
   }, [enabled, id, t]);
   const style = useAnimatedStyle(() => ({ transform: [{ rotate: `${t.value * 1.2}deg` }] }));
   return <Animated.View style={style}>{children}</Animated.View>;
-}
-
-function FrenchFace({ card, w, h }: { card: Card; w: number; h: number }) {
-  const key = card.suit === 'j' ? `fr-j${Number(card.id.slice(-1)) % 2}` : `fr-${card.suit}${card.rank}`;
-  return <Image source={CARD_FACES[key]} style={{ position: 'absolute', left: 0, top: 0, width: w, height: h }} resizeMode="stretch" />;
 }
 
 export const UNO_COLORS: Record<string, string> = { r: '#E53935', g: '#43A047', b: '#1E88E5', y: '#FDD835', w: '#222222' };
@@ -104,6 +93,8 @@ export const PlayingCard = memo(function PlayingCard({ card, width, selected, di
   const reduced = useReducedMotion();
   const height = width * cardRatio(card.deck);
   const radius = width * 0.1;
+  // Numerali disegnati in codice; figure e Jolly sono immagini coi personaggi.
+  const numeral = (card.deck === 'it' && card.rank <= 7) || (card.deck === 'fr' && card.suit !== 'j' && card.rank <= 10);
   const face = (
     <Sway id={card.id} enabled={(sway ?? !onPress) && !reduced}>
       <View style={[{ width, height }, dimmed && { opacity: 0.45 }, style]}>
@@ -116,11 +107,10 @@ export const PlayingCard = memo(function PlayingCard({ card, width, selected, di
             selected && styles.selected,
           ]}
         >
-          {card.deck === 'it' && <ItalianFace card={card} w={width} h={height} />}
-          {card.deck === 'fr' && <FrenchFace card={card} w={width} h={height} />}
+          {numeral && <NumeralFace card={card} w={width} h={height} />}
+          {!numeral && card.deck !== 'uno' && <FigureFace card={card} w={width} h={height} />}
           {card.deck === 'uno' && <UnoFace card={card} w={width} h={height} chosenColor={chosenColor} />}
         </View>
-        {card.deck === 'it' && <ValueBadge card={card} w={width} />}
       </View>
     </Sway>
   );
@@ -131,16 +121,35 @@ export const PlayingCard = memo(function PlayingCard({ card, width, selected, di
       accessibilityLabel={cardName(card)}
       accessibilityState={{ selected: !!selected, disabled: !!dimmed }}
       onPress={() => {
+        if (!tapAllowed()) return;
         tap();
         onPress();
       }}
-      // Carta scelta: si alza del 14% (spec §4); premuta scende appena (feedback < 100 ms, V-FB-1).
-      style={(state) => [{ transform: [{ translateY: selected ? -height * 0.14 : state.pressed ? 3 : 0 }], borderRadius: radius }, focusRing((state as { focused?: boolean }).focused ?? false)]}
+      // Carta scelta: si alza del 14% (spec §4); premuta scende appena (feedback < 100 ms, V-FB-1);
+      // col mouse sopra si solleva un poco, come in mano a un giocatore.
+      style={(state) => {
+        const hovered = (state as { hovered?: boolean }).hovered && !dimmed;
+        const dy = selected ? -height * 0.14 : state.pressed ? 3 : hovered ? -height * 0.06 : 0;
+        return [{ transform: [{ translateY: dy }], borderRadius: radius, transitionDuration: '120ms', transitionProperty: 'transform' } as ViewStyle, focusRing((state as { focused?: boolean }).focused ?? false)];
+      }}
     >
       {face}
     </Pressable>
   );
 });
+
+/** Ciò che segue il dito quando si trascinano una o più carte: un piccolo ventaglio. */
+export function CardGhost({ cards, width }: { cards: Card[]; width: number }) {
+  return (
+    <View style={{ flexDirection: 'row' }}>
+      {cards.map((c, i) => (
+        <View key={c.id} style={{ marginLeft: i ? -width * 0.6 : 0, transform: [{ rotate: `${(i - (cards.length - 1) / 2) * 5}deg` }] }}>
+          <PlayingCard card={c} width={width} sway={false} />
+        </View>
+      ))}
+    </View>
+  );
+}
 
 export function CardBack({ width, style, deck = 'it' }: { width: number; style?: StyleProp<ViewStyle>; deck?: 'it' | 'fr' | 'uno' }) {
   const height = width * cardRatio(deck);
@@ -175,7 +184,6 @@ const styles = StyleSheet.create({
     boxShadow: `0px 5px 0px ${colors.line}, 0px 8px 14px rgba(0,0,0,0.35)`,
   },
   selected: { borderColor: colors.accent, borderWidth: 4 },
-  valueBadge: { position: 'absolute', backgroundColor: colors.accent2, borderWidth: 2, borderColor: colors.line, alignItems: 'center', justifyContent: 'center' },
   center: { alignItems: 'center', justifyContent: 'center' },
   corner: { position: 'absolute', fontWeight: '900', color: '#2B2D42' },
   figure: { backgroundColor: '#F7EBD0', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#D9C08A' },

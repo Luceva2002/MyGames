@@ -5,6 +5,7 @@ import { GameFrame, HandoffCurtain } from '../../games/GameFrame';
 import { getPendingMatch, useLocalMatch, type MatchConfig } from '../../session/local';
 import { Screen } from '../../ui/kit';
 import { pickBots } from '@giochi/engine';
+import { getSettings } from '../../ui/settings';
 
 export default function PlayLocal() {
   // Con ?bots=N si parte subito contro il computer (comodo anche come link diretto a un gioco).
@@ -12,7 +13,7 @@ export default function PlayLocal() {
   const config = useMemo(() => {
     const pending = getPendingMatch();
     if (pending?.gameId === id) return pending;
-    return bots ? { gameId: id, seats: [{ name: 'Io', bot: false }, ...pickBots(Number(bots)).map((b) => ({ name: b.name, bot: true }))] } : null;
+    return bots ? { gameId: id, seats: [{ name: 'Io', bot: false, avatar: getSettings().avatar ?? undefined }, ...pickBots(Number(bots), Math.random, [getSettings().avatar]).map((b) => ({ name: b.name, bot: true }))] } : null;
   }, [id, bots]);
   useEffect(() => {
     if (!config) router.replace('/');
@@ -37,6 +38,7 @@ function LocalMatch({ config }: { config: MatchConfig }) {
         view={m.view}
         me={m.me}
         names={m.names}
+        avatars={m.avatars}
         myTurn={m.myTurn}
         active={m.active}
         onMove={m.play}

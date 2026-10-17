@@ -3,7 +3,10 @@ import { Image, Pressable, ScrollView, StyleSheet, View, type ImageSourcePropTyp
 import { ROLES, type LupusMove, type LupusView, type NightPrompt, type RoleId, type Seat } from '@giochi/engine';
 import type { BoardProps } from './common';
 import { Button, focusRing, Panel, PlayerTag, Row, T, tap } from '../ui/kit';
-import { useIsTv } from '../ui/settings';
+import { useIsTv, useReducedMotion } from '../ui/settings';
+import { sfx } from '../ui/sound';
+import { FlyIn } from '../ui/motion';
+import Animated, { Easing, runOnJS, useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
 import { TableBg } from '../ui/tables';
 import { colors, MIN_TOUCH, radius, seatColor } from '../ui/theme';
 
@@ -25,6 +28,41 @@ const CAUSE: Record<string, string> = { lupi: 'sbranato dai Lupi', veggente: 'uc
 
 function RoleCard({ role, width }: { role: RoleId | 'retro'; width: number }) {
   return <Image source={CARD[role]} style={{ width, height: width * 1.6, borderRadius: radius.m }} accessibilityLabel={role === 'retro' ? 'Carta coperta' : `Carta del ruolo ${ROLES[role].name}`} />;
+}
+
+/**
+ * La carta del ruolo che si gira: parte coperta, ruota su se stessa, a metà giro mostra il ruolo
+ * e atterra con un rimbalzo, un lampo di luce e un suono. Col movimento ridotto appare e basta.
+ */
+function FlipRole({ role, width }: { role: RoleId; width: number }) {
+  const reduced = useReducedMotion();
+  const [front, setFront] = useState(reduced);
+  const turn = useSharedValue(reduced ? 1 : 0);
+  const glow = useSharedValue(0);
+  useEffect(() => {
+    if (reduced) return;
+    sfx('scopa');
+    turn.value = withTiming(0.5, { duration: 260, easing: Easing.in(Easing.quad) }, (done) => {
+      if (!done) return;
+      runOnJS(setFront)(true);
+      turn.value = withSpring(1, { damping: 9, stiffness: 140 });
+      glow.value = withSequence(withTiming(1, { duration: 160 }), withTiming(0, { duration: 900 }));
+    });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const card = useAnimatedStyle(() => {
+    const deg = turn.value <= 0.5 ? turn.value * 180 : (1 - turn.value) * 180;
+    const lift = 1 + Math.sin(Math.min(turn.value, 1) * Math.PI) * 0.18;
+    return { transform: [{ perspective: 800 }, { rotateY: `${deg}deg` }, { scale: lift }] };
+  });
+  const ring = useAnimatedStyle(() => ({ opacity: glow.value, transform: [{ scale: 0.6 + (1 - glow.value) * 0.9 + glow.value * 0.4 }] }));
+  return (
+    <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+      <Animated.View pointerEvents="none" style={[{ position: 'absolute', width: width * 1.5, height: width * 1.5, borderRadius: width, backgroundColor: role === 'lupo' ? '#FF2E8866' : '#FFE14D66', boxShadow: `0px 0px 60px ${role === 'lupo' ? colors.accent2 : colors.accent}` }, ring]} />
+      <Animated.View style={card}>
+        <RoleCard role={front ? role : 'retro'} width={width} />
+      </Animated.View>
+    </View>
+  );
 }
 
 /** Testo delle informazioni notturne (il motore usa codici per non mescolare nomi e regole). */
@@ -152,7 +190,7 @@ export function LupusBoard({ view, me, names, myTurn, onMove }: BoardProps<Lupus
   // ---------- Schermo condiviso: mai ruoli segreti (V-HID-1) ----------
   if (tv) {
     return (
-      <TableBg table={night || view.phase === 'reveal' ? 'night' : 'day'} scrim={0.6}>
+      <TableBg table={night || view.phase === 'reveal' ? 'night' : 'day'} scrim={0.8}>
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, gap: 20, alignItems: 'center' }}>
           <T size={30} weight="900" center>
             {view.phase === 'reveal'
@@ -184,7 +222,7 @@ export function LupusBoard({ view, me, names, myTurn, onMove }: BoardProps<Lupus
   if (view.phase === 'reveal') {
     const done = !myTurn;
     return (
-      <TableBg table={'night'} scrim={0.6}>
+      <TableBg table={'night'} scrim={0.8}>
         <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.phone}>
           {done ? (
             <>
@@ -197,13 +235,14 @@ export function LupusBoard({ view, me, names, myTurn, onMove }: BoardProps<Lupus
             </>
           ) : revealed ? (
             <>
-              <RoleCard role={myRole} width={220} />
-              <T size={26} weight="900" center>
-                Sei {roleDef.name}
-              </T>
-              <T center color={colors.muted}>
-                {roleDef.description}
-              </T>
+              <FlipRole role={myRole} width={220} />
+              {/* Il nome del ruolo arriva dopo il giro della carta, per non rovinare la sorpresa. */}
+              <FlyIn from="none" delay={550} style={{ gap: 8, alignItems: 'center' }}>
+                <T size={28} weight="900" center color={myRole === 'lupo' ? colors.accent2 : colors.accent}>
+                  Sei {roleDef.name}
+                </T>
+                <T center>{roleDef.description}</T>
+              </FlyIn>
               {view.teammates.length > 0 && (
                 <T center weight="800">
                   {myRole === 'lupo' ? 'Il tuo branco' : 'La tua loggia'}: {view.teammates.map((s) => names[s]).join(', ')}
@@ -217,9 +256,11 @@ export function LupusBoard({ view, me, names, myTurn, onMove }: BoardProps<Lupus
               <Pressable accessibilityRole="button" accessibilityLabel="Gira la carta e scopri il tuo ruolo" onPress={() => setRevealed(true)}>
                 <RoleCard role="retro" width={220} />
               </Pressable>
-              <T center color={colors.muted}>
-                Assicurati che nessuno guardi lo schermo.
-              </T>
+              <View style={styles.notice}>
+                <T size={17} weight="800" center>
+                  🤫 Assicurati che nessuno guardi lo schermo
+                </T>
+              </View>
               <View style={{ flex: 1 }} />
               <Button label="Scopri il mio ruolo" onPress={() => setRevealed(true)} style={{ alignSelf: 'stretch' }} />
             </>
@@ -238,7 +279,7 @@ export function LupusBoard({ view, me, names, myTurn, onMove }: BoardProps<Lupus
   );
 
   return (
-    <TableBg table={night ? 'night' : 'day'} scrim={0.6}>
+    <TableBg table={night ? 'night' : 'day'} scrim={0.8}>
       <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.phone}>
         <Row style={{ justifyContent: 'space-between', alignSelf: 'stretch' }}>
           <T size={18} weight="900">
@@ -314,5 +355,6 @@ const styles = StyleSheet.create({
   phone: { padding: 16, gap: 16, alignItems: 'center', flexGrow: 1 },
   choice: { minHeight: MIN_TOUCH + 4, minWidth: 140, paddingHorizontal: 14, justifyContent: 'center', borderRadius: radius.m, borderWidth: 2, borderColor: colors.line, backgroundColor: colors.surface },
   rosterItem: { padding: 8, borderRadius: radius.m, borderWidth: 2, backgroundColor: colors.surface, minWidth: 120, gap: 2 },
+  notice: { backgroundColor: '#12052BE6', borderRadius: 999, paddingHorizontal: 20, paddingVertical: 10, borderWidth: 2, borderColor: colors.accent },
   roleChip: { minHeight: MIN_TOUCH, justifyContent: 'center', paddingHorizontal: 14, borderRadius: 999, backgroundColor: colors.surface2 },
 });

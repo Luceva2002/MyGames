@@ -1,3 +1,4 @@
+import { getSettings } from '../ui/settings';
 import { useEffect, useState } from 'react';
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
@@ -66,10 +67,13 @@ function friendly(e: unknown): string {
   return msg;
 }
 
+/** Chi gioca porta con sé la maschera scelta nelle impostazioni (lo schermo condiviso no). */
+const withAvatar = <T extends JoinOptions>(o: T): T => (o.role === 'player' && getSettings().avatar ? { ...o, avatar: getSettings().avatar! } : o);
+
 export async function createRoom(options: JoinOptions & { gameId?: string }) {
   set({ status: 'connecting', error: null });
   try {
-    const room = await new Client(serverUrl()).create(ROOM_NAME, options);
+    const room = await new Client(serverUrl()).create(ROOM_NAME, withAvatar(options));
     attach(room);
     return room.roomId;
   } catch (e) {
@@ -81,7 +85,7 @@ export async function createRoom(options: JoinOptions & { gameId?: string }) {
 export async function joinRoom(code: string, options: JoinOptions) {
   set({ status: 'connecting', error: null });
   try {
-    const room = await new Client(serverUrl()).joinById(code, options);
+    const room = await new Client(serverUrl()).joinById(code, withAvatar(options));
     attach(room);
     return room.roomId;
   } catch (e) {

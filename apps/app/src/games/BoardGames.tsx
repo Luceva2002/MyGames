@@ -1,14 +1,29 @@
 import { useEffect, useState } from 'react';
-import { Pressable, useWindowDimensions, View } from 'react-native';
+import { Pressable, Text, useWindowDimensions, View } from 'react-native';
 import type { ChessMove, ChessView, DamaMove, DamaPlan, DamaState } from '@giochi/engine';
-import { Banner, turnText, type BoardProps } from './common';
-import { Button, Row, SeatDot, T, tap } from '../ui/kit';
+import { Banner, Opponents, PlayerBadge, seatsFrom, turnText, type BoardProps } from './common';
+import { Button, Row, T, tap } from '../ui/kit';
 import { TableBg } from '../ui/tables';
 import { colors } from '../ui/theme';
 
 function useBoardSize() {
   const { width, height } = useWindowDimensions();
-  return Math.floor(Math.min(width - 24, height - 230, 640) / 8) * 8;
+  // Lascia spazio a barra in alto, giocatori, catture e cartello del turno.
+  return Math.floor(Math.min(width - 48, height - 330, 620) / 8) * 8;
+}
+
+/** Colori della scacchiera del Carnevale: crema e viola, cornice gialla col contorno spesso. */
+const SQ_LIGHT = '#FDFAE8';
+const SQ_DARK = '#7B45E0';
+const SQ_LAST_LIGHT = '#FFF0A0';
+const SQ_LAST_DARK = '#B08CF5';
+
+function BoardFrame({ size, children }: { size: number; children: React.ReactNode }) {
+  return (
+    <View style={{ padding: 8, borderRadius: 18, backgroundColor: colors.accent, borderWidth: 3, borderColor: colors.line, boxShadow: `0px 8px 0px ${colors.line}` }}>
+      <View style={{ width: size, height: size, flexDirection: 'row', flexWrap: 'wrap', borderWidth: 3, borderColor: colors.line, borderRadius: 6, overflow: 'hidden', boxSizing: 'content-box' } as object}>{children}</View>
+    </View>
+  );
 }
 
 /** Ordine delle caselle a schermo: chi gioca col nero vede la scacchiera girata. */
@@ -17,22 +32,30 @@ function squares(flip: boolean) {
   return flip ? list.reverse() : list;
 }
 
-function PlayersLine({ names, labels, turn }: { names: string[]; labels: [string, string]; turn: number }) {
+/* ------------------------------ DAMA ------------------------------ */
+
+/** Pedina della dama: disco crema o inchiostro col contorno spesso e lo spessore sotto; la dama ha la corona. */
+function Disc({ white, king, size, selected, movable }: { white: boolean; king: boolean; size: number; selected: boolean; movable: boolean }) {
   return (
-    <Row gap={20} style={{ justifyContent: 'center' }}>
-      {[0, 1].map((p) => (
-        <Row key={p} gap={6} style={{ opacity: turn === p ? 1 : 0.6 }}>
-          <SeatDot seat={p} />
-          <T weight="800">
-            {names[p]} {labels[p]}
-          </T>
-        </Row>
-      ))}
-    </Row>
+    <View
+      style={{
+        width: size,
+        height: size,
+        borderRadius: size,
+        backgroundColor: white ? '#FFFBEE' : '#1E0B40',
+        borderWidth: Math.max(2, size * 0.07),
+        borderColor: selected ? colors.accent : colors.line,
+        boxShadow: `0px ${size * 0.1}px 0px ${colors.line}${movable && !selected ? `, 0px 0px 0px ${size * 0.06}px ${colors.accent}` : ''}`,
+        transform: [{ translateY: selected ? -size * 0.1 : 0 }],
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <View style={{ position: 'absolute', width: size * 0.62, height: size * 0.62, borderRadius: size, borderWidth: Math.max(1.5, size * 0.05), borderColor: white ? '#E8DFC2' : '#4A2A8A' }} />
+      {king && <T size={size * 0.46} color={white ? colors.accent2 : colors.accent}>♛</T>}
+    </View>
   );
 }
-
-/* ------------------------------ DAMA ------------------------------ */
 
 export function DamaBoard({ view, me, names, myTurn, onMove }: BoardProps<DamaState & { moves: DamaPlan[] }, DamaMove>) {
   const size = useBoardSize();
@@ -55,8 +78,12 @@ export function DamaBoard({ view, me, names, myTurn, onMove }: BoardProps<DamaSt
 
   return (
     <TableBg table="wood" scrim={0.35} style={{ alignItems: 'center', justifyContent: 'center', gap: 12 }}>
-      <PlayersLine names={names} labels={['⚪', '⚫']} turn={view.turn} />
-      <View style={{ width: size + 12, height: size + 12, flexDirection: 'row', flexWrap: 'wrap', borderWidth: 6, borderColor: '#4E342E' }}>
+      <Opponents>
+        {seatsFrom(2, me).map((seat) => (
+          <PlayerBadge key={seat} seat={seat} isMe={seat === me} name={`${names[seat]} ${seat === 0 ? '⚪' : '⚫'}`} active={view.turn === seat} score={12 - view.board.filter((p) => p && p.owner !== seat).length} scoreLabel="mangiate" />
+        ))}
+      </Opponents>
+      <BoardFrame size={size}>
         {squares(me === 1).map((sq) => {
           const dark = (Math.floor(sq / 8) + (sq % 8)) % 2 === 1;
           const p = view.board[sq];
@@ -69,29 +96,14 @@ export function DamaBoard({ view, me, names, myTurn, onMove }: BoardProps<DamaSt
                 tap();
                 press(sq);
               }}
-              style={{ width: cell, height: cell, backgroundColor: dark ? (wasLast ? '#8D6E3F' : '#6D4C41') : '#EFD9B4', alignItems: 'center', justifyContent: 'center' }}
+              style={{ width: cell, height: cell, backgroundColor: dark ? (wasLast ? SQ_LAST_DARK : SQ_DARK) : SQ_LIGHT, alignItems: 'center', justifyContent: 'center' }}
             >
-              {p && (
-                <View
-                  style={{
-                    width: cell * 0.78,
-                    height: cell * 0.78,
-                    borderRadius: cell,
-                    backgroundColor: p.owner === 0 ? '#F5F5F0' : '#1E1E1E',
-                    borderWidth: sel === sq ? 4 : 2,
-                    borderColor: sel === sq ? colors.accent : movable.has(sq) ? '#FFC94A88' : p.owner === 0 ? '#BDB6A6' : '#555',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  {p.king && <T size={cell * 0.42} color={p.owner === 0 ? '#B8860B' : '#FFD54F'}>♛</T>}
-                </View>
-              )}
-              {isTarget && <View style={{ position: 'absolute', width: cell * 0.3, height: cell * 0.3, borderRadius: cell, backgroundColor: colors.accent }} />}
+              {p && <Disc white={p.owner === 0} king={p.king} size={cell * 0.76} selected={sel === sq} movable={movable.has(sq)} />}
+              {isTarget && <View style={{ position: 'absolute', width: cell * 0.34, height: cell * 0.34, borderRadius: cell, backgroundColor: colors.accent3, borderWidth: 3, borderColor: colors.line }} />}
             </Pressable>
           );
         })}
-      </View>
+      </BoardFrame>
       <Banner text={turnText(myTurn, names, view.turn, me)} tone={myTurn ? 'turn' : 'info'} />
       {myTurn && view.moves.some((m) => m.captured.length) && <T color={colors.accent}>Devi mangiare!</T>}
     </TableBg>
@@ -103,21 +115,28 @@ export function DamaBoard({ view, me, names, myTurn, onMove }: BoardProps<DamaSt
 const GLYPH: Record<string, string> = { k: '♚', q: '♛', r: '♜', b: '♝', n: '♞', p: '♟' };
 const glyph = (p: string) => GLYPH[p.toLowerCase()] + '︎';
 
+/**
+ * Pezzo degli scacchi col contorno spesso del Carnevale: il simbolo pieno ripetuto sotto, spostato
+ * tutto intorno, fa da bordo. Bianchi crema col bordo inchiostro, neri inchiostro col bordo giallo.
+ */
 function Piece({ p, size }: { p: string; size: number }) {
   const white = p === p.toUpperCase();
+  const ch = glyph(p);
+  const o = Math.max(1.5, size * 0.05);
+  const box = { width: size * 1.1, height: size * 1.2 };
+  const text = (color: string, dx: number, dy: number, key: string) => (
+    <Text key={key} style={{ position: 'absolute', left: dx, top: dy, width: box.width, fontSize: size, lineHeight: box.height, color, textAlign: 'center' }}>
+      {ch}
+    </Text>
+  );
+  const edge = white ? colors.line : colors.accent;
+  const offsets = [[-o, 0], [o, 0], [0, -o], [0, o], [-o, -o], [o, o], [-o, o], [o, -o]];
   return (
-    <T
-      size={size}
-      color={white ? '#FFFFFF' : '#111111'}
-      style={{
-        lineHeight: size * 1.15,
-        textShadowColor: white ? '#000' : '#fff8',
-        textShadowRadius: white ? 2 : 1,
-        textShadowOffset: { width: 0, height: 0 },
-      }}
-    >
-      {glyph(p)}
-    </T>
+    <View style={box}>
+      {text('#12052B55', 0, size * 0.08, 'shadow')}
+      {offsets.map(([dx, dy], i) => text(edge, dx, dy, `e${i}`))}
+      {text(white ? '#FFFBEE' : '#1E0B40', 0, 0, 'fill')}
+    </View>
   );
 }
 
@@ -143,17 +162,21 @@ export function ScacchiBoard({ view, me, names, myTurn, onMove }: BoardProps<Che
 
   return (
     <TableBg table="wood" scrim={0.35} style={{ alignItems: 'center', justifyContent: 'center', gap: 10 }}>
-      <PlayersLine names={names} labels={['(bianco)', '(nero)']} turn={view.turn} />
+      <Opponents>
+        {seatsFrom(2, me).map((seat) => (
+          <PlayerBadge key={seat} seat={seat} isMe={seat === me} name={`${names[seat]} (${seat === 0 ? 'bianco' : 'nero'})`} active={view.turn === seat} score={view.captured[seat === 0 ? 1 : 0].length} scoreLabel="catture" />
+        ))}
+      </Opponents>
       <T size={20} color={colors.muted}>{view.captured[me === 1 ? 0 : 1].map(glyph).join('')} </T>
-      <View style={{ width: size + 8, height: size + 8, flexDirection: 'row', flexWrap: 'wrap', borderWidth: 4, borderColor: '#4E342E' }}>
+      <BoardFrame size={size}>
         {squares(me === 1).map((sq) => {
           const light = (Math.floor(sq / 8) + (sq % 8)) % 2 === 0;
           const p = view.board[sq];
           const last = view.last && (view.last.from === sq || view.last.to === sq);
-          let bg = light ? '#F0D9B5' : '#B58863';
-          if (last) bg = light ? '#F6EB8A' : '#D2B34C';
+          let bg = light ? SQ_LIGHT : SQ_DARK;
+          if (last) bg = light ? SQ_LAST_LIGHT : SQ_LAST_DARK;
           if (sel === sq) bg = colors.accent;
-          if (view.check && sq === king) bg = '#E57373';
+          if (view.check && sq === king) bg = colors.accent2;
           return (
             <Pressable
               key={sq}
@@ -165,12 +188,12 @@ export function ScacchiBoard({ view, me, names, myTurn, onMove }: BoardProps<Che
             >
               {p && <Piece p={p} size={cell * 0.78} />}
               {targets.has(sq) && (
-                <View style={{ position: 'absolute', width: p ? cell * 0.9 : cell * 0.28, height: p ? cell * 0.9 : cell * 0.28, borderRadius: cell, borderWidth: p ? 4 : 0, borderColor: '#2E7D32aa', backgroundColor: p ? 'transparent' : '#2E7D32aa' }} />
+                <View style={{ position: 'absolute', width: p ? cell * 0.92 : cell * 0.32, height: p ? cell * 0.92 : cell * 0.32, borderRadius: cell, borderWidth: p ? 4 : 3, borderColor: p ? colors.accent3 : colors.line, backgroundColor: p ? 'transparent' : colors.accent3 }} />
               )}
             </Pressable>
           );
         })}
-      </View>
+      </BoardFrame>
       <T size={20} color={colors.muted}>{view.captured[me === 1 ? 1 : 0].map(glyph).join('')} </T>
       <Banner text={view.check && myTurn ? 'Scacco! Tocca a te' : turnText(myTurn, names, view.turn, me)} tone={myTurn ? 'turn' : 'info'} />
       {promo && (
@@ -186,7 +209,7 @@ export function ScacchiBoard({ view, me, names, myTurn, onMove }: BoardProps<Che
                   onMove({ ...promo, promo: k });
                   setPromo(null);
                 }}
-                style={{ width: 70, height: 70, borderRadius: 14, backgroundColor: '#ECEFF4', alignItems: 'center', justifyContent: 'center' }}
+                style={{ width: 76, height: 76, borderRadius: 16, backgroundColor: SQ_DARK, borderWidth: 3, borderColor: colors.line, alignItems: 'center', justifyContent: 'center' }}
               >
                 <Piece p={view.turn === 0 ? k.toUpperCase() : k} size={52} />
               </Pressable>

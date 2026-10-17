@@ -46,6 +46,8 @@ function teamPoints(s: BriscolaState): number[] {
 }
 
 export const briscola: Game<BriscolaState, BriscolaMove, BriscolaView> = {
+  // Presa appena chiusa: più tempo per vedere chi l'ha fatta; altrimenti un attimo per seguire la giocata.
+  pause: (s) => (s.trick.length === 0 && s.lastTrick ? 1800 : 1100),
   meta: {
     id: 'briscola',
     name: 'Briscola',

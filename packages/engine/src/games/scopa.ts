@@ -141,6 +141,8 @@ function endOfPlay(s: ScopaState) {
 }
 
 export const scopa: Game<ScopaState, ScopaMove, ScopaView, { target?: number }> = {
+  // Dopo una presa (o una scopa) si lascia il tempo di vederla prima che giochi il prossimo.
+  pause: (s) => (s.lastPlay?.scopa ? 2000 : s.lastPlay?.taken.length ? 1600 : 1100),
   meta: {
     id: 'scopa',
     name: 'Scopa',

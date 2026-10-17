@@ -9,12 +9,15 @@ export interface RoomMember {
   name: string;
   role: MemberRole;
   connected: boolean;
+  /** Id della maschera scelta come avatar. */
+  avatar?: string;
 }
 
 export interface RoomSeat {
   name: string;
   bot: boolean;
   memberId: string | null;
+  avatar?: string;
 }
 
 export interface RoomSnapshot {
@@ -36,6 +39,8 @@ export interface SeatView {
   me: Seat | null;
   myTurn: boolean;
   names: string[];
+  /** Maschera di ogni posto (null: nessuna scelta). */
+  avatars?: (string | null)[];
   active: Seat[];
   result: GameResult | null;
 }
@@ -43,6 +48,7 @@ export interface SeatView {
 export interface JoinOptions {
   name: string;
   role: MemberRole;
+  avatar?: string;
 }
 
 export const ROOM_NAME = 'tavolo';

@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Image, Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { GAME_ART } from '../../ui/art';
+import { getSettings, setSettings } from '../../ui/settings';
 import { router, useLocalSearchParams } from 'expo-router';
-import { BOT_CHARACTERS, botByName, catalog, pickBots, playerCounts } from '@giochi/engine';
-import { BotAvatar } from '../../ui/avatars';
+import { assignAvatars, BOT_CHARACTERS, botByName, catalog, pickBots, playerCounts } from '@giochi/engine';
+import { BotAvatar, CharacterAvatar } from '../../ui/avatars';
+import { CharacterPickerModal } from '../../ui/CharacterPicker';
 import { setPendingMatch, type SeatConfig } from '../../session/local';
 import { defaultName, loadNames, saveNames } from '../../session/names';
 import { Button, Panel, Row, Screen, SeatDot, T, tap } from '../../ui/kit';
@@ -16,7 +18,8 @@ export default function GameDetail() {
   const [count, setCount] = useState(meta ? Math.max(meta.minPlayers, Math.min(2, meta.maxPlayers)) : 2);
   const [seats, setSeats] = useState<SeatConfig[]>([]);
   // Una maschera diversa per ogni posto, scelta a caso e cambiabile con un tocco.
-  const [masks, setMasks] = useState(() => pickBots(10).map((b) => b.name));
+  const [masks, setMasks] = useState(() => pickBots(10, Math.random, [getSettings().avatar]).map((b) => b.name));
+  const [picking, setPicking] = useState<number | null>(null);
 
   useEffect(() => {
     loadNames().then((saved) => {
@@ -35,12 +38,15 @@ export default function GameDetail() {
 
   const ready = entry.status === 'ready';
   const active = seats.slice(0, count);
+  // Ogni posto ha la sua maschera: i computer la loro, le persone quella scelta (il primo posto
+  // parte da quella del profilo) o una libera assegnata in automatico.
+  const avatars = assignAvatars(active.map((s, i) => (s.bot ? { name: masks[i], bot: true } : { ...s, avatar: s.avatar ?? (i === 0 ? getSettings().avatar : undefined) })));
   const counts = playerCounts(meta);
 
   const update = (i: number, patch: Partial<SeatConfig>) => setSeats((s) => s.map((seat, j) => (j === i ? { ...seat, ...patch } : seat)));
 
   const startLocal = () => {
-    const named = active.map((s, i) => ({ ...s, name: s.bot ? masks[i] : s.name.trim() || defaultName(i) }));
+    const named = active.map((s, i) => ({ ...s, name: s.bot ? masks[i] : s.name.trim() || defaultName(i), avatar: s.bot ? undefined : avatars[i] }));
     saveNames(seats.map((s) => s.name));
     setPendingMatch({ gameId: meta.id, seats: named });
     router.push({ pathname: '/play/[id]', params: { id: meta.id } });
@@ -157,6 +163,17 @@ export default function GameDetail() {
                   </View>
                 </Pressable>
               ) : (
+                <>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`Personaggio del posto ${i + 1}. Tocca per cambiarlo`}
+                  onPress={() => {
+                    tap();
+                    setPicking(i);
+                  }}
+                >
+                  <CharacterAvatar id={avatars[i]} size={56} seat={i} />
+                </Pressable>
                 <TextInput
                   value={seat.name}
                   onChangeText={(name) => update(i, { name })}
@@ -165,6 +182,7 @@ export default function GameDetail() {
                   style={styles.input}
                   maxLength={16}
                 />
+                </>
               )}
               {i > 0 && (
                 <Pressable
@@ -201,6 +219,18 @@ export default function GameDetail() {
           />
         </View>
       )}
+      <CharacterPickerModal
+        visible={picking !== null}
+        title={picking === null ? '' : `Personaggio di ${active[picking]?.name.trim() || defaultName(picking)}`}
+        value={picking === null ? null : avatars[picking]}
+        taken={avatars.filter((_, j) => j !== picking)}
+        onPick={(avatar) => {
+          if (picking === null) return;
+          update(picking, { avatar });
+          if (picking === 0) setSettings({ ...getSettings(), avatar });
+        }}
+        onClose={() => setPicking(null)}
+      />
     </Screen>
   );
 }

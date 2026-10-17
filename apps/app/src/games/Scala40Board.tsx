@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { checkMeld, meldPoints40, SCALA40_RULES, type Card, type Scala40Move, type Scala40View } from '@giochi/engine';
-import { Banner, Opponents, othersOf, PlayerBadge, useCardWidth, type BoardProps } from './common';
+import { Banner, Opponents, PlayerBadge, seatsFrom, Slot, useCardWidth, type BoardProps } from './common';
 import { CardsSummaryTable } from './summary';
 import { MeldRow, MultiHand, TableArea } from './RummyParts';
-import { DeckPile, PlayingCard } from '../ui/cards';
+import { CardBack, DeckPile, PlayingCard } from '../ui/cards';
+import { Draggable, DropZone, type DragPayload } from '../ui/drag';
 import { Button, Row, T, tap } from '../ui/kit';
 import { TableBg } from '../ui/tables';
 import { colors, seatColors } from '../ui/theme';
@@ -28,6 +29,17 @@ export function Scala40Board({ view, me, names, myTurn, onMove }: BoardProps<Sca
   const stagedPoints = staged.reduce((t, g) => t + meldPoints40(checkMeld(g.map((id) => byId.get(id)!), SCALA40_RULES)!), 0);
   const opened = me !== null && view.opened[me];
   const playing = myTurn && view.phase === 'play';
+  const drawing = myTurn && view.phase === 'draw';
+  const meldFrom = (p: DragPayload) => {
+    const cs = p.ids.map((id) => byId.get(id)!).filter(Boolean);
+    return p.kind === 'hand' && cs.length >= 3 ? checkMeld(cs, SCALA40_RULES) : null;
+  };
+  // Trascinando: sul tavolo si cala (o si prepara l'apertura), su una combinazione si attacca, sullo scarto si scarta.
+  const dropOnTable = (p: DragPayload) => {
+    if (opened) return void onMove({ type: 'meld', cards: p.ids });
+    setStaged((s) => [...s, p.ids]);
+    setSelected([]);
+  };
 
   if (view.phase === 'roundEnd' || view.phase === 'over') {
     return (
@@ -56,10 +68,10 @@ export function Scala40Board({ view, me, names, myTurn, onMove }: BoardProps<Sca
   return (
     <View style={{ flex: 1 }}>
       <Opponents>
-        {othersOf(view.players, me).map((seat) => (
-          <PlayerBadge key={seat} seat={seat} name={names[seat]} active={view.turn === seat} cards={view.out[seat] ? 0 : view.handCounts[seat]} deck="fr">
+        {seatsFrom(view.players, me).map((seat) => (
+          <PlayerBadge key={seat} seat={seat} isMe={seat === me} name={names[seat]} active={view.turn === seat} cards={view.out[seat] ? 0 : view.handCounts[seat]} deck="fr" score={view.scores[seat]} scoreLabel={`/ ${view.limit} pt`}>
             <T size={12} color={colors.muted}>
-              {view.out[seat] ? 'eliminato' : `${view.opened[seat] ? '✓ aperto · ' : ''}${view.scores[seat]} pt`}
+              {view.out[seat] ? 'eliminato' : view.opened[seat] ? '✓ aperto' : ''}
             </T>
           </PlayerBadge>
         ))}
@@ -73,7 +85,11 @@ export function Scala40Board({ view, me, names, myTurn, onMove }: BoardProps<Sca
               onMove({ type: 'draw', source: 'stock' });
             }}
           >
-            <DeckPile count={view.stockCount} width={42} deck="fr" />
+            <Draggable payload={drawing ? { kind: 'stock', ids: [] } : null} ghost={<CardBack width={42} deck="fr" />}>
+              <Slot width={46} ratio={1.45} label="Mazzo">
+                <DeckPile count={view.stockCount} width={42} deck="fr" />
+              </Slot>
+            </Draggable>
           </Pressable>
           <Pressable
             disabled={!myTurn || view.phase !== 'draw' || !view.discardTop}
@@ -82,25 +98,38 @@ export function Scala40Board({ view, me, names, myTurn, onMove }: BoardProps<Sca
               onMove({ type: 'draw', source: 'discard' });
             }}
           >
-            {view.discardTop ? <PlayingCard card={view.discardTop} width={42} /> : <View style={{ width: 42 }} />}
+            <DropZone id="discard" radius={8} inset={4} accepts={(p) => playing && p.kind === 'hand' && p.ids.length === 1 && !staged.length} onDrop={(p) => onMove({ type: 'discard', card: p.ids[0] })}>
+              <Slot width={46} ratio={1.45} label="Scarti">
+                {view.discardTop ? (
+                  <Draggable payload={drawing ? { kind: 'discard', ids: [view.discardTop.id] } : null} ghost={<PlayingCard card={view.discardTop} width={42} sway={false} />}>
+                    <PlayingCard card={view.discardTop} width={42} />
+                  </Draggable>
+                ) : null}
+              </Slot>
+            </DropZone>
           </Pressable>
           <T size={13} color="#ffffffcc" style={{ flex: 1 }}>
             {banner}
           </T>
         </Row>
-        <TableArea>
-          {view.melds.map((m) => (
-            <MeldRow
-              key={m.id}
-              cards={m.cards}
-              width={meldWidth}
-              color={seatColors[m.owner % seatColors.length]}
-              onPress={playing && opened && selected.length ? () => onMove({ type: 'attach', meld: m.id, cards: selected }) : undefined}
-              active={playing && opened && selected.length > 0}
-            />
-          ))}
-          {view.melds.length === 0 && <T color="#ffffff66">Ancora nessuna combinazione in tavola</T>}
-        </TableArea>
+        <DropZone id="table" style={{ flex: 1 }} radius={16} accepts={(p) => playing && !!meldFrom(p)} onDrop={dropOnTable}>
+          <TableArea>
+            {view.melds.map((m) => (
+              <MeldRow
+                key={m.id}
+                cards={m.cards}
+                width={meldWidth}
+                color={seatColors[m.owner % seatColors.length]}
+                onPress={playing && opened && selected.length ? () => onMove({ type: 'attach', meld: m.id, cards: selected }) : undefined}
+                active={playing && opened && selected.length > 0}
+                dropId={`m-${m.id}`}
+                accepts={(p) => playing && opened && p.kind === 'hand'}
+                onDrop={(p) => onMove({ type: 'attach', meld: m.id, cards: p.ids })}
+              />
+            ))}
+            {view.melds.length === 0 && <T color="#ffffff66">Ancora nessuna combinazione in tavola</T>}
+          </TableArea>
+        </DropZone>
       </TableBg>
       {me !== null && (
         <>
@@ -116,7 +145,15 @@ export function Scala40Board({ view, me, names, myTurn, onMove }: BoardProps<Sca
               </Row>
             </View>
           )}
-          <MultiHand cards={handLeft} selected={selected} onToggle={playing ? toggle : undefined} width={handWidth} highlight={view.mustUse} />
+          <MultiHand
+            cards={handLeft}
+            selected={selected}
+            onToggle={playing ? toggle : undefined}
+            width={handWidth}
+            highlight={view.mustUse}
+            draggable={playing}
+            dropHere={{ accepts: (p) => drawing && (p.kind === 'stock' || p.kind === 'discard'), onDrop: (p) => onMove({ type: 'draw', source: p.kind === 'stock' ? 'stock' : 'discard' }) }}
+          />
           <Row gap={8} wrap style={{ justifyContent: 'center', padding: 8, minHeight: 60 }}>
             {playing && !opened && selected.length >= 3 && (
               <Button small label={selMeld ? `Metti da parte (${meldPoints40(selMeld)} pt)` : 'Combinazione non valida'} disabled={!selMeld} onPress={() => {

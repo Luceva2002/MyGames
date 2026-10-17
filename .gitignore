@@ -5,6 +5,21 @@ web-build/
 .vercel/
 .DS_Store
 *.log
-.env
-.env*.local
-.vercel
+.env*
+
+# immagini intermedie di Higgsfield (gli originali restano sul Mac)
+design-proposte/raw*/
+
+# file generati da Expo e dagli strumenti
+expo-env.d.ts
+ios/
+android/
+*.tsbuildinfo
+.idea/
+.vscode/
+
+# chiavi e certificati
+*.pem
+*.p12
+*.key
+*.mobileprovision

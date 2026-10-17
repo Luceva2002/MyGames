@@ -52,7 +52,7 @@ export function YahtzeeBoard({ view, me, names, myTurn, onMove }: BoardProps<Yah
   const players = Array.from({ length: view.players }, (_, i) => i);
 
   return (
-    <TableBg table="green" scrim={0.3}>
+    <TableBg table="dice" scrim={0.25}>
       <View style={{ alignItems: 'center', gap: 12, paddingVertical: 12 }}>
         <Row gap={10}>
           {view.dice.map((d, i) => (

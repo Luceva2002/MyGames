@@ -1,11 +1,13 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { ActivityIndicator, Image, Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import type { GameMeta, GameResult, Seat } from '@giochi/engine';
 import { BOARDS } from './registry';
 import { GAME_ART } from '../ui/art';
-import { BotFigure } from '../ui/avatars';
+import { BotFigure, SeatAvatars } from '../ui/avatars';
 import { botByName } from '@giochi/engine';
 import { Button, Confirm, focusRing, PlayerTag, Row, T, tap } from '../ui/kit';
+import { DragProvider } from '../ui/drag';
+import { sfx } from '../ui/sound';
 import { TvContext } from '../ui/settings';
 import { colors, MIN_TOUCH, radius, seatColor } from '../ui/theme';
 
@@ -13,11 +15,13 @@ import { colors, MIN_TOUCH, radius, seatColor } from '../ui/theme';
  * Guscio comune a ogni partita (P-SHELL-3): barra in alto con uscita confermata, nome del gioco
  * e di chi è il turno; area di gioco; regole, errori, attesa di rete e risultati.
  */
-export function GameFrame({ meta, view, me, names, myTurn, active, onMove, result, error, onExit, onRestart, overlay, headerRight, tv, pending }: {
+export function GameFrame({ meta, view, me, names, avatars, myTurn, active, onMove, result, error, onExit, onRestart, overlay, headerRight, tv, pending }: {
   meta: GameMeta;
   view: unknown;
   me: Seat | null;
   names: string[];
+  /** Maschera di ogni posto, per avatar e punteggi. */
+  avatars?: (string | null)[];
   myTurn: boolean;
   /** Chi deve muovere adesso, per la barra di stato (V-ST-1). */
   active: Seat[];
@@ -38,9 +42,19 @@ export function GameFrame({ meta, view, me, names, myTurn, active, onMove, resul
   const [leaving, setLeaving] = useState(false);
   const [dismissed, setDismissed] = useState(false);
   useEffect(() => setDismissed(false), [result]);
+  // Un "ding" quando tocca a te (non all'apertura della partita) e la fanfara se vinci.
+  const started = useRef(false);
+  useEffect(() => {
+    if (myTurn && started.current && !result) sfx('turn');
+    started.current = true;
+  }, [myTurn]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (result && me !== null && result.winners.includes(me)) sfx('win');
+  }, [result]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <TvContext.Provider value={!!tv}>
+    <SeatAvatars.Provider value={avatars ?? []}>
       <View style={[{ flex: 1 }, tv && styles.tvSafe]}>
         <Row style={styles.header} gap={10}>
           <IconButton label="Esci dalla partita" glyph="✕" onPress={() => setLeaving(true)} />
@@ -58,7 +72,9 @@ export function GameFrame({ meta, view, me, names, myTurn, active, onMove, resul
           </View>
         )}
         <View style={{ flex: 1 }} pointerEvents={pending ? 'none' : 'auto'}>
-          {Board ? <Board view={view} me={me} names={names} myTurn={myTurn && !pending} onMove={onMove} /> : <T>Interfaccia non disponibile.</T>}
+          <DragProvider>
+            {Board ? <Board view={view} me={me} names={names} myTurn={myTurn && !pending} onMove={onMove} /> : <T>Interfaccia non disponibile.</T>}
+          </DragProvider>
         </View>
         {pending && (
           <View style={styles.pending} accessibilityLiveRegion="polite">
@@ -153,6 +169,7 @@ export function GameFrame({ meta, view, me, names, myTurn, active, onMove, resul
           }}
         />
       </View>
+    </SeatAvatars.Provider>
     </TvContext.Provider>
   );
 }

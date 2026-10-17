@@ -1,5 +1,6 @@
 import { router } from 'expo-router';
 import { Switch, View } from 'react-native';
+import { CharacterPicker } from '../ui/CharacterPicker';
 import { Button, Chip, Panel, Row, Screen, T } from '../ui/kit';
 import { setSettings, useReducedMotion, useSettings, type Settings } from '../ui/settings';
 import { colors } from '../ui/theme';
@@ -31,6 +32,16 @@ export default function SettingsScreen() {
 
       <Panel>
         <T size={18} weight="900">
+          Il tuo personaggio
+        </T>
+        <T size={14} color={colors.muted}>
+          Scegli la tua maschera: ti rappresenta al tavolo e nei punteggi, in ogni partita.
+        </T>
+        <CharacterPicker value={s.avatar} onChange={(avatar) => patch({ avatar })} />
+      </Panel>
+
+      <Panel>
+        <T size={18} weight="900">
           Dimensione del testo
         </T>
         <Row gap={8} wrap>
@@ -54,9 +65,10 @@ export default function SettingsScreen() {
 
       <Panel>
         <T size={18} weight="900">
-          Tatto
+          Tatto e suoni
         </T>
         {toggle('Vibrazione', 'Un piccolo tocco quando premi un pulsante', s.haptics, (v) => patch({ haptics: v }))}
+        {toggle('Suoni', 'Carte che scivolano, prese, scope e vittorie', s.sound, (v) => patch({ sound: v }))}
       </Panel>
 
       {s.reduceMotion !== null && <Button kind="ghost" color={colors.muted} small label="Movimento: torna a seguire il sistema" onPress={() => patch({ reduceMotion: null })} />}

@@ -9,12 +9,16 @@ export interface Settings {
   /** null = segue il sistema operativo. */
   reduceMotion: boolean | null;
   haptics: boolean;
+  /** Effetti sonori nei giochi. */
+  sound: boolean;
+  /** La maschera scelta come proprio personaggio (id), null se non scelta. */
+  avatar: string | null;
   /** Bordi e testi più marcati. */
   highContrast: boolean;
 }
 
 const KEY = 'tavolata.settings';
-export const DEFAULT_SETTINGS: Settings = { textSize: 0, reduceMotion: null, haptics: true, highContrast: false };
+export const DEFAULT_SETTINGS: Settings = { textSize: 0, reduceMotion: null, haptics: true, sound: true, avatar: null, highContrast: false };
 export const TEXT_SCALE = [1, 1.18, 1.36] as const;
 
 let current: Settings = DEFAULT_SETTINGS;

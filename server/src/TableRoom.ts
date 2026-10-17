@@ -1,7 +1,10 @@
 import { Room, type Client } from '@colyseus/core';
 import {
   applyMove,
+  assignAvatars,
+  botByName,
   botMove,
+  characterById,
   CODE_ALPHABET,
   CODE_LENGTH,
   canControl,
@@ -17,7 +20,7 @@ import {
   type SeatView,
 } from '@giochi/engine';
 
-const BOT_DELAY_MS = 900;
+const BOT_DELAY_MS = 1000;
 const RECONNECT_SECONDS = 120;
 
 const usedCodes = new Set<string>();
@@ -43,7 +46,12 @@ export class TableRoom extends Room {
   private hostId = '';
   private gameId: string | null = null;
   private bots = 0;
-  private botNames = pickBots(9).map((b) => b.name);
+  private botNames = pickBots(16).map((b) => b.name);
+  /** I computer al tavolo, senza le maschere già scelte da chi gioca. */
+  private seatedBots() {
+    const taken = new Set(this.members.map((m) => m.avatar).filter(Boolean));
+    return this.botNames.filter((n) => !taken.has(botByName(n)?.id)).slice(0, this.bots);
+  }
   private seats: RoomSeat[] = [];
   private game: Game | null = null;
   private state_: unknown = null;
@@ -64,6 +72,11 @@ export class TableRoom extends Room {
     this.onMessage('setBots', (client, msg: { count: number }) => {
       if (!this.isHost(client) || this.game) return;
       this.bots = Math.max(0, Math.min(9, Math.floor(msg.count)));
+      this.broadcastRoom();
+    });
+    this.onMessage('avatar', (client, msg: { avatar: string }) => {
+      const m = this.member(client.sessionId);
+      if (m && characterById(msg.avatar)) m.avatar = msg.avatar;
       this.broadcastRoom();
     });
     this.onMessage('rename', (client, msg: { name: string }) => {
@@ -103,7 +116,8 @@ export class TableRoom extends Room {
 
   onJoin(client: Client, options: JoinOptions) {
     const name = (options?.name ?? '').trim().slice(0, 16) || `Giocatore ${this.members.length + 1}`;
-    this.members.push({ id: client.sessionId, name, role: options?.role === 'screen' ? 'screen' : 'player', connected: true });
+    const avatar = characterById(options?.avatar)?.id;
+    this.members.push({ id: client.sessionId, name, role: options?.role === 'screen' ? 'screen' : 'player', connected: true, avatar });
     if (!this.hostId) this.hostId = client.sessionId;
     this.broadcastRoom();
   }
@@ -148,8 +162,8 @@ export class TableRoom extends Room {
     const allowed = playerCounts(game.meta);
     if (!allowed.includes(total)) return this.fail(client, `${game.meta.name} si gioca in ${allowed.join(', ')}.`);
     this.seats = [
-      ...players.map((m): RoomSeat => ({ name: m.name, bot: false, memberId: m.id })),
-      ...this.botNames.slice(0, this.bots).map((name): RoomSeat => ({ name, bot: true, memberId: null })),
+      ...players.map((m): RoomSeat => ({ name: m.name, bot: false, memberId: m.id, avatar: m.avatar })),
+      ...this.seatedBots().map((name): RoomSeat => ({ name, bot: true, memberId: null, avatar: botByName(name)?.id })),
     ];
     this.game = game;
     this.state_ = game.setup({ players: total, seed: newSeed() });
@@ -164,10 +178,11 @@ export class TableRoom extends Room {
     const result = game.result(this.state_);
     const active = result ? [] : game.activePlayers(this.state_);
     const names = this.seats.map((s) => s.name);
+    const avatars = assignAvatars(this.seats);
     for (const client of this.clients) {
       const seatIndex = this.seats.findIndex((s) => s.memberId === client.sessionId);
       const me = seatIndex >= 0 ? seatIndex : null;
-      const msg: SeatView = { gameId: game.meta.id, view: game.view(this.state_, me), me, myTurn: me !== null && active.includes(me), names, active, result };
+      const msg: SeatView = { gameId: game.meta.id, view: game.view(this.state_, me), me, myTurn: me !== null && active.includes(me), names, avatars, active, result };
       client.send('view', msg);
     }
     this.botTimer?.clear();
@@ -193,7 +208,7 @@ export class TableRoom extends Room {
       hostId: this.hostId,
       gameId: this.gameId,
       bots: this.bots,
-      botNames: this.botNames.slice(0, this.bots),
+      botNames: this.seatedBots(),
       phase: this.game ? 'playing' : 'lobby',
       members: this.members,
       seats: this.seats,

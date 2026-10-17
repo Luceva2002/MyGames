@@ -62,6 +62,8 @@ function dealHand(s: TresetteState) {
 }
 
 export const tresette: Game<TresetteState, TresetteMove, TresetteView, { target?: number }> = {
+  // Presa appena chiusa: più tempo per vedere chi l'ha fatta; altrimenti un attimo per seguire la giocata.
+  pause: (s) => (s.trick.length === 0 && s.lastTrick ? 1800 : 1100),
   meta: {
     id: 'tresette',
     name: 'Tresette',

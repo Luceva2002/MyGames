@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { UNO_COLORS as COLORS, unoLastText, type Card, type UnoMove, type UnoView } from '@giochi/engine';
-import { Banner, Felt, Hand, Opponents, othersOf, PlayerBadge, turnText, useCardWidth, type BoardProps } from './common';
-import { DeckPile, PlayingCard, UNO_COLORS } from '../ui/cards';
+import { Banner, EventSticker, Felt, Hand, Opponents, PlayerBadge, seatsFrom, turnText, useCardWidth, type BoardProps } from './common';
+import { CardBack, DeckPile, PlayingCard, UNO_COLORS } from '../ui/cards';
+import { Draggable, DropZone } from '../ui/drag';
+import { FlyIn } from '../ui/motion';
 import { Button, Row, T, tap } from '../ui/kit';
 import { colors } from '../ui/theme';
 
@@ -23,8 +25,8 @@ export function UnoBoard({ view, me, names, myTurn, onMove }: BoardProps<UnoView
   return (
     <View style={{ flex: 1 }}>
       <Opponents>
-        {othersOf(view.players, me).map((seat) => (
-          <PlayerBadge key={seat} seat={seat} name={names[seat]} active={view.turn === seat} cards={view.handCounts[seat]} deck="uno">
+        {seatsFrom(view.players, me).map((seat) => (
+          <PlayerBadge key={seat} seat={seat} isMe={seat === me} name={names[seat]} active={view.turn === seat} cards={view.handCounts[seat]} deck="uno" score={view.handCounts[seat]} scoreLabel="carte">
             {view.handCounts[seat] === 1 && (
               <T size={13} weight="900" color={colors.danger}>
                 UNO!
@@ -33,6 +35,10 @@ export function UnoBoard({ view, me, names, myTurn, onMove }: BoardProps<UnoView
           </PlayerBadge>
         ))}
       </Opponents>
+      <DropZone id="table" style={{ flex: 1 }} radius={22} inset={-10} accepts={(p) => myTurn && p.kind === 'hand'} onDrop={(p) => {
+        const c = view.hand.find((x) => x.id === p.ids[0]);
+        if (c) playCard(c);
+      }}>
       <Felt table="blue" style={{ borderColor: '#0E1226' }}>
         <Row gap={big ? 40 : 24}>
           <Pressable
@@ -43,15 +49,24 @@ export function UnoBoard({ view, me, names, myTurn, onMove }: BoardProps<UnoView
             }}
             style={{ alignItems: 'center', gap: 6 }}
           >
-            <DeckPile count={view.deckCount} width={big ? 110 : 76} deck="uno" />
+            <Draggable payload={myTurn && !view.drawn ? { kind: 'stock', ids: [] } : null} ghost={<CardBack width={big ? 110 : 76} deck="uno" />}>
+              <DeckPile count={view.deckCount} width={big ? 110 : 76} deck="uno" />
+            </Draggable>
             {myTurn && !view.drawn && (
               <T size={13} weight="800" color={colors.accent}>
                 Pesca
               </T>
             )}
           </Pressable>
+          <View style={{ alignItems: 'center', gap: 6 }}>
           <View style={{ padding: 8, borderRadius: 18, borderWidth: 5, borderColor: UNO_COLORS[view.color] }}>
-            <PlayingCard card={view.top} width={big ? 120 : 86} chosenColor={view.top.suit === 'w' ? view.color : undefined} />
+            <FlyIn key={view.top.id} from={view.last?.seat === me ? 'below' : 'above'} sound="card">
+              <PlayingCard card={view.top} width={big ? 120 : 86} chosenColor={view.top.suit === 'w' ? view.color : undefined} />
+            </FlyIn>
+          </View>
+            <T size={13} weight="800" color="#ffffffcc">
+              Scarti
+            </T>
           </View>
         </Row>
         <T size={big ? 30 : 20} color="#ffffff88">
@@ -63,10 +78,14 @@ export function UnoBoard({ view, me, names, myTurn, onMove }: BoardProps<UnoView
           </T>
         )}
       </Felt>
+      </DropZone>
+      <EventSticker eventKey={view.last ? view.top.id + view.last.text : null} text={unoSticker(view)} />
       <Banner text={turnText(myTurn, names, view.turn, me)} tone={myTurn ? 'turn' : 'info'} />
       {me !== null && (
         <>
-          <Hand cards={view.hand} width={handWidth} playable={myTurn ? view.playable : undefined} onPress={myTurn ? playCard : undefined} />
+          <DropZone id="hand" radius={18} accepts={(p) => myTurn && !view.drawn && p.kind === 'stock'} onDrop={() => onMove({ type: 'draw' })}>
+            <Hand cards={view.hand} width={handWidth} playable={myTurn ? view.playable : undefined} onPress={myTurn ? playCard : undefined} drag={myTurn ? (c) => ({ kind: 'hand', ids: [c.id] }) : undefined} />
+          </DropZone>
           <View style={{ minHeight: 60, padding: 8, alignItems: 'center' }}>
             {myTurn && view.drawn && <Button small label="Tieni la carta e passa" onPress={() => onMove({ type: 'pass' })} />}
           </View>
@@ -99,4 +118,11 @@ export function UnoBoard({ view, me, names, myTurn, onMove }: BoardProps<UnoView
       )}
     </View>
   );
+}
+
+/** Cartello per le carte speciali appena giocate: si capisce al volo cosa è successo. */
+function unoSticker(view: UnoView): string | null {
+  if (!view.last || view.last.text === 'pesca' || view.last.text === 'passa') return null;
+  if (view.last.text.includes('UNO!')) return 'UNO!';
+  return ({ 10: 'Salta!', 11: 'Giro al contrario!', 12: '+2!', 14: '+4!' } as Record<number, string>)[view.top.rank] ?? null;
 }

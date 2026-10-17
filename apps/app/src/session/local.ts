@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { applyMove, botMove, getGame, newSeed, type Game, type Seat } from '@giochi/engine';
+import { applyMove, assignAvatars, botMove, getGame, newSeed, type Game, type Seat } from '@giochi/engine';
 
 export interface SeatConfig {
   name: string;
   bot: boolean;
+  /** Maschera scelta come avatar (id). */
+  avatar?: string;
 }
 
 export interface MatchConfig {
@@ -17,7 +19,7 @@ let pending: MatchConfig | null = null;
 export const setPendingMatch = (c: MatchConfig) => (pending = c);
 export const getPendingMatch = () => pending;
 
-const BOT_DELAY = 750;
+const BOT_DELAY = 1000;
 
 /**
  * Partita su un solo dispositivo: le regole girano qui, i computer muovono da soli
@@ -93,6 +95,7 @@ export function useLocalMatch(config: MatchConfig) {
     play,
     restart,
     names: config.seats.map((s) => s.name),
+    avatars: assignAvatars(config.seats),
     handoffTo: showHandoff ? activeHuman! : null,
     confirmHandoff: () => setRevealed(activeHuman ?? null),
   };
