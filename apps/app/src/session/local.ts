@@ -1,0 +1,99 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { applyMove, botMove, getGame, newSeed, type Game, type Seat } from '@giochi/engine';
+
+export interface SeatConfig {
+  name: string;
+  bot: boolean;
+}
+
+export interface MatchConfig {
+  gameId: string;
+  seats: SeatConfig[];
+  options?: Record<string, unknown>;
+}
+
+/** Configurazione della prossima partita locale, passata dalla scheda del gioco allo schermo di gioco. */
+let pending: MatchConfig | null = null;
+export const setPendingMatch = (c: MatchConfig) => (pending = c);
+export const getPendingMatch = () => pending;
+
+const BOT_DELAY = 750;
+
+/**
+ * Partita su un solo dispositivo: le regole girano qui, i computer muovono da soli
+ * e, se ci sono carte segrete e più persone, il telefono va passato fra un turno e l'altro.
+ */
+export function useLocalMatch(config: MatchConfig) {
+  const game = getGame(config.gameId) as Game;
+  const [state, setState] = useState(() => game.setup({ players: config.seats.length, seed: newSeed(), options: config.options }));
+  const [error, setError] = useState<string | null>(null);
+  const humans = useMemo(() => config.seats.flatMap((s, i) => (s.bot ? [] : [i])), [config.seats]);
+  const isBot = useCallback((seat: Seat) => config.seats[seat]?.bot ?? false, [config.seats]);
+  const result = game.result(state);
+  const active = result ? [] : game.activePlayers(state);
+  const activeHuman = active.find((s) => !isBot(s));
+  const [me, setMe] = useState<Seat>(humans[0] ?? 0);
+  /** Chi ha il telefono in mano: con le carte segrete serve la conferma prima di mostrarle. */
+  const [revealed, setRevealed] = useState<Seat | null>(humans.length === 1 ? humans[0] : null);
+  const needsHandoff = game.meta.hiddenInfo && humans.length > 1;
+
+  useEffect(() => {
+    if (activeHuman !== undefined && activeHuman !== me) setMe(activeHuman);
+  }, [activeHuman, me]);
+
+  // I computer muovono uno alla volta, con una pausa per far vedere la giocata.
+  const stateRef = useRef(state);
+  stateRef.current = state;
+  useEffect(() => {
+    if (result) return;
+    const bot = active.find(isBot);
+    if (bot === undefined) return;
+    const timer = setTimeout(() => {
+      const current = stateRef.current;
+      if (!game.activePlayers(current).includes(bot)) return;
+      setState(applyMove(game, current, bot, botMove(game, current, bot)));
+    }, game.pause?.(state) ?? BOT_DELAY);
+    return () => clearTimeout(timer);
+  }, [state]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const showHandoff = needsHandoff && !result && activeHuman !== undefined && revealed !== activeHuman;
+  const viewer: Seat | null = needsHandoff ? (showHandoff ? null : revealed) : me;
+
+  const play = useCallback(
+    (move: unknown) => {
+      if (viewer === null) return;
+      try {
+        const next = applyMove(game, stateRef.current, viewer, move);
+        stateRef.current = next;
+        setState(next);
+        setError(null);
+      } catch (e) {
+        setError((e as Error).message);
+      }
+    },
+    [game, viewer],
+  );
+
+  const restart = useCallback(() => {
+    setState(game.setup({ players: config.seats.length, seed: newSeed(), options: config.options }));
+    setError(null);
+    setRevealed(humans.length === 1 ? humans[0] : null);
+  }, [game, config, humans]);
+
+  return {
+    game,
+    state,
+    view: game.view(state, needsHandoff && result ? null : viewer),
+    me: viewer,
+    myTurn: viewer !== null && active.includes(viewer),
+    active,
+    result,
+    error,
+    clearError: () => setError(null),
+    play,
+    restart,
+    names: config.seats.map((s) => s.name),
+    handoffTo: showHandoff ? activeHuman! : null,
+    confirmHandoff: () => setRevealed(activeHuman ?? null),
+  };
+}

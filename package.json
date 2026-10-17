@@ -1,0 +1,16 @@
+{
+  "name": "giochi",
+  "private": true,
+  "workspaces": ["apps/*", "packages/*", "server"],
+  "scripts": {
+    "app": "npm run start -w app",
+    "web": "npm run web -w app",
+    "server": "npm run dev -w server",
+    "test": "npm test -w @giochi/engine",
+    "typecheck": "npm run typecheck -w @giochi/engine && npm run typecheck -w server && npm run typecheck -w app"
+  },
+  "devDependencies": {
+    "tsx": "^4.23.15",
+    "typescript": "~6.0.3"
+  }
+}
