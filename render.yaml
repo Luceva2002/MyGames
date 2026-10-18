@@ -1,0 +1,23 @@
+# Server delle stanze (Colyseus) su Render, piano gratuito.
+# Render → New → Blueprint → scegli questo repo: crea il servizio da solo.
+services:
+  - type: web
+    name: tavolata-stanze
+    runtime: node
+    plan: free
+    region: frankfurt
+    branch: main
+    buildCommand: npm ci --include=dev --workspace server --workspace packages/engine --include-workspace-root
+    startCommand: npm start --workspace server
+    healthCheckPath: /
+    autoDeploy: true
+    buildFilter:
+      paths:
+        - server/**
+        - packages/engine/**
+        - package.json
+        - package-lock.json
+        - render.yaml
+    envVars:
+      - key: NODE_VERSION
+        value: "22"

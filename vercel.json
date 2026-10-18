@@ -1,7 +1,12 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "installCommand": "npm install",
-  "buildCommand": "cd apps/app && npx expo export --platform web --output-dir ../../dist",
+  "buildCommand": "cd apps/app && EXPO_PUBLIC_SERVER_URL=${EXPO_PUBLIC_SERVER_URL:-wss://tavolata-stanze.onrender.com} npx expo export --platform web --output-dir ../../dist",
   "outputDirectory": "dist",
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
 }
