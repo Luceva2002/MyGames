@@ -35,7 +35,7 @@ gioca: node_modules
 	echo ""; \
 	trap 'kill 0' INT TERM EXIT; \
 	  (cd server && npx tsx src/index.ts) & \
-	  (cd apps/app && npx expo start --web --port $(WEB_PORT)) & \
+	  (cd apps/app && EXPO_PUBLIC_LAN_HOST=$(IP) npx expo start --web --port $(WEB_PORT)) & \
 	  ( [ "$(OPEN)" = 1 ] && sleep 12 && open http://localhost:$(WEB_PORT) >/dev/null 2>&1 ) & \
 	  wait
 
@@ -46,14 +46,14 @@ telefono: node_modules
 	fi; \
 	trap 'kill 0' INT TERM EXIT; \
 	  (cd server && npx tsx src/index.ts) & \
-	  (cd apps/app && npx expo start --port $(WEB_PORT)) & \
+	  (cd apps/app && EXPO_PUBLIC_LAN_HOST=$(IP) npx expo start --port $(WEB_PORT)) & \
 	  wait
 
 server: node_modules
 	cd server && npx tsx watch src/index.ts
 
 web: node_modules
-	cd apps/app && npx expo start --web --port $(WEB_PORT)
+	cd apps/app && EXPO_PUBLIC_LAN_HOST=$(IP) npx expo start --web --port $(WEB_PORT)
 
 test: node_modules
 	npm test

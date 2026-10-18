@@ -26,7 +26,13 @@ const PUBLIC_WEB_URL = 'https://tavolata-five.vercel.app';
 export function joinUrl(code: string): string | null {
   const fixed = process.env.EXPO_PUBLIC_WEB_URL;
   if (fixed) return `${fixed.replace(/\/$/, '')}/room/join?code=${code}`;
-  if (Platform.OS === 'web' && typeof location !== 'undefined') return `${location.origin}/room/join?code=${code}`;
+  if (Platform.OS === 'web' && typeof location !== 'undefined') {
+    // Da localhost il QR non può dire "localhost": il telefono aprirebbe sé stesso. Si usa
+    // l'indirizzo del computer sulla Wi-Fi, che `make` passa in EXPO_PUBLIC_LAN_HOST.
+    const lan = process.env.EXPO_PUBLIC_LAN_HOST;
+    if (lan && /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname)) return `${location.protocol}//${lan}${location.port ? `:${location.port}` : ''}/room/join?code=${code}`;
+    return `${location.origin}/room/join?code=${code}`;
+  }
   // Dall'app installata il link porta sempre al sito: chi è invitato entra dal browser, senza app.
   const host = Constants.expoConfig?.hostUri?.split(':')[0];
   return host ? `http://${host}:8081/room/join?code=${code}` : `${PUBLIC_WEB_URL}/room/join?code=${code}`;
