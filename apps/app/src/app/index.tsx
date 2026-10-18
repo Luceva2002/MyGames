@@ -141,41 +141,63 @@ export default function Home() {
     [category, mode],
   );
 
+  const gear = (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel="Impostazioni"
+      onPress={() => {
+        tap();
+        router.push('/settings');
+      }}
+      style={(state) => [styles.gear, focusRing((state as { focused?: boolean }).focused ?? false)]}
+    >
+      <T size={22}>⚙️</T>
+    </Pressable>
+  );
+
   return (
     <Screen>
+      {wide ? (
       <View style={[styles.hero, { height: heroH }]}>
-        {/* Sul telefono l'illustrazione si appoggia a destra (dove stanno le maschere) e il titolo ha una fascia scura sotto. */}
-        <Image source={HERO} style={wide ? { position: 'absolute', left: 0, top: 0, width: contentWidth, height: heroH - 6 } : { position: 'absolute', right: -heroH * 0.2, top: 0, width: heroH * 2.22, height: heroH - 6 }} resizeMode="cover" accessibilityIgnoresInvertColors />
-        {!wide && <View pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: heroH * 0.4, backgroundColor: '#12052BC0' }} />}
+        <Image source={HERO} style={{ position: 'absolute', left: 0, top: 0, width: contentWidth, height: heroH - 6 }} resizeMode="cover" accessibilityIgnoresInvertColors />
         {/* La metà sinistra dell'illustrazione è vuota apposta per il titolo, che resta leggibile (V-CON-2). */}
-        <View style={[styles.heroScrim, { padding: wide ? 24 : 16 }]}>
+        <View style={[styles.heroScrim, { padding: 24 }]}>
           <Row style={{ flex: 1, justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            {/* Desktop: titolo in alto e lobby in basso, allineati a sinistra; telefono: titolo in basso. */}
-            <View style={{ flex: 1, maxWidth: wide ? '50%' : '100%', height: '100%', justifyContent: wide ? 'space-between' : 'flex-end', gap: 4 }}>
+            {/* Titolo in alto e lobby in basso, allineati a sinistra. */}
+            <View style={{ flex: 1, maxWidth: '50%', height: '100%', justifyContent: 'space-between', gap: 4 }}>
               <View style={{ gap: 4 }}>
-              <T size={wide ? 52 : 34} weight="900" color={colors.accent} style={styles.wordmark}>
-                Tavolata
-              </T>
-              <T size={wide ? 16 : 13} weight="800" color={colors.text}>
-                La TV è il tavolo, il telefono è il tuo controller.
-              </T>
+                <T size={52} weight="900" color={colors.accent} style={styles.wordmark}>
+                  Tavolata
+                </T>
+                <T size={16} weight="800" color={colors.text}>
+                  La TV è il tavolo, il telefono è il tuo controller.
+                </T>
               </View>
-              {wide && <HomeLobby size={Math.round(Math.min(150, heroHeight * 0.38))} />}
+              <HomeLobby size={Math.round(Math.min(150, heroHeight * 0.38))} />
             </View>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Impostazioni"
-              onPress={() => {
-                tap();
-                router.push('/settings');
-              }}
-              style={(state) => [styles.gear, focusRing((state as { focused?: boolean }).focused ?? false)]}
-            >
-              <T size={22}>⚙️</T>
-            </Pressable>
+            {gear}
           </Row>
         </View>
       </View>
+      ) : (
+      // Telefono: in alto le maschere intere e centrate, sotto titolo e frase su fondo pieno.
+      <View style={styles.hero}>
+        <View style={{ height: Math.round((contentWidth / 0.6) / 2.22), overflow: 'hidden' }}>
+          <Image source={HERO} style={{ position: 'absolute', right: 0, top: 0, width: contentWidth / 0.6, height: (contentWidth / 0.6) / 2.22 }} resizeMode="cover" accessibilityIgnoresInvertColors />
+        </View>
+        <Row style={{ padding: 16, paddingTop: 10, justifyContent: 'space-between', alignItems: 'center' }}>
+          <View style={{ flex: 1, gap: 2 }}>
+            <T size={34} weight="900" color={colors.accent} style={styles.wordmark}>
+              Tavolata
+            </T>
+            <T size={13} weight="800" color={colors.text}>
+              La TV è il tavolo, il telefono è il tuo controller.
+            </T>
+          </View>
+          {gear}
+        </Row>
+      </View>
+      )}
 
       <Row gap={12} wrap>
         <BigAction
