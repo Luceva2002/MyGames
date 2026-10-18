@@ -10,7 +10,7 @@ import Animated, { Easing, runOnJS, useAnimatedStyle, useSharedValue, withSequen
 import { TableBg } from '../ui/tables';
 import { colors, MIN_TOUCH, radius, seatColor } from '../ui/theme';
 
-/** Le carte dei ruoli sono quelle dell'app Lupus in Tabula. */
+/** Carte dei ruoli in stile tarocchi semplici, nei colori dell'app (Higgsfield, originali in design-proposte/raw7/lupus). */
 const CARD: Record<RoleId | 'retro', ImageSourcePropType> = {
   lupo: require('../../assets/lupus/lupo.jpg'),
   villico: require('../../assets/lupus/villico.jpg'),
@@ -27,7 +27,7 @@ const CARD: Record<RoleId | 'retro', ImageSourcePropType> = {
 const CAUSE: Record<string, string> = { lupi: 'sbranato dai Lupi', veggente: 'ucciso dallo sguardo della Veggente', rogo: 'mandato al rogo' };
 
 function RoleCard({ role, width }: { role: RoleId | 'retro'; width: number }) {
-  return <Image source={CARD[role]} style={{ width, height: width * 1.6, borderRadius: radius.m }} accessibilityLabel={role === 'retro' ? 'Carta coperta' : `Carta del ruolo ${ROLES[role].name}`} />;
+  return <Image source={CARD[role]} style={{ width, height: width * 1.5, borderRadius: radius.m }} accessibilityLabel={role === 'retro' ? 'Carta coperta' : `Carta del ruolo ${ROLES[role].name}`} />;
 }
 
 /**
