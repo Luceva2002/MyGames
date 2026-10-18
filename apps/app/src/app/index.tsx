@@ -18,8 +18,16 @@ const CATEGORIES: { id: Category | 'all'; label: string }[] = [
   { id: 'party', label: '🎉 Party' },
 ];
 
-const PLAYER_FILTERS = [1, 2, 3, 4, 5];
 const CATEGORY_LABEL: Record<Category, string> = { carte: 'carte', tavolo: 'tavolo', dadi: 'dadi', abilita: 'abilità', party: 'party' };
+
+type PlayMode = 'offline' | 'share' | 'online';
+
+/** Filtri per modo di gioco: da soli o sullo stesso telefono, con la TV in salotto, o ognuno da casa. */
+const MODES: { id: PlayMode; icon: string; label: string; hint: string; fits: (e: CatalogEntry) => boolean }[] = [
+  { id: 'offline', icon: '📴', label: 'Offline', hint: 'Su questo dispositivo, anche contro il computer', fits: (e) => e.status === 'ready' },
+  { id: 'share', icon: '📺', label: 'Stanza in share', hint: 'Uno schermo fa da tavolo, i telefoni da controller', fits: (e) => e.status === 'ready' && e.meta.maxPlayers >= 2 },
+  { id: 'online', icon: '🌍', label: 'Online', hint: 'Ognuno dal suo telefono, anche a distanza', fits: (e) => e.status === 'ready' && e.meta.maxPlayers >= 2 },
+];
 
 function playersLabel(e: CatalogEntry) {
   const counts = playerCounts(e.meta);
@@ -111,7 +119,7 @@ function BigAction({ icon, title, text, primary, onPress }: { icon: string; titl
 export default function Home() {
   const { width } = useWindowDimensions();
   const [category, setCategory] = useState<Category | 'all'>('all');
-  const [players, setPlayers] = useState<number | null>(null);
+  const [mode, setMode] = useState<PlayMode | null>(null);
   const online = useOnline();
   const contentWidth = Math.min(width, 1100) - 32;
   const columns = contentWidth > 900 ? 5 : contentWidth > 640 ? 4 : contentWidth > 420 ? 3 : 2;
@@ -126,9 +134,9 @@ export default function Home() {
       catalog().filter(
         (e) =>
           (category === 'all' || e.meta.category === category) &&
-          (players === null || (players >= 5 ? e.meta.maxPlayers >= 5 : playerCounts(e.meta).includes(players))),
+          (mode === null || MODES.find((m) => m.id === mode)!.fits(e)),
       ),
-    [category, players],
+    [category, mode],
   );
 
   return (
@@ -180,29 +188,32 @@ export default function Home() {
 
       <View style={{ gap: 10 }}>
         <T size={14} weight="800" color={colors.muted}>
-          QUANTI SIETE?
+          COME GIOCATE?
         </T>
-        <Row gap={10}>
-          {PLAYER_FILTERS.map((n) => {
-            const active = players === n;
+        <Row gap={10} wrap>
+          {MODES.map((m) => {
+            const active = mode === m.id;
             return (
               <Pressable
-                key={n}
+                key={m.id}
                 accessibilityRole="button"
                 accessibilityState={{ selected: active }}
-                accessibilityLabel={`${n === 5 ? '5 o più' : n} giocatori`}
+                accessibilityLabel={`${m.label}: ${m.hint}`}
                 onPress={() => {
                   tap();
-                  setPlayers(active ? null : n);
+                  setMode(active ? null : m.id);
                 }}
-                style={(state) => [styles.countButton, active && { backgroundColor: colors.accent, borderColor: colors.accent }, focusRing((state as { focused?: boolean }).focused ?? false)]}
+                style={(state) => [styles.modeButton, active && { backgroundColor: colors.accent, borderColor: colors.accent }, focusRing((state as { focused?: boolean }).focused ?? false)]}
               >
-                <T size={24} weight="900" color={active ? colors.onAccent : colors.text}>
-                  {n === 5 ? '5+' : n}
-                </T>
-                <T size={12} weight="700" color={active ? colors.onAccent : colors.dim}>
-                  {'👤'.repeat(Math.min(n, 4))}
-                </T>
+                <T size={22}>{m.icon}</T>
+                <View style={{ flexShrink: 1 }}>
+                  <T size={15} weight="900" color={active ? colors.onAccent : colors.text}>
+                    {m.label}
+                  </T>
+                  <T size={12} weight="700" color={active ? colors.onAccent : colors.dim}>
+                    {m.hint}
+                  </T>
+                </View>
               </Pressable>
             );
           })}
@@ -234,9 +245,9 @@ const styles = StyleSheet.create({
   gear: { width: MIN_TOUCH, height: MIN_TOUCH, borderRadius: MIN_TOUCH / 2, backgroundColor: colors.scrim, alignItems: 'center', justifyContent: 'center' },
   tile: { backgroundColor: colors.surface, borderRadius: radius.l, overflow: 'hidden', borderWidth: 3, borderColor: colors.line, marginBottom: 6 },
   ribbon: { position: 'absolute', top: 10, right: 10, backgroundColor: colors.accent, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
+  modeButton: { flexDirection: 'row', alignItems: 'center', gap: 10, flexGrow: 1, flexBasis: 200, minHeight: 56, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 18, borderWidth: 3, borderColor: colors.line, backgroundColor: colors.surface },
   players: { position: 'absolute', bottom: 8, left: 8, backgroundColor: colors.scrim, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 },
   bigAction: { flexGrow: 1, flexBasis: 300, minHeight: 84, flexDirection: 'row', alignItems: 'center', gap: 14, padding: 18, borderRadius: radius.l, borderWidth: 3, borderColor: colors.line, boxShadow: `0px 6px 0px ${colors.line}`, marginBottom: 6 },
-  countButton: { flex: 1, maxWidth: 90, minHeight: 64, alignItems: 'center', justifyContent: 'center', paddingVertical: 8, borderRadius: radius.m, borderWidth: 3, borderColor: colors.line, backgroundColor: colors.surface, boxShadow: `0px 4px 0px ${colors.line}` },
 });
 
 /**
