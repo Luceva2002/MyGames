@@ -3,6 +3,7 @@ import { Image, Pressable, StyleSheet, useWindowDimensions, View } from 'react-n
 import { router } from 'expo-router';
 import { assignAvatars, catalog, playerCounts, type Category, type CatalogEntry } from '@giochi/engine';
 import { createRoom, joinUrl, quickRoom, useOnline } from '../session/online';
+import { canPassAndPlay } from '../session/local';
 import { CharacterAvatar } from '../ui/avatars';
 import { QrCode } from '../ui/QrCode';
 import { GAME_ART, HERO } from '../ui/art';
@@ -20,11 +21,12 @@ const CATEGORIES: { id: Category | 'all'; label: string }[] = [
 
 const CATEGORY_LABEL: Record<Category, string> = { carte: 'carte', tavolo: 'tavolo', dadi: 'dadi', abilita: 'abilità', party: 'party' };
 
-type PlayMode = 'offline' | 'share' | 'online';
+type PlayMode = 'offline' | 'friends' | 'share' | 'online';
 
 /** Filtri per modo di gioco: da soli o sullo stesso telefono, con la TV in salotto, o ognuno da casa. */
 const MODES: { id: PlayMode; icon: string; label: string; hint: string; fits: (e: CatalogEntry) => boolean }[] = [
-  { id: 'offline', icon: '📴', label: 'Offline', hint: 'Su questo dispositivo, anche contro il computer', fits: (e) => e.status === 'ready' },
+  { id: 'offline', icon: '🤖', label: 'Offline', hint: 'Su questo dispositivo contro il computer', fits: (e) => e.status === 'ready' },
+  { id: 'friends', icon: '🫶', label: 'Offline con amici', hint: 'Tutti sullo stesso dispositivo', fits: (e) => e.status === 'ready' && canPassAndPlay(e.meta) },
   { id: 'share', icon: '📺', label: 'Stanza in share', hint: 'Uno schermo fa da tavolo, i telefoni da controller', fits: (e) => e.status === 'ready' && e.meta.maxPlayers >= 2 },
   { id: 'online', icon: '🌍', label: 'Online', hint: 'Ognuno dal suo telefono, anche a distanza', fits: (e) => e.status === 'ready' && e.meta.maxPlayers >= 2 },
 ];

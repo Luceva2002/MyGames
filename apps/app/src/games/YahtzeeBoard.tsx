@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { CATEGORY_LABEL, YAHTZEE_CATEGORIES, type YahtzeeMove, type YahtzeeView } from '@giochi/engine';
-import { Banner, turnText, type BoardProps } from './common';
-import { Button, Row, SeatDot, T, tap } from '../ui/kit';
+import { turnText, type BoardProps } from './common';
+import { Button, Row, T, tap } from '../ui/kit';
+import { SeatAvatar } from '../ui/avatars';
+import { FlyIn, Pulse } from '../ui/motion';
 import { TableBg } from '../ui/tables';
 import { colors, seatColors } from '../ui/theme';
 
@@ -20,27 +22,44 @@ export function Die({ value, size, held, onPress, blank }: { value: number; size
   return (
     <Pressable
       disabled={!onPress}
+      accessibilityRole={onPress ? 'button' : undefined}
+      accessibilityLabel={blank ? 'Dado da tirare' : `Dado ${value}${held ? ', tenuto' : ''}`}
       onPress={() => {
         tap();
         onPress?.();
       }}
-      style={{
-        width: size,
-        height: size,
-        borderRadius: size * 0.2,
-        backgroundColor: held ? colors.accent : '#FAFAF5',
-        borderWidth: 3,
-        borderColor: held ? '#C79A1E' : '#DDD',
-        transform: [{ translateY: held ? -6 : 0 }],
-      }}
+      style={{ alignItems: 'center', gap: 6 }}
     >
-      {!blank &&
-        PIPS[value].map(([r, c], i) => (
-          <View
-            key={i}
-            style={{ position: 'absolute', width: pip, height: pip, borderRadius: pip, backgroundColor: '#222', left: size * (0.2 + c * 0.3) - pip / 2 - 3, top: size * (0.2 + r * 0.3) - pip / 2 - 3 }}
-          />
-        ))}
+      <View
+        style={{
+          width: size,
+          height: size,
+          borderRadius: size * 0.22,
+          backgroundColor: '#FFFBEE',
+          borderWidth: 3,
+          borderColor: held ? colors.accent2 : colors.line,
+          boxShadow: held ? `0px 0px 0px 3px ${colors.accent}, 0px 10px 0px ${colors.line}` : `0px 5px 0px ${colors.line}`,
+          transform: [{ translateY: held ? -10 : 0 }],
+        }}
+      >
+        {!blank &&
+          PIPS[value].map(([r, c], i) => (
+            <View
+              key={i}
+              style={{ position: 'absolute', width: pip, height: pip, borderRadius: pip, backgroundColor: value === 1 || value === 4 ? colors.accent2 : colors.line, left: size * (0.2 + c * 0.3) - pip / 2 - 3, top: size * (0.2 + r * 0.3) - pip / 2 - 3 }}
+            />
+          ))}
+        {blank && (
+          <T size={size * 0.4} weight="900" color={colors.dim} center style={{ lineHeight: size - 6 }}>
+            ?
+          </T>
+        )}
+      </View>
+      <View style={[styles.holdTag, { opacity: held ? 1 : 0 }]}>
+        <T size={10} weight="900" color={colors.onAccent}>
+          TENUTO
+        </T>
+      </View>
     </Pressable>
   );
 }
@@ -51,24 +70,62 @@ export function YahtzeeBoard({ view, me, names, myTurn, onMove }: BoardProps<Yah
   const rolled = view.rollsLeft < 3;
   const players = Array.from({ length: view.players }, (_, i) => i);
 
+  const { width } = useWindowDimensions();
+  const dieSize = Math.min(76, Math.floor((Math.min(width, 700) - 80) / 5.6));
+  const canHold = myTurn && rolled && view.rollsLeft > 0;
   return (
-    <TableBg table="dice" scrim={0.25}>
-      <View style={{ alignItems: 'center', gap: 12, paddingVertical: 12 }}>
-        <Row gap={10}>
-          {view.dice.map((d, i) => (
-            <Die key={i} value={d} size={56} blank={!rolled} held={rolled && (myTurn ? held[i] : view.held[i])} onPress={myTurn && rolled && view.rollsLeft > 0 ? () => setHeld((h) => h.map((x, j) => (j === i ? !x : x))) : undefined} />
-          ))}
+    <TableBg table="teal">
+      {/* I giocatori in fila col totale: chi tira pulsa. */}
+      <Row gap={8} wrap style={{ justifyContent: 'center', paddingTop: 8 }}>
+        {players.map((p) => (
+          <Pulse key={p} active={p === view.turn}>
+            <View style={[styles.player, p === view.turn && { borderColor: seatColors[p % seatColors.length] }]}>
+              <SeatAvatar seat={p} name={names[p]} size={30} />
+              <View>
+                <T size={12} weight="800" lines={1}>
+                  {p === me ? 'Tu' : names[p]}
+                </T>
+                <T size={18} weight="900" color={colors.accent}>
+                  {view.totals[p]}
+                </T>
+              </View>
+            </View>
+          </Pulse>
+        ))}
+      </Row>
+      <View style={{ alignItems: 'center', gap: 10, paddingVertical: 12 }}>
+        <Row gap={Math.round(dieSize * 0.18)}>
+          {view.dice.map((d, i) => {
+            const isHeld = rolled && (myTurn ? held[i] : view.held[i]);
+            return (
+              // Ogni tiro i dadi non tenuti rotolano di nuovo sul tavolo.
+              <FlyIn key={isHeld ? `h${i}` : `${view.rollsLeft}-${view.turn}-${i}`} from={isHeld || !rolled ? 'none' : 'above'} delay={i * 60} sound={isHeld || !rolled ? undefined : 'card'}>
+                <Die value={d} size={dieSize} blank={!rolled} held={isHeld} onPress={canHold ? () => setHeld((h) => h.map((x, j) => (j === i ? !x : x))) : undefined} />
+              </FlyIn>
+            );
+          })}
         </Row>
-        <Banner text={myTurn ? (rolled ? (view.rollsLeft ? 'Tieni i dadi che ti servono o segna i punti' : 'Scegli dove segnare') : 'Tira i dadi!') : turnText(false, names, view.turn, me)} tone={myTurn ? 'turn' : 'info'} />
-        {myTurn && view.rollsLeft > 0 && <Button label={rolled ? `Ritira (${view.rollsLeft})` : 'Tira'} icon="🎲" onPress={() => onMove({ type: 'roll', held })} style={{ minWidth: 200 }} />}
+        <T size={14} weight="800" color="#ffffffdd" center>
+          {myTurn ? (rolled ? (view.rollsLeft ? 'Tocca i dadi da tenere, poi ritira o segna i punti qui sotto' : 'Scegli dove segnare i punti') : 'Tira i dadi!') : turnText(false, names, view.turn, me)}
+        </T>
+        {myTurn && view.rollsLeft > 0 && (
+          <Row gap={10}>
+            <Button label={rolled ? 'Ritira' : 'Tira'} icon="🎲" onPress={() => onMove({ type: 'roll', held })} style={{ minWidth: 180 }} />
+            <Row gap={4} style={styles.rolls}>
+              {[0, 1, 2].map((k) => (
+                <View key={k} style={[styles.rollDot, k < view.rollsLeft && { backgroundColor: colors.accent }]} />
+              ))}
+            </Row>
+          </Row>
+        )}
       </View>
       <ScrollView contentContainerStyle={{ padding: 10 }}>
-        <View style={{ backgroundColor: colors.surface, borderRadius: 16, padding: 8, alignSelf: 'center', width: '100%', maxWidth: 160 + view.players * 90 }}>
+        <View style={{ backgroundColor: '#12052BD9', borderRadius: 18, padding: 10, alignSelf: 'center', width: '100%', maxWidth: 180 + view.players * 90, borderWidth: 3, borderColor: colors.line }}>
           <Row gap={0} style={{ paddingVertical: 6 }}>
             <View style={{ flex: 1.6 }} />
             {players.map((p) => (
               <View key={p} style={{ flex: 1, alignItems: 'center' }}>
-                <SeatDot seat={p} />
+                <SeatAvatar seat={p} name={names[p]} size={26} />
                 <T size={12} weight="800" center color={p === view.turn ? seatColors[p % seatColors.length] : colors.text}>
                   {names[p]}
                 </T>
@@ -104,9 +161,9 @@ export function YahtzeeBoard({ view, me, names, myTurn, onMove }: BoardProps<Yah
                         tap();
                         onMove({ type: 'score', category: k });
                       }}
-                      style={{ flex: 1, alignSelf: 'stretch', alignItems: 'center', justifyContent: 'center', borderRadius: 8, margin: 2, backgroundColor: canPick ? colors.surface2 : 'transparent' }}
+                      style={{ flex: 1, alignSelf: 'stretch', alignItems: 'center', justifyContent: 'center', borderRadius: 999, margin: 3, backgroundColor: canPick ? (view.preview[k] ? colors.accent : colors.surface2) : 'transparent', borderWidth: canPick ? 2 : 0, borderColor: colors.line }}
                     >
-                      <T size={15} weight={scored !== undefined ? '800' : '500'} color={scored !== undefined ? colors.text : canPick ? colors.accent : colors.dim}>
+                      <T size={15} weight={scored !== undefined || canPick ? '900' : '500'} color={scored !== undefined ? colors.text : canPick ? (view.preview[k] ? colors.onAccent : colors.muted) : colors.dim}>
                         {scored !== undefined ? scored : p === view.turn && view.preview[k] !== undefined ? view.preview[k] : ''}
                       </T>
                     </Pressable>
@@ -130,3 +187,10 @@ export function YahtzeeBoard({ view, me, names, myTurn, onMove }: BoardProps<Yah
     </TableBg>
   );
 }
+
+const styles = StyleSheet.create({
+  player: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 4, paddingLeft: 4, paddingRight: 10, borderRadius: 999, backgroundColor: '#12052BB3', borderWidth: 2.5, borderColor: '#FFFFFF22' },
+  holdTag: { paddingHorizontal: 6, paddingVertical: 1, borderRadius: 6, backgroundColor: colors.accent, borderWidth: 1.5, borderColor: colors.line },
+  rolls: { paddingHorizontal: 10, paddingVertical: 8, borderRadius: 999, backgroundColor: '#12052BB3' },
+  rollDot: { width: 14, height: 14, borderRadius: 7, borderWidth: 2, borderColor: colors.line, backgroundColor: '#FFFFFF33' },
+});

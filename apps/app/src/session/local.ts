@@ -14,6 +14,16 @@ export interface MatchConfig {
   options?: Record<string, unknown>;
 }
 
+/**
+ * Giochi che si giocano tra amici sullo stesso dispositivo: quelli a vista e quelli con pochi
+ * passaggi di telefono (Sette e mezzo: ognuno fa la sua mano intera; Rigori: un tocco a testa).
+ * Gli altri hanno carte segrete a ogni turno: sullo stesso dispositivo solo contro il computer.
+ */
+const PASS_AND_PLAY = new Set(['setteemezzo', 'football']);
+export function canPassAndPlay(meta: { id: string; hiddenInfo?: boolean; maxPlayers: number }) {
+  return meta.maxPlayers >= 2 && (!meta.hiddenInfo || PASS_AND_PLAY.has(meta.id));
+}
+
 /** Configurazione della prossima partita locale, passata dalla scheda del gioco allo schermo di gioco. */
 let pending: MatchConfig | null = null;
 export const setPendingMatch = (c: MatchConfig) => (pending = c);

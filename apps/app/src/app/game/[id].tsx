@@ -6,7 +6,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { assignAvatars, BOT_CHARACTERS, botByName, catalog, pickBots, playerCounts } from '@giochi/engine';
 import { BotAvatar, CharacterAvatar } from '../../ui/avatars';
 import { CharacterPickerModal } from '../../ui/CharacterPicker';
-import { setPendingMatch, type SeatConfig } from '../../session/local';
+import { canPassAndPlay, setPendingMatch, type SeatConfig } from '../../session/local';
 import { quickRoom, useOnline } from '../../session/online';
 import { defaultName, loadNames, saveNames } from '../../session/names';
 import { Button, Panel, Row, Screen, SeatDot, T, tap } from '../../ui/kit';
@@ -187,7 +187,7 @@ export default function GameDetail() {
             ))}
             {canAdd && (
               <View style={{ gap: 8, justifyContent: 'center', width: '47%', maxWidth: 170, flexGrow: 1 }}>
-                {!meta.hiddenInfo && <Pressable accessibilityRole="button" onPress={() => addSeat(false)} style={styles.addTile}>
+                {canPassAndPlay(meta) && <Pressable accessibilityRole="button" onPress={() => addSeat(false)} style={styles.addTile}>
                   <T size={22} weight="900" color={colors.accent}>+</T>
                   <T size={14} weight="800">Persona</T>
                 </Pressable>}
@@ -198,7 +198,7 @@ export default function GameDetail() {
               </View>
             )}
           </View>
-          {meta.hiddenInfo && (
+          {!canPassAndPlay(meta) && meta.maxPlayers >= 2 && (
             <T size={13} color={colors.muted}>
               Qui ognuno ha carte o ruoli segreti: su questo dispositivo giochi contro il computer. Per giocare tra persone usa «Gioca con amici»: ognuno entra col suo telefono, anche solo dal browser.
             </T>
