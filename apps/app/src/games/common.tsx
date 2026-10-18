@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { Children, useEffect, useRef, useState, type ReactNode } from 'react';
 import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import type { Card, Seat } from '@giochi/engine';
 import { CARD_RATIO, CardBack, CardGhost, cardRatio, PlayingCard } from '../ui/cards';
@@ -68,7 +68,7 @@ export function PlayerBadge({ seat, name, active, cards, deck = 'it', score, sco
           </T>
           {score !== undefined && (
             <Row gap={4} style={{ alignItems: 'baseline' }}>
-              <T size={24} weight="900" color={colors.accent}>
+              <T size={30} weight="900" color={colors.accent}>
                 {score}
               </T>
               {scoreLabel ? (
@@ -93,16 +93,188 @@ export function PlayerBadge({ seat, name, active, cards, deck = 'it', score, sco
   );
 }
 
+export interface SeatInfo {
+  seat: Seat;
+  name: string;
+  active: boolean;
+  score?: number | string;
+  scoreLabel?: string;
+  /** Carte in mano: dall'altro lato del tavolo si vedono coperte. */
+  cards?: number;
+  deck?: 'it' | 'fr' | 'uno';
+}
+
+/** Un avversario seduto dall'altro lato del tavolo: icona, nome, punti e le sue carte coperte. */
+export function TableSeat({ info }: { info: SeatInfo }) {
+  const { seat, name, active, score, scoreLabel, cards, deck = 'it' } = info;
+  const n = Math.min(cards ?? 0, 10);
+  return (
+    <Pulse active={active}>
+      <View style={[styles.tableSeat, active && { borderColor: seatColor(seat), boxShadow: `0px 0px 14px ${seatColor(seat)}` }]} accessibilityLabel={`${name}${score !== undefined ? `, ${score} ${scoreLabel ?? ''}` : ''}${cards !== undefined ? `, ${cards} carte` : ''}${active ? ', è il suo turno' : ''}`}>
+        <Row gap={8}>
+          <SeatAvatar seat={seat} name={name} size={40} />
+          <View>
+            <T size={13} weight="800" lines={1} color={active ? seatColor(seat) : colors.text}>
+              {name}
+              {active ? ' ▶' : ''}
+            </T>
+            {score !== undefined && (
+              <Row gap={4} style={{ alignItems: 'baseline' }}>
+                <T size={22} weight="900" color={colors.accent}>
+                  {score}
+                </T>
+                {scoreLabel ? (
+                  <T size={11} color={colors.muted}>
+                    {scoreLabel}
+                  </T>
+                ) : null}
+              </Row>
+            )}
+          </View>
+        </Row>
+        {n > 0 && (
+          <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 4 }}>
+            {Array.from({ length: n }, (_, i) => (
+              <CardBack key={i} width={22} deck={deck} style={{ marginLeft: i ? -14 : 0, transform: [{ rotate: `${(i - (n - 1) / 2) * 4}deg` }, { translateY: Math.abs(i - (n - 1) / 2) * 1.2 }] }} />
+            ))}
+            {(cards ?? 0) > 10 && (
+              <T size={11} weight="800" color={colors.muted}>
+                {` +${(cards ?? 0) - 10}`}
+              </T>
+            )}
+          </View>
+        )}
+      </View>
+    </Pulse>
+  );
+}
+
+/** Gli avversari in fila sul bordo lontano del tavolo. */
+export function TableTop({ seats }: { seats: SeatInfo[] }) {
+  if (!seats.length) return null;
+  return (
+    <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-start', gap: 10, alignSelf: 'stretch', paddingTop: 2 }}>
+      {seats.map((s) => (
+        <TableSeat key={s.seat} info={s} />
+      ))}
+    </View>
+  );
+}
+
+/** Il mio posto, sul bordo vicino: la mia icona e i miei punti accanto alla mano, con l'obiettivo. */
+export function MyBar({ info, goal, hint, tone = 'info' }: { info: SeatInfo | null; goal?: string; hint: string; tone?: 'info' | 'turn' }) {
+  return (
+    <Row gap={10} style={{ paddingHorizontal: 10, paddingTop: 6, justifyContent: 'center' }} wrap>
+      {info && (
+        <View style={[styles.myBar, info.active && { borderColor: colors.accent }]}>
+          <SeatAvatar seat={info.seat} name={info.name} size={36} />
+          <View>
+            <T size={12} weight="800" color={colors.muted}>
+              Tu
+            </T>
+            {info.score !== undefined && (
+              <Row gap={4} style={{ alignItems: 'baseline' }}>
+                <T size={22} weight="900" color={colors.accent}>
+                  {info.score}
+                </T>
+                {info.scoreLabel ? (
+                  <T size={11} color={colors.muted}>
+                    {info.scoreLabel}
+                  </T>
+                ) : null}
+              </Row>
+            )}
+          </View>
+        </View>
+      )}
+      <View style={{ alignItems: 'center', flexShrink: 1 }}>
+        <Banner text={hint} tone={tone} />
+        {goal ? (
+          <T size={11} weight="800" color={colors.dim} center>
+            🏁 {goal}
+          </T>
+        ) : null}
+      </View>
+    </Row>
+  );
+}
+
+/**
+ * Il mio angolo del tavolo, in basso a destra: la mia icona e i miei punti. Niente cartello del
+ * turno: quando tocca a me il bordo si accende e pulsa.
+ */
+export function MyCorner({ info, note, style }: { info: SeatInfo | null; note?: string; style?: object }) {
+  if (!info) return null;
+  return (
+    <View pointerEvents="none" style={[{ position: 'absolute', right: 6, bottom: 6, zIndex: 20, alignItems: 'flex-end', gap: 4 }, style]}>
+      {note ? (
+        <View style={styles.cornerNote}>
+          <T size={11} weight="800" center>
+            {note}
+          </T>
+        </View>
+      ) : null}
+      <Pulse active={info.active}>
+        <View style={[styles.myBar, info.active && { borderColor: colors.accent, boxShadow: `0px 0px 14px ${colors.accent}` }]}>
+          <SeatAvatar seat={info.seat} name={info.name} size={40} />
+          <View>
+            <T size={12} weight="800" color={info.active ? colors.accent : colors.muted}>
+              {info.active ? 'Tu ▶' : 'Tu'}
+            </T>
+            {info.score !== undefined && (
+              <Row gap={4} style={{ alignItems: 'baseline' }}>
+                <T size={22} weight="900" color={colors.accent}>
+                  {info.score}
+                </T>
+                {info.scoreLabel ? (
+                  <T size={11} color={colors.muted}>
+                    {info.scoreLabel}
+                  </T>
+                ) : null}
+              </Row>
+            )}
+          </View>
+        </View>
+      </Pulse>
+    </View>
+  );
+}
+
 /** I posti visti da chi gioca: prima io (se gioco), poi gli altri nell'ordine del tavolo. */
 export function seatsFrom(players: number, me: Seat | null): Seat[] {
   return me === null ? othersOf(players, me) : [me, ...othersOf(players, me)];
 }
 
-export function Opponents({ children }: { children: ReactNode }) {
+/**
+ * La barra dei punteggi: tutti i giocatori col loro punteggio grande; in due c'è il "VS" in mezzo,
+ * e sopra l'obiettivo della partita, così si capisce subito a quanto si sta e quanto manca.
+ */
+export function Opponents({ children, goal }: { children: ReactNode; goal?: string }) {
+  const items = Children.toArray(children);
+  const duel = items.length === 2;
   return (
-    <ScrollView horizontal contentContainerStyle={styles.opponents} showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }}>
-      {children}
-    </ScrollView>
+    <View style={{ alignItems: 'center' }}>
+      {goal ? (
+        <View style={styles.goal}>
+          <T size={12} weight="800" color={colors.onAccent}>
+            🏁 {goal}
+          </T>
+        </View>
+      ) : null}
+      <ScrollView horizontal contentContainerStyle={[styles.opponents, duel && { alignItems: 'center' }]} showsHorizontalScrollIndicator={false} style={{ flexGrow: 0, maxWidth: '100%' }}>
+        {duel ? (
+          <>
+            {items[0]}
+            <T size={18} weight="900" color={colors.accent2}>
+              VS
+            </T>
+            {items[1]}
+          </>
+        ) : (
+          items
+        )}
+      </ScrollView>
+    </View>
   );
 }
 
@@ -137,7 +309,7 @@ export function Hand({ cards, width, selected, playable, onPress, drag, onLift }
         const isPlayable = playable ? playable.includes(c.id) : true;
         return (
           <View key={c.id} style={{ marginLeft: i ? overlap : 0, transform: [{ translateY: arc(off) }, { rotate: `${off * step}deg` }] }}>
-            <FlyIn from="above" delay={dealt.current ? 0 : i * 80} sound="deal">
+            <FlyIn from="above" fromX={-screenW * 0.35 - off * width * 0.6} delay={dealt.current ? 0 : 250 + i * 140} sound="deal">
               <Draggable
                 payload={drag && isPlayable ? drag(c) : null}
                 ghost={<CardGhost cards={[c]} width={width} />}
@@ -154,20 +326,40 @@ export function Hand({ cards, width, selected, playable, onPress, drag, onLift }
 }
 
 /**
- * Posto tratteggiato sul tavolo dove va una carta (mazzo, scarti, la carta di un giocatore):
+ * Posto sul tavolo dove va una carta o il mazzo (mazzo, scarti, la carta di un giocatore):
  * si vede anche vuoto, così il tavolo dice da solo dove si gioca. `glow` lo accende (turno, vincitore).
  */
-export function Slot({ width, ratio = 1.8, label, glow, children, style }: { width: number; ratio?: number; label?: ReactNode; glow?: string; children?: ReactNode; style?: object }) {
+export function Slot({ width, ratio = 1.6, label, glow, children, style }: { width: number; ratio?: number; label?: ReactNode; glow?: string; children?: ReactNode; style?: object }) {
   return (
-    <View style={[{ alignItems: 'center', gap: 4 }, style]}>
-      <View style={[styles.slot, { width, height: width * ratio, borderRadius: width * 0.1 }, glow ? { borderColor: glow, borderStyle: 'solid', backgroundColor: '#FFFFFF14' } : null]}>{children}</View>
-      {label ? <View style={{ alignItems: 'center' }}>{typeof label === 'string' ? <T size={11} weight="800" color="#ffffffcc">{label}</T> : label}</View> : null}
+    <View style={[{ alignItems: 'center', gap: 5 }, style]}>
+      <View
+        style={[
+          styles.slot,
+          { width, height: width * ratio, borderRadius: Math.max(8, width * 0.1) },
+          glow ? { borderColor: glow, borderStyle: 'solid', borderWidth: 2.5, backgroundColor: `${glow}1A`, boxShadow: `0px 0px 12px ${glow}88` } : null,
+        ]}
+      >
+        {children}
+      </View>
+      {label ? (
+        <View style={{ alignItems: 'center' }}>
+          {typeof label === 'string' ? (
+            <View style={[styles.slotBadge, glow ? { backgroundColor: glow } : null]}>
+              <T size={11} weight="900" color={glow ? colors.onAccent : '#ffffffee'}>
+                {label}
+              </T>
+            </View>
+          ) : (
+            label
+          )}
+        </View>
+      ) : null}
     </View>
   );
 }
 
 /** Il panno del tavolo con la cornice di legno. */
-export function Felt({ children, style, table = 'green' }: { children: ReactNode; style?: object; table?: TableName }) {
+export function Felt({ children, style, table = 'teal' }: { children: ReactNode; style?: object; table?: TableName }) {
   return (
     <View style={[styles.feltFrame, style]}>
       <TableBg table={table} style={styles.felt}>
@@ -204,10 +396,16 @@ const styles = StyleSheet.create({
   sticker: { backgroundColor: colors.accent2, borderWidth: 3, borderColor: colors.line, borderRadius: 18, paddingHorizontal: 22, paddingVertical: 10, transform: [{ rotate: '-6deg' }], boxShadow: `0px 6px 0px ${colors.line}` },
   badge: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 6, paddingLeft: 6, paddingRight: 12, borderRadius: 18, borderWidth: 3, borderColor: colors.line, minWidth: 120, backgroundColor: colors.surface, boxShadow: `0px 4px 0px ${colors.line}` },
   opponents: { gap: 10, paddingHorizontal: 12, paddingVertical: 8 },
-  hand: { flexDirection: 'row', justifyContent: 'center', alignItems: 'flex-end', paddingHorizontal: 8, paddingTop: 16 },
-  feltFrame: { flex: 1, margin: 8, borderRadius: 26, borderWidth: 3, borderColor: colors.line, overflow: 'hidden', backgroundColor: colors.felt, boxShadow: `0px 6px 0px ${colors.line}` },
-  felt: { padding: 12, alignItems: 'center', justifyContent: 'center', gap: 12 },
-  slot: { borderWidth: 2.5, borderStyle: 'dashed', borderColor: '#FFFFFF66', backgroundColor: '#00000022', alignItems: 'center', justifyContent: 'center' },
+  // La mano sale un po' sul bordo del tavolo, come le carte tenute in mano sopra il panno.
+  hand: { flexDirection: 'row', justifyContent: 'center', alignItems: 'flex-end', paddingHorizontal: 8, paddingTop: 16, marginTop: -34, zIndex: 5 },
+  feltFrame: { flex: 1, marginHorizontal: 4 },
+  felt: { alignItems: 'center', justifyContent: 'flex-start', gap: 10 },
+  tableSeat: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 16, backgroundColor: '#12052BB3', borderWidth: 2.5, borderColor: '#FFFFFF22' },
+  myBar: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 4, paddingLeft: 4, paddingRight: 12, borderRadius: 999, backgroundColor: colors.surface, borderWidth: 3, borderColor: colors.line },
+  cornerNote: { maxWidth: 220, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, backgroundColor: '#12052BCC' },
+  goal: { backgroundColor: colors.accent, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 3, borderWidth: 2, borderColor: colors.line, marginTop: 4 },
+  slot: { borderWidth: 2, borderStyle: 'dashed', borderColor: 'rgba(255,255,255,0.3)', backgroundColor: 'rgba(0,0,0,0.22)', alignItems: 'center', justifyContent: 'center' },
+  slotBadge: { paddingHorizontal: 7, paddingVertical: 1.5, borderRadius: 8, backgroundColor: 'rgba(0,0,0,0.45)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
   banner: { alignSelf: 'center', paddingHorizontal: 18, paddingVertical: 10, borderRadius: 999, backgroundColor: colors.surface2, marginVertical: 6, borderWidth: 3, borderColor: colors.line, boxShadow: `0px 4px 0px ${colors.line}` },
 });
 

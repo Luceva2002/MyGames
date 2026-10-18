@@ -13,8 +13,10 @@ import { sfx, type Sfx } from './sound';
 const SPRING = { damping: 13, stiffness: 170, mass: 0.8 };
 
 /** La carta entra volando: da sotto se l'ho giocata io, da sopra se arriva da un avversario. */
-export function FlyIn({ from = 'above', delay = 0, leave, sound, children, style }: {
+export function FlyIn({ from = 'above', fromX = 0, delay = 0, leave, sound, children, style }: {
   from?: 'above' | 'below' | 'none';
+  /** Spostamento orizzontale di partenza (es. dal mazzo a sinistra verso la mano). */
+  fromX?: number;
   delay?: number;
   /** Quando sparisce vola via: verso il basso se la prendo io, verso l'alto se la prende un avversario. */
   leave?: 'up' | 'down';
@@ -38,7 +40,7 @@ export function FlyIn({ from = 'above', delay = 0, leave, sound, children, style
     const k = 1 - p.value;
     return {
       opacity: o.value,
-      transform: [{ translateY: dy * k }, { scale: 1 + 0.25 * k }, { rotate: `${(from === 'below' ? 10 : -10) * k}deg` }],
+      transform: [{ translateX: fromX * k }, { translateY: dy * k }, { scale: 1 + 0.25 * k }, { rotate: `${(from === 'below' ? 10 : fromX ? -25 : -10) * k}deg` }],
     };
   });
   const exiting = !leave || reduced ? undefined : (leave === 'up' ? SlideOutUp : SlideOutDown).duration(520);

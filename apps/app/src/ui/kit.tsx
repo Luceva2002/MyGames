@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { getSettings, TEXT_SCALE, useIsTv, useSettings } from './settings';
 import { SeatAvatar } from './avatars';
-import { colors, font, MIN_TEXT, MIN_TOUCH, OUTLINE, radius, seatColor, seatSymbol, shadow, TV_MIN_TEXT, TV_SCALE } from './theme';
+import { colors, font, MIN_TEXT, MIN_TOUCH, OUTLINE, radius, seatColor, shadow, TV_MIN_TEXT, TV_SCALE } from './theme';
 
 /** Vibrazione leggera al tocco, se attiva nelle impostazioni (P-A11Y-3). */
 export function tap() {
@@ -138,14 +138,9 @@ export function Chip({ label, active, onPress, color = colors.accent }: { label:
   );
 }
 
-/** Segno del giocatore: simbolo colorato, riconoscibile anche senza distinguere i colori (V-COL-2). */
-export function SeatDot({ seat, size = 14 }: { seat: number; size?: number }) {
-  const fontSize = useTextSize(size);
-  return (
-    <Text accessibilityElementsHidden style={{ color: seatColor(seat), fontSize, lineHeight: fontSize * 1.15, fontWeight: '900', minWidth: fontSize }}>
-      {seatSymbol(seat)}
-    </Text>
-  );
+/** Segno del giocatore: la sua icona tonda in piccolo (al posto delle vecchie forme colorate). */
+export function SeatDot({ seat, size = 14, name = '' }: { seat: number; size?: number; name?: string }) {
+  return <SeatAvatar seat={seat} name={name} size={Math.round(size * 1.7)} />;
 }
 
 /** Colore + simbolo + nome (P-ID-1). */
@@ -153,7 +148,6 @@ export function PlayerTag({ seat, name, size = 15, active, suffix }: { seat: num
   return (
     <Row gap={6} style={active ? { borderBottomWidth: 3, borderColor: seatColor(seat) } : undefined}>
       <SeatAvatar seat={seat} name={name} size={Math.round(size * 2.6)} />
-      <SeatDot seat={seat} size={size} />
       <T size={size} weight="800" lines={1}>
         {name}
         {suffix ?? ''}

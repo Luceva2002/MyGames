@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
-import { BURRACO_RULES, checkMeld, teamOf, type BurracoMove, type BurracoView, type Card } from '@giochi/engine';
-import { Banner, Opponents, PlayerBadge, seatsFrom, Slot, useCardWidth, type BoardProps } from './common';
+import { BURRACO_RULES, checkMeld, teamOf, type BurracoMove, type BurracoView, type Card , type Seat } from '@giochi/engine';
+import { Banner, MyCorner, MyBar, othersOf, Slot, TableTop, useCardWidth, type BoardProps, type SeatInfo } from './common';
 import { CardsSummaryTable, teamLabel } from './summary';
-import { MeldRow, MultiHand } from './RummyParts';
+import { CardTable, MeldRow, MultiHand, usePileWidth } from './RummyParts';
 import { CardBack, DeckPile, PlayingCard } from '../ui/cards';
 import { Draggable, DropZone, type DragPayload } from '../ui/drag';
 import { Button, Row, T, tap } from '../ui/kit';
@@ -12,7 +12,7 @@ import { colors } from '../ui/theme';
 
 export function BurracoBoard({ view, me, names, myTurn, onMove }: BoardProps<BurracoView, BurracoMove>) {
   const [selected, setSelected] = useState<string[]>([]);
-  const handWidth = useCardWidth(9, 64);
+  const handWidth = useCardWidth(9, 70);
   useEffect(() => setSelected([]), [view.turn, view.phase]);
   const myTeam = me === null ? 0 : teamOf(me, view.players);
   const teams = view.teamScores.length;
@@ -52,17 +52,14 @@ export function BurracoBoard({ view, me, names, myTurn, onMove }: BoardProps<Bur
   }
 
   const meldsOf = (team: number) => view.melds.filter((m) => m.team === team);
+  const info = (seat: Seat): SeatInfo => ({ seat, name: names[seat] + (me !== null && seat !== me && view.players === 4 && teamOf(seat, 4) === myTeam ? ' 🤝' : ''), active: view.turn === seat, cards: view.handCounts[seat], deck: 'fr', score: view.teamScores[teamOf(seat, view.players)], scoreLabel: view.pozzettoTaken[teamOf(seat, view.players)] ? 'punti · pozzetto ✓' : 'punti' });
   return (
     <View style={{ flex: 1 }}>
-      <Opponents>
-        {seatsFrom(view.players, me).map((seat) => (
-          <PlayerBadge key={seat} seat={seat} isMe={seat === me} name={names[seat] + (me !== null && seat !== me && view.players === 4 && teamOf(seat, 4) === myTeam ? ' 🤝' : '')} active={view.turn === seat} cards={view.handCounts[seat]} deck="fr" score={view.teamScores[teamOf(seat, view.players)]} scoreLabel={view.pozzettoTaken[teamOf(seat, view.players)] ? 'pt · pozzetto ✓' : 'pt'} />
-        ))}
-      </Opponents>
-      <TableBg table="green" rounded style={{ marginHorizontal: 8 }}>
-      <DropZone id="table" style={{ flex: 1 }} radius={16} accepts={(p) => playing && validMeld(p)} onDrop={(p) => onMove({ type: 'meld', cards: p.ids })}>
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 8, gap: 8 }}>
-          <Row gap={12}>
+      <CardTable
+        top={<TableTop seats={othersOf(view.players, me).map(info)} />}
+        count={2}
+        piles={(pileW) =>
+          <>
             <Pressable
               disabled={!myTurn || view.phase !== 'draw'}
               onPress={() => {
@@ -70,16 +67,16 @@ export function BurracoBoard({ view, me, names, myTurn, onMove }: BoardProps<Bur
                 onMove({ type: 'draw', source: 'stock' });
               }}
             >
-              <Draggable payload={drawing ? { kind: 'stock', ids: [] } : null} ghost={<CardBack width={40} deck="fr" />}>
-                <Slot width={44} ratio={1.45} label="Mazzo">
-                  <DeckPile count={view.stockCount} width={40} deck="fr" />
+              <Draggable payload={drawing ? { kind: 'stock', ids: [] } : null} ghost={<CardBack width={pileW} deck="fr" />}>
+                <Slot width={pileW + 6} ratio={1.45} label={drawing ? 'PESCA' : `MAZZO · ${view.stockCount}`} glow={drawing ? colors.accent : undefined}>
+                  <DeckPile count={view.stockCount} width={pileW} deck="fr" />
                 </Slot>
               </Draggable>
             </Pressable>
-            <DropZone id="discard" style={{ flex: 1 }} radius={8} inset={2} accepts={(p) => playing && p.kind === 'hand' && p.ids.length === 1} onDrop={(p) => onMove({ type: 'discard', card: p.ids[0] })}>
+            <DropZone id="discard" radius={8} inset={4} accepts={(p) => playing && p.kind === 'hand' && p.ids.length === 1} onDrop={(p) => onMove({ type: 'discard', card: p.ids[0] })}>
               <Draggable
                 payload={drawing && view.discard.length ? { kind: 'discard', ids: view.discard.map((c) => c.id) } : null}
-                ghost={<View style={{ flexDirection: 'row' }}>{view.discard.slice(-4).map((c, i) => <View key={c.id} style={{ marginLeft: i ? -26 : 0 }}><PlayingCard card={c} width={40} sway={false} /></View>)}</View>}
+                ghost={<View style={{ flexDirection: 'row' }}>{view.discard.slice(-4).map((c, i) => <View key={c.id} style={{ marginLeft: i ? -pileW * 0.6 : 0 }}><PlayingCard card={c} width={pileW} sway={false} /></View>)}</View>}
               >
                 <Pressable
                   disabled={!myTurn || view.phase !== 'draw' || !view.discard.length}
@@ -87,21 +84,18 @@ export function BurracoBoard({ view, me, names, myTurn, onMove }: BoardProps<Bur
                     tap();
                     onMove({ type: 'draw', source: 'discard' });
                   }}
-                  style={{ flexDirection: 'row', flexWrap: 'wrap', minHeight: 58 }}
                 >
-                  {view.discard.map((c, i) => (
-                    <View key={c.id} style={{ marginLeft: i ? -26 : 0 }}>
-                      <PlayingCard card={c} width={40} />
-                    </View>
-                  ))}
+                  <Slot width={pileW + 6} ratio={1.45} label={view.discard.length > 1 ? `SCARTI · ${view.discard.length}` : 'SCARTI'} glow={drawing && view.discard.length ? colors.accent3 : undefined}>
+                    {view.discard.length ? <PlayingCard card={view.discard[view.discard.length - 1]} width={pileW} sway={false} /> : null}
+                  </Slot>
                 </Pressable>
               </Draggable>
             </DropZone>
-          </Row>
-          <T size={13} color="#ffffffcc">
-            {myTurn ? (view.phase === 'draw' ? 'Pesca o prendi tutti gli scarti' : 'Cala, attacca alle tue combinazioni o scarta') : `Tocca a ${names[view.turn]}`}
-            {view.last ? ` · ${names[view.turn]} ${view.last}` : ''}
-          </T>
+          </>
+        }
+      >
+      <DropZone id="table" style={{ flex: 1 }} radius={16} accepts={(p) => playing && validMeld(p)} onDrop={(p) => onMove({ type: 'meld', cards: p.ids })}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 10, gap: 10 }}>
           {Array.from({ length: teams }, (_, t) => (
             <View key={t} style={{ gap: 6 }}>
               <T size={12} weight="800" color="#ffffffaa">
@@ -128,7 +122,8 @@ export function BurracoBoard({ view, me, names, myTurn, onMove }: BoardProps<Bur
           ))}
         </ScrollView>
       </DropZone>
-      </TableBg>
+        <MyCorner info={me === null ? null : info(me)} note={myTurn ? (view.phase === 'draw' ? 'Pesca o prendi tutti gli scarti' : 'Cala, attacca o scarta') : undefined} />
+      </CardTable>
       {me !== null && (
         <>
           <MultiHand

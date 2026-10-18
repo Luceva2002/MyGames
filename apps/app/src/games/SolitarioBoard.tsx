@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { Pressable, ScrollView, useWindowDimensions, View } from 'react-native';
 import type { Card, SolitarioFrom, SolitarioMove, SolitarioTo, SolitarioView } from '@giochi/engine';
 import type { BoardProps } from './common';
-import { CARD_RATIO, CardBack, CardGhost, PlayingCard } from '../ui/cards';
+import { CARD_RATIO, CardBack, CardGhost, DeckPile, PlayingCard } from '../ui/cards';
 import { Draggable, DropZone, type DragPayload } from '../ui/drag';
 import { Button, Row, T, tap } from '../ui/kit';
 import { TableBg } from '../ui/tables';
@@ -90,7 +90,7 @@ export function SolitarioBoard({ view, myTurn, onMove }: BoardProps<SolitarioVie
   };
 
   return (
-    <TableBg table="green">
+    <TableBg table="teal">
       <Row style={{ padding: 8, justifyContent: 'center' }} gap={8}>
         <Pressable
           onPress={() => {
@@ -100,7 +100,7 @@ export function SolitarioBoard({ view, myTurn, onMove }: BoardProps<SolitarioVie
           }}
         >
           {view.stockCount ? (
-            <CardBack width={cw} deck="fr" />
+            <DeckPile count={view.stockCount} width={cw} deck="fr" />
           ) : (
             <View style={{ width: cw, height: ch, borderRadius: cw * 0.1, borderWidth: 2, borderColor: '#ffffff44', alignItems: 'center', justifyContent: 'center' }}>
               <T size={cw * 0.4} color="#ffffff66">

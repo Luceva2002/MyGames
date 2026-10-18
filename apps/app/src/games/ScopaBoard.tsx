@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
-import { captureOptions, cardName, teamOf, type ScopaMove, type ScopaView } from '@giochi/engine';
-import { Banner, EventSticker, Felt, Hand, Opponents, PlayerBadge, seatsFrom, Slot, turnText, useCardWidth, type BoardProps } from './common';
+import { captureOptions, cardName, teamOf, type ScopaMove, type ScopaView, type Seat } from '@giochi/engine';
+import { Banner, MyCorner, EventSticker, Felt, Hand, MyBar, othersOf, Slot, TableTop, type SeatInfo, turnText, useCardWidth, type BoardProps } from './common';
 import { CardsSummaryTable, teamLabel } from './summary';
 import { DeckPile, PlayingCard } from '../ui/cards';
 import { DropZone, type DragPayload } from '../ui/drag';
@@ -71,23 +71,24 @@ export function ScopaBoard({ view, me, names, myTurn, onMove }: BoardProps<Scopa
   }
 
   const last = view.lastPlay;
+  // Ogni posto: punti della squadra, prese e scope; gli avversari stanno dall'altro lato del tavolo.
+  const info = (seat: Seat): SeatInfo => ({
+    seat,
+    name: names[seat] + (view.players === 4 && me !== null && seat !== me && teamOf(seat, 4) === teamOf(me, 4) ? ' 🤝' : ''),
+    active: view.turn === seat,
+    cards: view.handCounts[seat],
+    score: view.teamScores[teamOf(seat, view.players)],
+    scoreLabel: `punti · prese ${view.capturedCounts[seat]}${view.scope[seat] ? ` · 🧹${view.scope[seat]}` : ''}`,
+  });
   return (
     <View style={{ flex: 1 }}>
-      <Opponents>
-        {seatsFrom(view.players, me).map((seat) => (
-          <PlayerBadge key={seat} seat={seat} isMe={seat === me} name={names[seat] + (view.players === 4 && me !== null && seat !== me && teamOf(seat, 4) === teamOf(me, 4) ? ' 🤝' : '')} active={view.turn === seat} cards={view.handCounts[seat]} score={view.teamScores[teamOf(seat, view.players)]} scoreLabel={`/ ${view.target}`}>
-            <T size={12} color={colors.muted}>
-              prese {view.capturedCounts[seat]}
-              {view.scope[seat] ? `  🧹${view.scope[seat]}` : ''}
-            </T>
-          </PlayerBadge>
-        ))}
-      </Opponents>
       <DropZone id="table" style={{ flex: 1 }} radius={22} inset={-10} accepts={(p) => myTurn && p.kind === 'hand'} onDrop={(p) => dropCard(p.ids[0])}>
       <Felt>
-        <View style={{ position: 'absolute', top: 10, left: 12 }}>
-          <Slot width={40} label="Mazzo">
-            {view.deckCount > 0 ? <DeckPile count={view.deckCount} width={34} /> : null}
+        <TableTop seats={othersOf(view.players, me).map(info)} />
+        <View style={{ flex: 1, alignSelf: 'stretch', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+        <View style={{ position: 'absolute', left: 0, top: '50%', marginTop: -70, zIndex: 10 }}>
+          <Slot width={me === null ? 74 : 60} label={`MAZZO · ${view.deckCount}`} ratio={1.85}>
+            {view.deckCount > 0 ? <DeckPile count={view.deckCount} width={me === null ? 68 : 54} /> : null}
           </Slot>
         </View>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8, maxWidth: 6 * (tableWidth + 8) }}>
@@ -107,13 +108,14 @@ export function ScopaBoard({ view, me, names, myTurn, onMove }: BoardProps<Scopa
             {last.scopa ? '  🧹 SCOPA!' : ''}
           </T>
         )}
+        </View>
+        <MyCorner info={me === null ? null : info(me)} style={{ right: '4.5%', bottom: '7%' }} />
       </Felt>
       </DropZone>
       <EventSticker
         eventKey={last ? `${last.seat}-${last.card.id}` : null}
         text={last?.scopa ? '+1 scopa!' : last && [last.card, ...last.taken].some((c) => c.suit === 'd' && c.rank === 7) && last.taken.length ? 'Settebello!' : null}
       />
-      <Banner text={turnText(myTurn, names, view.turn, me)} tone={myTurn ? 'turn' : 'info'} />
       {me !== null && (
         <>
           <Hand
@@ -128,7 +130,7 @@ export function ScopaBoard({ view, me, names, myTurn, onMove }: BoardProps<Scopa
               keepSel.current = false;
             }}
           />
-          <View style={{ minHeight: 64, padding: 8, gap: 8, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center' }}>
+          <View style={{ minHeight: 44, padding: 4, gap: 8, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center' }}>
             {card && options.length === 0 && <Button small label="Cala la carta" onPress={() => onMove({ type: 'play', card: card.id })} />}
             {card &&
               options.map((opt) => (

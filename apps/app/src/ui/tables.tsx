@@ -1,12 +1,16 @@
 import { useState, type ReactNode } from 'react';
 import { ImageBackground, View, type ImageSourcePropType, type StyleProp, type ViewStyle } from 'react-native';
 
-/** Tavoli da gioco in stile Carnevale, generati con Higgsfield (assets/tables, originali in design-proposte/raw7/tavoli). */
+/** Tavoli da gioco eleganti e puliti, senza bordi invasivi. */
 export const TABLES = {
-  // Un solo tavolo per tutti i giochi di carte: velluto viola del Carnevale (spec §5).
-  green: require('../../assets/tables/carnevale.jpg'),
-  blue: require('../../assets/tables/carnevale.jpg'),
-  carnevale: require('../../assets/tables/carnevale.jpg'),
+  /** Tavolo delle carte: velluto turchese scuro col bordo dorato, nella sala del Carnevale. */
+  teal: require('../../assets/tables/table-teal.jpg'),
+  // Tavolo delle carte: velluto viola elegante, tono su tono con l'app
+  purple: require('../../assets/tables/felt-purple.jpg'),
+  // Tavolo delle carte: classico panno verde da gioco
+  green: require('../../assets/tables/felt-green.jpg'),
+  blue: require('../../assets/tables/felt-blue.jpg'),
+  carnevale: require('../../assets/tables/felt-purple.jpg'),
   /** Vassoio dei dadi (Yahtzee). */
   dice: require('../../assets/tables/dice.jpg'),
   /** Panno verde vero, per il biliardo. */
@@ -21,11 +25,13 @@ export const TABLES = {
 
 export type TableName = keyof typeof TABLES;
 
-/** Versioni verticali per i telefoni: con quella orizzontale si vedrebbe solo il centro, senza cornice. */
+/** Versioni verticali per i telefoni */
 const PORTRAIT: Partial<Record<TableName, ImageSourcePropType>> = {
-  green: require('../../assets/tables/carnevale-v.jpg'),
-  blue: require('../../assets/tables/carnevale-v.jpg'),
-  carnevale: require('../../assets/tables/carnevale-v.jpg'),
+  teal: require('../../assets/tables/table-teal-v.jpg'),
+  purple: require('../../assets/tables/felt-purple-v.jpg'),
+  green: require('../../assets/tables/felt-green-v.jpg'),
+  blue: require('../../assets/tables/felt-blue.jpg'),
+  carnevale: require('../../assets/tables/felt-purple-v.jpg'),
 };
 
 /**
@@ -40,15 +46,17 @@ export function TableBg({ table, children, style, scrim = 0, rounded }: {
   rounded?: boolean;
 }) {
   const [tall, setTall] = useState(false);
+  const framed = table === 'teal';
   return (
     <ImageBackground
       source={(tall && PORTRAIT[table]) || TABLES[table]}
       onLayout={(e) => setTall(e.nativeEvent.layout.height > e.nativeEvent.layout.width * 1.15)}
-      resizeMode="cover"
-      style={[{ flex: 1, overflow: 'hidden' }, rounded && { borderRadius: 18 }, style]}
+      resizeMode={framed ? 'stretch' : 'cover'}
+      // Il tavolo col bordo dorato si vede sempre intero; il contenuto sta dentro il bordo.
+      style={[{ flex: 1, overflow: 'hidden' }, rounded && !framed && { borderRadius: 18 }, framed && { padding: '4.5%' }, style]}
       // Senza misure esplicite l'immagine resta grande quanto il file (1344×752) e si vede solo
       // l'angolo in alto a sinistra del tavolo: la stiriamo a coprire tutto il riquadro.
-      imageStyle={[{ width: '100%', height: '100%' }, rounded && { borderRadius: 18 }]}
+      imageStyle={[{ width: '100%', height: '100%' }, rounded && !framed && { borderRadius: 18 }]}
       accessibilityIgnoresInvertColors
     >
       {scrim > 0 && <View pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, backgroundColor: `rgba(0,0,0,${scrim})` }} />}

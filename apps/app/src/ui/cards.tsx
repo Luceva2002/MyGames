@@ -160,12 +160,16 @@ export function CardBack({ width, style, deck = 'it' }: { width: number; style?:
   );
 }
 
-/** Piccolo mazzo coperto con il numero di carte. */
+/** Mazzo coperto con effetto spessore 3D a strati e contatore carte ben visibile. */
 export function DeckPile({ count, width, deck = 'it' }: { count: number; width: number; deck?: 'it' | 'fr' | 'uno' }) {
   if (count <= 0) return <View style={{ width, height: width * cardRatio(deck) }} />;
+  // Lo spessore del mazzo si vede: più carte, più strati sotto.
+  const layers = Math.min(4, Math.ceil(count / 10));
   return (
-    <View>
-      {count > 1 && <CardBack width={width} deck={deck} style={{ position: 'absolute', left: 3, top: 3 }} />}
+    <View style={{ paddingRight: layers * 2, paddingBottom: layers * 2 }}>
+      {Array.from({ length: layers }, (_, i) => (
+        <CardBack key={i} width={width} deck={deck} style={{ position: 'absolute', left: (layers - i) * 2, top: (layers - i) * 2 }} />
+      ))}
       <CardBack width={width} deck={deck} />
       <View style={styles.badge}>
         <Text style={{ color: '#fff', fontWeight: '800', fontSize: 12 }}>{count}</Text>
@@ -187,5 +191,23 @@ const styles = StyleSheet.create({
   center: { alignItems: 'center', justifyContent: 'center' },
   corner: { position: 'absolute', fontWeight: '900', color: '#2B2D42' },
   figure: { backgroundColor: '#F7EBD0', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#D9C08A' },
-  badge: { position: 'absolute', right: -6, bottom: -6, backgroundColor: '#000a', borderRadius: 10, paddingHorizontal: 6, paddingVertical: 1 },
+  badge: {
+    position: 'absolute',
+    right: -6,
+    bottom: -6,
+    backgroundColor: '#1E0942',
+    borderWidth: 2,
+    borderColor: colors.accent,
+    borderRadius: 12,
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    boxShadow: `0px 3px 0px ${colors.line}`,
+    zIndex: 10,
+  },
+  badgeText: {
+    color: colors.accent,
+    fontWeight: '900',
+    fontSize: 12,
+    textAlign: 'center',
+  },
 });

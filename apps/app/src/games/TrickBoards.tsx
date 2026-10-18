@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { BRISCOLA_POINTS, cardName, IT_SUIT_NAMES, teamOf, type BriscolaMove, type BriscolaView, type Card, type Seat, type TresetteMove, type TresetteView } from '@giochi/engine';
-import { Banner, EventSticker, Felt, Hand, Opponents, PlayerBadge, seatsFrom, Slot, turnText, useCardWidth, type BoardProps } from './common';
+import { Banner, MyCorner, EventSticker, Felt, Hand, MyBar, othersOf, Slot, TableTop, turnText, type SeatInfo, useCardWidth, type BoardProps } from './common';
 import { CardsSummaryTable, teamLabel } from './summary';
 import { DeckPile, PlayingCard } from '../ui/cards';
 import { DropZone, type DragPayload } from '../ui/drag';
@@ -111,21 +111,18 @@ function partnerMark(players: number, me: Seat | null, seat: Seat) {
 export function BriscolaBoard({ view, me, names, myTurn, onMove }: BoardProps<BriscolaView, BriscolaMove>) {
   const handWidth = useCardWidth(3, 100);
   const trickWidth = useCardWidth(5, 80);
+  const binfo = (seat: Seat): SeatInfo => ({ seat, name: names[seat] + partnerMark(view.players, me, seat), active: view.turn === seat, cards: view.handCounts[seat], score: view.capturedPoints[seat], scoreLabel: 'punti' });
   return (
     <View style={{ flex: 1 }}>
-      <Opponents>
-        {seatsFrom(view.players, me).map((seat) => (
-          <PlayerBadge key={seat} seat={seat} isMe={seat === me} name={names[seat] + partnerMark(view.players, me, seat)} active={view.turn === seat} cards={view.handCounts[seat]} score={view.capturedCounts[seat] / view.players} scoreLabel="prese" />
-        ))}
-      </Opponents>
       <TableDrop enabled={myTurn} onCard={(id) => onMove({ card: id })}>
       <Felt>
-        <Row style={{ position: 'absolute', top: 10, left: 12, alignItems: 'flex-start', zIndex: 2 }} gap={10}>
-          <Slot width={me === null ? 54 : 40} label="Mazzo">
-            {view.deckCount > 1 ? <DeckPile count={view.deckCount - 1} width={(me === null ? 54 : 40) - 6} /> : null}
+        <TableTop seats={othersOf(view.players, me).map(binfo)} />
+        <Row style={{ position: 'absolute', bottom: '7%', left: '4.5%', alignItems: 'flex-end', zIndex: 10 }} gap={10}>
+          <Slot width={me === null ? 74 : 60} label={`MAZZO · ${Math.max(0, view.deckCount - 1)}`} ratio={1.85}>
+            {view.deckCount > 1 ? <DeckPile count={view.deckCount - 1} width={me === null ? 68 : 54} /> : null}
           </Slot>
-          <Slot width={me === null ? 54 : 40} label="Briscola" glow={colors.accent}>
-            {view.deckCount > 0 ? <PlayingCard card={view.trump} width={(me === null ? 54 : 40) - 6} /> : null}
+          <Slot width={me === null ? 74 : 60} label="BRISCOLA" ratio={1.85} glow={colors.accent}>
+            {view.deckCount > 0 ? <PlayingCard card={view.trump} width={me === null ? 68 : 54} /> : null}
           </Slot>
         </Row>
         {view.teamPoints ? (
@@ -136,10 +133,10 @@ export function BriscolaBoard({ view, me, names, myTurn, onMove }: BoardProps<Br
         ) : (
           <TrickArea view={view} names={names} width={trickWidth} me={me} />
         )}
+        <MyCorner info={me === null ? null : binfo(me)} style={{ right: '4.5%', bottom: '7%' }} />
       </Felt>
       </TableDrop>
       <EventSticker eventKey={view.lastTrick ? `${view.lastTrick.winner}-${view.lastTrick.plays[0].card.id}` : null} text={briscolaSticker(view, me, names)} />
-      {!view.teamPoints && <Banner text={turnText(myTurn, names, view.turn, me)} tone={myTurn ? 'turn' : 'info'} />}
       {me !== null && <Hand cards={view.hand} width={handWidth} onPress={myTurn ? (c) => onMove({ card: c.id }) : undefined} drag={myTurn ? dragFromHand : undefined} />}
       <View style={{ height: 12 }} />
     </View>
@@ -150,6 +147,7 @@ export function TresetteBoard({ view, me, names, myTurn, onMove }: BoardProps<Tr
   const handWidth = useCardWidth(Math.max(view.hand.length, 5), 80);
   const trickWidth = useCardWidth(5, 76);
   const teams = view.teamScores.length;
+  const tinfo = (seat: Seat): SeatInfo => ({ seat, name: names[seat] + partnerMark(view.players, me, seat), active: view.turn === seat, cards: view.handCounts[seat], score: view.teamScores[teamOf(seat, view.players)], scoreLabel: 'punti' });
   if (view.phase !== 'play') {
     return (
       <View style={{ flex: 1, padding: 16, gap: 16, justifyContent: 'center' }}>
@@ -169,17 +167,13 @@ export function TresetteBoard({ view, me, names, myTurn, onMove }: BoardProps<Tr
   }
   return (
     <View style={{ flex: 1 }}>
-      <Opponents>
-        {seatsFrom(view.players, me).map((seat) => (
-          <PlayerBadge key={seat} seat={seat} isMe={seat === me} name={names[seat] + partnerMark(view.players, me, seat)} active={view.turn === seat} cards={view.handCounts[seat]} score={view.teamScores[teamOf(seat, view.players)]} scoreLabel={`/ ${view.target}`} />
-        ))}
-      </Opponents>
       <TableDrop enabled={myTurn} onCard={(id) => onMove({ type: 'play', card: id })}>
       <Felt>
+        <TableTop seats={othersOf(view.players, me).map(tinfo)} />
         {view.deckCount > 0 && (
-          <View style={{ position: 'absolute', top: 10, left: 12, zIndex: 2 }}>
-            <Slot width={40} label="Mazzo">
-              <DeckPile count={view.deckCount} width={34} />
+          <View style={{ position: 'absolute', bottom: '7%', left: '4.5%', zIndex: 10 }}>
+            <Slot width={me === null ? 74 : 60} label={`MAZZO · ${view.deckCount}`} ratio={1.85}>
+              <DeckPile count={view.deckCount} width={me === null ? 68 : 54} />
             </Slot>
           </View>
         )}
@@ -189,9 +183,9 @@ export function TresetteBoard({ view, me, names, myTurn, onMove }: BoardProps<Tr
             Pescate: {view.lastDraw.map((d) => `${names[d.seat]} ${cardName(d.card)}`).join(', ')}
           </T>
         )}
+        <MyCorner info={me === null ? null : tinfo(me)} style={{ right: '4.5%', bottom: '7%' }} />
       </Felt>
       </TableDrop>
-      <Banner text={turnText(myTurn, names, view.turn, me)} tone={myTurn ? 'turn' : 'info'} />
       {me !== null && <Hand cards={view.hand} width={handWidth} playable={myTurn ? view.playable : undefined} onPress={myTurn ? (c) => onMove({ type: 'play', card: c.id }) : undefined} drag={myTurn ? dragFromHand : undefined} />}
       <View style={{ height: 12 }} />
     </View>

@@ -1,7 +1,7 @@
 import { createContext, useContext } from 'react';
 import { Image, Text, View, type ImageSourcePropType } from 'react-native';
 import { botByName, characterById } from '@giochi/engine';
-import { colors, OUTLINE, seatColor, seatSymbol } from './theme';
+import { colors, OUTLINE, seatColor } from './theme';
 
 /** Le 16 maschere, sprite trasparenti a figura intera (design-proposte/pronti/bots e bots-trasparenti). */
 export const BOT_ART: Record<string, ImageSourcePropType> = {
@@ -73,7 +73,7 @@ export function SeatAvatar({ seat, name, size }: { seat: number; name: string; s
   if (id && PORTRAIT[id]) return <CharacterAvatar id={id} size={size} seat={seat} />;
   return (
     <View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: colors.surface2, borderWidth: OUTLINE, borderColor: seatColor(seat), alignItems: 'center', justifyContent: 'center' }}>
-      <Text style={{ color: seatColor(seat), fontSize: size * 0.45, fontWeight: '900' }}>{seatSymbol(seat)}</Text>
+      <Text style={{ color: seatColor(seat), fontSize: size * 0.45, fontWeight: '900' }}>{name.trim().charAt(0).toUpperCase() || '?'}</Text>
     </View>
   );
 }

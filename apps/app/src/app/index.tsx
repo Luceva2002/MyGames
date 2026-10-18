@@ -1,7 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Image, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { router } from 'expo-router';
-import { catalog, playerCounts, type Category, type CatalogEntry } from '@giochi/engine';
+import { assignAvatars, catalog, playerCounts, type Category, type CatalogEntry } from '@giochi/engine';
+import { createRoom, joinUrl, useOnline } from '../session/online';
+import { CharacterAvatar } from '../ui/avatars';
+import { QrCode } from '../ui/QrCode';
 import { GAME_ART, HERO } from '../ui/art';
 import { Chip, focusRing, Row, Screen, T, tap } from '../ui/kit';
 import { CATEGORY_COLORS, colors, MIN_TOUCH, radius } from '../ui/theme';
@@ -109,10 +112,13 @@ export default function Home() {
   const { width } = useWindowDimensions();
   const [category, setCategory] = useState<Category | 'all'>('all');
   const [players, setPlayers] = useState<number | null>(null);
+  const online = useOnline();
   const contentWidth = Math.min(width, 1100) - 32;
   const columns = contentWidth > 900 ? 5 : contentWidth > 640 ? 4 : contentWidth > 420 ? 3 : 2;
   // L'hero tiene le proporzioni dell'illustrazione (1600×720), così si vedono tutte e 4 le maschere.
   const heroHeight = Math.min(420, Math.max(200, Math.round((contentWidth * 720) / 1600)));
+  const wide = contentWidth > 640;
+  const heroH = wide ? heroHeight : 230;
   const tileWidth = Math.floor((contentWidth - (columns - 1) * 12) / columns);
 
   const entries = useMemo(
@@ -127,18 +133,24 @@ export default function Home() {
 
   return (
     <Screen>
-      <View style={[styles.hero, { height: heroHeight }]}>
-        <Image source={HERO} style={{ position: 'absolute', left: 0, top: 0, width: contentWidth, height: heroHeight - 6 }} resizeMode="cover" accessibilityIgnoresInvertColors />
+      <View style={[styles.hero, { height: heroH }]}>
+        {/* Sul telefono l'illustrazione si appoggia a destra (dove stanno le maschere) e il titolo ha una fascia scura sotto. */}
+        <Image source={HERO} style={wide ? { position: 'absolute', left: 0, top: 0, width: contentWidth, height: heroH - 6 } : { position: 'absolute', right: -heroH * 0.2, top: 0, width: heroH * 2.22, height: heroH - 6 }} resizeMode="cover" accessibilityIgnoresInvertColors />
+        {!wide && <View pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: heroH * 0.4, backgroundColor: '#12052BC0' }} />}
         {/* La metà sinistra dell'illustrazione è vuota apposta per il titolo, che resta leggibile (V-CON-2). */}
-        <View style={styles.heroScrim}>
-          <Row style={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <View style={{ gap: 4, flex: 1, maxWidth: '58%' }}>
-              <T size={46} weight="900" color={colors.accent} style={styles.wordmark}>
+        <View style={[styles.heroScrim, { padding: wide ? 24 : 16 }]}>
+          <Row style={{ flex: 1, justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            {/* Desktop: titolo in alto e lobby in basso, allineati a sinistra; telefono: titolo in basso. */}
+            <View style={{ flex: 1, maxWidth: wide ? '50%' : '100%', height: '100%', justifyContent: wide ? 'space-between' : 'flex-end', gap: 4 }}>
+              <View style={{ gap: 4 }}>
+              <T size={wide ? 52 : 34} weight="900" color={colors.accent} style={styles.wordmark}>
                 Tavolata
               </T>
-              <T size={16} weight="800" color={colors.text}>
+              <T size={wide ? 16 : 13} weight="800" color={colors.text}>
                 La TV è il tavolo, il telefono è il tuo controller.
               </T>
+              </View>
+              {wide && <HomeLobby size={Math.round(Math.min(150, heroHeight * 0.38))} />}
             </View>
             <Pressable
               accessibilityRole="button"
@@ -156,7 +168,13 @@ export default function Home() {
       </View>
 
       <Row gap={12} wrap>
-        <BigAction primary icon="📺" title="Crea una stanza" text="Questo schermo fa da tavolo" onPress={() => router.push('/room/host')} />
+        <BigAction
+          primary
+          icon="📺"
+          title="Crea una stanza"
+          text="Questo schermo fa da tavolo"
+          onPress={() => (online.snapshot ? router.push({ pathname: '/room/[code]', params: { code: online.snapshot.code } }) : router.push('/room/host'))}
+        />
         <BigAction icon="📱" title="Entra con un codice" text="Il telefono diventa il controller" onPress={() => router.push('/room/join')} />
       </Row>
 
@@ -209,7 +227,9 @@ export default function Home() {
 
 const styles = StyleSheet.create({
   hero: { borderRadius: radius.l, overflow: 'hidden', borderWidth: 3, borderColor: colors.line, backgroundColor: colors.brand },
-  heroScrim: { flex: 1, padding: 20, justifyContent: 'flex-end' },
+  heroScrim: { flex: 1, padding: 20, justifyContent: 'flex-start' },
+  lobby: { flexDirection: 'row', alignItems: 'center', gap: 14, alignSelf: 'flex-start', paddingVertical: 10, paddingHorizontal: 12, borderRadius: 18, backgroundColor: '#12052BCC' },
+  lobbyOff: { alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, backgroundColor: '#12052BB3' },
   wordmark: { textShadowColor: colors.line, textShadowOffset: { width: 0, height: 5 }, textShadowRadius: 0 },
   gear: { width: MIN_TOUCH, height: MIN_TOUCH, borderRadius: MIN_TOUCH / 2, backgroundColor: colors.scrim, alignItems: 'center', justifyContent: 'center' },
   tile: { backgroundColor: colors.surface, borderRadius: radius.l, overflow: 'hidden', borderWidth: 3, borderColor: colors.line, marginBottom: 6 },
@@ -218,3 +238,60 @@ const styles = StyleSheet.create({
   bigAction: { flexGrow: 1, flexBasis: 300, minHeight: 84, flexDirection: 'row', alignItems: 'center', gap: 14, padding: 18, borderRadius: radius.l, borderWidth: 3, borderColor: colors.line, boxShadow: `0px 6px 0px ${colors.line}`, marginBottom: 6 },
   countButton: { flex: 1, maxWidth: 90, minHeight: 64, alignItems: 'center', justifyContent: 'center', paddingVertical: 8, borderRadius: radius.m, borderWidth: 3, borderColor: colors.line, backgroundColor: colors.surface, boxShadow: `0px 4px 0px ${colors.line}` },
 });
+
+/**
+ * Lobby nella copertina: sugli schermi grandi la home apre da sola una stanza (questo schermo fa
+ * da tavolo) e mostra QR, codice e chi è già entrato. I telefoni inquadrano e sono dentro.
+ */
+function HomeLobby({ size }: { size: number }) {
+  const online = useOnline();
+  const snap = online.snapshot;
+  useEffect(() => {
+    if (online.room || online.status === 'connecting') return;
+    createRoom({ name: 'Schermo', role: 'screen' });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  if (!snap) {
+    return online.error ? (
+      <View style={styles.lobbyOff}>
+        <T size={13} color={colors.muted}>
+          📡 Stanze online non disponibili adesso
+        </T>
+      </View>
+    ) : null;
+  }
+  const players = snap.members.filter((m) => m.role === 'player');
+  const url = joinUrl(snap.code);
+  const avatars = assignAvatars(players.map((m) => ({ name: m.name, bot: false, avatar: m.avatar })));
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`Stanza ${snap.code}, ${players.length} giocatori dentro. Apri il tavolo`}
+      onPress={() => {
+        tap();
+        router.push({ pathname: '/room/[code]', params: { code: snap.code } });
+      }}
+      style={styles.lobby}
+    >
+      {url && <QrCode value={url} size={size} light />}
+      <View style={{ gap: 4, justifyContent: 'center' }}>
+        <T size={11} weight="800" color={colors.muted}>
+          INQUADRA O USA IL CODICE
+        </T>
+        <T size={30} weight="900" color={colors.accent} style={{ letterSpacing: 4 }}>
+          {snap.code}
+        </T>
+        <Row gap={4}>
+          {players.slice(0, 6).map((m, i) => (
+            <CharacterAvatar key={m.id} id={avatars[i]} size={24} />
+          ))}
+          <T size={13} weight="800">
+            {players.length ? `${players.length} al tavolo` : 'Aspetto i telefoni…'}
+          </T>
+        </Row>
+        <T size={12} weight="800" color={colors.accent}>
+          Apri il tavolo ›
+        </T>
+      </View>
+    </Pressable>
+  );
+}

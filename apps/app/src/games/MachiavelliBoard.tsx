@@ -1,12 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ScrollView, View } from 'react-native';
-import { checkMeld, NO_WILD, type Card, type MachiavelliMove, type MachiavelliView } from '@giochi/engine';
-import { Banner, Opponents, PlayerBadge, seatsFrom, turnText, useCardWidth, type BoardProps } from './common';
-import { MeldRow, MultiHand } from './RummyParts';
+import { Pressable, ScrollView, View } from 'react-native';
+import { checkMeld, NO_WILD, type Card, type MachiavelliMove, type MachiavelliView , type Seat } from '@giochi/engine';
+import { Banner, MyCorner, MyBar, othersOf, Slot, TableTop, turnText, useCardWidth, type BoardProps, type SeatInfo } from './common';
+import { CardTable, MeldRow, MultiHand, usePileWidth } from './RummyParts';
 import { DeckPile } from '../ui/cards';
 import { DropZone, type DragPayload } from '../ui/drag';
-import { Button, Row, T } from '../ui/kit';
-import { TableBg } from '../ui/tables';
+import { Button, Row, T, tap } from '../ui/kit';
 import { colors } from '../ui/theme';
 
 /**
@@ -18,7 +17,7 @@ export function MachiavelliBoard({ view, me, names, myTurn, onMove }: BoardProps
   const [groups, setGroups] = useState<string[][]>(initial);
   const [hand, setHand] = useState<string[]>(view.hand.map((c) => c.id));
   const [selected, setSelected] = useState<string[]>([]);
-  const handWidth = useCardWidth(10, 60);
+  const handWidth = useCardWidth(10, 70);
   const reset = () => {
     setGroups(initial);
     setHand(view.hand.map((c) => c.id));
@@ -53,46 +52,68 @@ export function MachiavelliBoard({ view, me, names, myTurn, onMove }: BoardProps
   const meldOf = (g: string[]) => checkMeld(g.map((id) => byId.get(id)!), NO_WILD);
   const allValid = groups.every((g) => meldOf(g));
 
+  const canDraw = editable && !changed;
+  // Il suggerimento sta nel cartello del turno, non più in una barra sopra il tavolo.
+  const hint = editable
+    ? changed
+      ? 'Tavolo modificato: Conferma o Annulla'
+      : 'Tocca a te: cala combinazioni o pesca dal mazzo'
+    : view.last
+      ? `${names[(view.turn + view.players - 1) % view.players]} ${view.last} · ${turnText(myTurn, names, view.turn, me)}`
+      : turnText(myTurn, names, view.turn, me);
+
+  const info = (seat: Seat): SeatInfo => ({ seat, name: names[seat], active: view.turn === seat, cards: view.handCounts[seat], deck: 'fr', score: view.handCounts[seat], scoreLabel: 'carte da calare' });
   return (
     <View style={{ flex: 1 }}>
-      <Opponents>
-        {seatsFrom(view.players, me).map((seat) => (
-          <PlayerBadge key={seat} seat={seat} isMe={seat === me} name={names[seat]} active={view.turn === seat} cards={view.handCounts[seat]} deck="fr" score={view.handCounts[seat]} scoreLabel="in mano" />
-        ))}
-      </Opponents>
-      <TableBg table="green" rounded style={{ marginHorizontal: 8 }}>
-      <DropZone id="table" style={{ flex: 1 }} radius={16} accepts={(p) => editable && fromDrag(p)} onDrop={dropTo('new')}>
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 8, gap: 8, flexDirection: 'row', flexWrap: 'wrap' }}>
-          <View style={{ width: '100%', flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-            <DeckPile count={view.stockCount} width={36} deck="fr" />
-            <T size={13} color="#ffffffcc" style={{ flex: 1 }}>
-              {editable ? 'Trascina le carte (dalla mano o dal tavolo) su un gruppo o in uno spazio libero; o selezionale e tocca un gruppo.' : view.last ? `${names[(view.turn + view.players - 1) % view.players]} ${view.last}` : ''}
-            </T>
-          </View>
-          {groups.map((g, i) => {
-            const m = meldOf(g);
-            return (
-              <MeldRow
-                key={i}
-                cards={m ? m.cards : g.map((id) => byId.get(id)!)}
-                width={me === null ? 48 : 36}
-                invalid={!m}
-                active={editable && selected.length > 0}
-                selected={selected}
-                onPress={editable && selected.length ? () => moveSelectedTo(i) : undefined}
-                onCardPress={editable ? toggle : undefined}
-                dropId={`g-${i}`}
-                accepts={(p) => editable && fromDrag(p) && !p.ids.every((id) => g.includes(id))}
-                onDrop={dropTo(i)}
-                dragCard={dragTable}
-              />
-            );
-          })}
-          {groups.length === 0 && <T color="#ffffff66">Tavolo vuoto: cala la prima combinazione.</T>}
-        </ScrollView>
-      </DropZone>
-      </TableBg>
-      <Banner text={turnText(myTurn, names, view.turn, me)} tone={myTurn ? 'turn' : 'info'} />
+      <CardTable
+        top={<TableTop seats={othersOf(view.players, me).map(info)} />}
+        count={1}
+        piles={(pileW) =>
+          <Pressable
+            disabled={!canDraw}
+            onPress={() => {
+              tap();
+              onMove({ type: 'draw' });
+            }}
+            accessibilityRole="button"
+            accessibilityLabel="Mazzo: tocca per pescare una carta e passare"
+          >
+            <Slot width={pileW + 6} ratio={1.45} label={canDraw ? 'PESCA' : `MAZZO · ${view.stockCount}`} glow={canDraw ? colors.accent : undefined}>
+              <DeckPile count={view.stockCount} width={pileW} deck="fr" />
+            </Slot>
+          </Pressable>
+        }
+      >
+        <DropZone id="table" style={{ flex: 1 }} radius={16} accepts={(p) => editable && fromDrag(p)} onDrop={dropTo('new')}>
+          <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 10, gap: 10, flexDirection: 'row', flexWrap: 'wrap' }}>
+            {groups.map((g, i) => {
+              const m = meldOf(g);
+              return (
+                <MeldRow
+                  key={i}
+                  cards={m ? m.cards : g.map((id) => byId.get(id)!)}
+                  width={me === null ? 48 : 36}
+                  invalid={!m}
+                  active={editable && selected.length > 0}
+                  selected={selected}
+                  onPress={editable && selected.length ? () => moveSelectedTo(i) : undefined}
+                  onCardPress={editable ? toggle : undefined}
+                  dropId={`g-${i}`}
+                  accepts={(p) => editable && fromDrag(p) && !p.ids.every((id) => g.includes(id))}
+                  onDrop={dropTo(i)}
+                  dragCard={dragTable}
+                />
+              );
+            })}
+            {groups.length === 0 && (
+              <View style={{ flex: 1, minHeight: 100, alignItems: 'center', justifyContent: 'center' }}>
+                <T color="#ffffff88">Tavolo vuoto: cala la prima combinazione o pesca dal mazzo.</T>
+              </View>
+            )}
+          </ScrollView>
+        </DropZone>
+        <MyCorner info={me === null ? null : info(me)} note={myTurn ? hint : undefined} />
+      </CardTable>
       {me !== null && (
         <>
           <MultiHand

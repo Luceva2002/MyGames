@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Pressable, View } from 'react-native';
-import { UNO_COLORS as COLORS, unoLastText, type Card, type UnoMove, type UnoView } from '@giochi/engine';
-import { Banner, EventSticker, Felt, Hand, Opponents, PlayerBadge, seatsFrom, turnText, useCardWidth, type BoardProps } from './common';
+import { UNO_COLORS as COLORS, unoLastText, type Card, type Seat, type UnoMove, type UnoView } from '@giochi/engine';
+import { Banner, MyCorner, EventSticker, Felt, Hand, MyBar, othersOf, TableTop, type SeatInfo, turnText, useCardWidth, type BoardProps } from './common';
 import { CardBack, DeckPile, PlayingCard, UNO_COLORS } from '../ui/cards';
 import { Draggable, DropZone } from '../ui/drag';
 import { FlyIn } from '../ui/motion';
@@ -22,24 +22,16 @@ export function UnoBoard({ view, me, names, myTurn, onMove }: BoardProps<UnoView
     else onMove({ type: 'play', card: c.id });
   };
 
+  const uinfo = (seat: Seat): SeatInfo => ({ seat, name: names[seat] + (view.handCounts[seat] === 1 ? ' · UNO!' : ''), active: view.turn === seat, cards: view.handCounts[seat], deck: 'uno', score: view.handCounts[seat], scoreLabel: 'carte' });
   return (
     <View style={{ flex: 1 }}>
-      <Opponents>
-        {seatsFrom(view.players, me).map((seat) => (
-          <PlayerBadge key={seat} seat={seat} isMe={seat === me} name={names[seat]} active={view.turn === seat} cards={view.handCounts[seat]} deck="uno" score={view.handCounts[seat]} scoreLabel="carte">
-            {view.handCounts[seat] === 1 && (
-              <T size={13} weight="900" color={colors.danger}>
-                UNO!
-              </T>
-            )}
-          </PlayerBadge>
-        ))}
-      </Opponents>
       <DropZone id="table" style={{ flex: 1 }} radius={22} inset={-10} accepts={(p) => myTurn && p.kind === 'hand'} onDrop={(p) => {
         const c = view.hand.find((x) => x.id === p.ids[0]);
         if (c) playCard(c);
       }}>
-      <Felt table="blue" style={{ borderColor: '#0E1226' }}>
+      <Felt>
+        <TableTop seats={othersOf(view.players, me).map(uinfo)} />
+        <View style={{ flex: 1, alignSelf: 'stretch', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
         <Row gap={big ? 40 : 24}>
           <Pressable
             disabled={!myTurn || !!view.drawn}
@@ -77,10 +69,11 @@ export function UnoBoard({ view, me, names, myTurn, onMove }: BoardProps<UnoView
             {unoLastText(view.last, names)}
           </T>
         )}
+        </View>
+        <MyCorner info={me === null ? null : uinfo(me)} style={{ right: '4.5%', bottom: '7%' }} />
       </Felt>
       </DropZone>
       <EventSticker eventKey={view.last ? view.top.id + view.last.text : null} text={unoSticker(view)} />
-      <Banner text={turnText(myTurn, names, view.turn, me)} tone={myTurn ? 'turn' : 'info'} />
       {me !== null && (
         <>
           <DropZone id="hand" radius={18} accepts={(p) => myTurn && !view.drawn && p.kind === 'stock'} onDrop={() => onMove({ type: 'draw' })}>

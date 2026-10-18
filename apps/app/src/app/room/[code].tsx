@@ -237,13 +237,15 @@ function Lobby({ snapshot, myId, isHost, tv, error, onExit, reconnecting }: {
                   style={(state) => [styles.gameChoice, { opacity: fits ? 1 : 0.45 }, active && { borderColor: colors.accent }, focusRing((state as { focused?: boolean }).focused ?? false)]}
                 >
                   {GAME_ART[g.meta.id] && <Image source={GAME_ART[g.meta.id]} style={styles.gameArt} />}
-                  <T weight="800" size={14} lines={1}>
-                    {active ? '✓ ' : ''}
-                    {g.meta.name}
-                  </T>
-                  <T size={12} color={colors.muted}>
-                    👤 {playerCounts(g.meta).length > 3 ? `${g.meta.minPlayers}–${g.meta.maxPlayers}` : playerCounts(g.meta).join(' o ')}
-                  </T>
+                  <View style={{ flex: 1, gap: 2 }}>
+                    <T weight="900" size={16} lines={2}>
+                      {active ? '✓ ' : ''}
+                      {g.meta.name}
+                    </T>
+                    <T size={12} weight="800" color={colors.accent} lines={1}>
+                      👤 {g.meta.minPlayers === g.meta.maxPlayers ? g.meta.minPlayers : `${g.meta.minPlayers}–${g.meta.maxPlayers}`}
+                    </T>
+                  </View>
                 </Pressable>
               );
             })}
@@ -296,7 +298,7 @@ function Lobby({ snapshot, myId, isHost, tv, error, onExit, reconnecting }: {
 const styles = StyleSheet.create({
   joined: { backgroundColor: colors.success, borderRadius: 999, paddingHorizontal: 14, paddingVertical: 8 },
   playerRow: { minHeight: 40 },
-  gameChoice: { width: 132, padding: 8, borderRadius: radius.m, borderWidth: 3, borderColor: 'transparent', backgroundColor: colors.surface2, gap: 4, minHeight: MIN_TOUCH },
-  gameArt: { width: '100%', aspectRatio: 1, borderRadius: radius.s },
+  gameChoice: { width: 230, flexDirection: 'row', alignItems: 'center', padding: 8, borderRadius: radius.m, borderWidth: 3, borderColor: 'transparent', backgroundColor: colors.surface2, gap: 10, minHeight: MIN_TOUCH },
+  gameArt: { width: 64, height: 64, borderRadius: radius.s, borderWidth: 2, borderColor: colors.line },
   reconnect: { position: 'absolute', top: 8, alignSelf: 'center', backgroundColor: colors.accent, borderRadius: 999, paddingHorizontal: 16, paddingVertical: 10 },
 });

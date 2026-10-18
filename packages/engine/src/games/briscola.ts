@@ -35,6 +35,8 @@ export interface BriscolaView {
   /** Punti si vedono solo a fine partita, come al tavolo. */
   teamPoints: number[] | null;
   capturedCounts: number[];
+  /** Punti presi finora da ogni giocatore (per vedere chi è avanti). */
+  capturedPoints: number[];
 }
 
 const points = (cards: Card[]) => cards.reduce((t, c) => t + (BRISCOLA_POINTS[c.rank] ?? 0), 0);
@@ -111,6 +113,7 @@ export const briscola: Game<BriscolaState, BriscolaMove, BriscolaView> = {
       lastTrick: s.lastTrick,
       teamPoints: s.done ? teamPoints(s) : null,
       capturedCounts: s.captured.map((c) => c.length),
+      capturedPoints: s.captured.map(points),
     };
   },
   result(s) {
