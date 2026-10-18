@@ -8,6 +8,7 @@ import { DropZone, type DragPayload } from '../ui/drag';
 import { FlyIn } from '../ui/motion';
 import { sfx } from '../ui/sound';
 import { Button, Row, T } from '../ui/kit';
+import { TableBg } from '../ui/tables';
 import { colors } from '../ui/theme';
 
 export function ScopaBoard({ view, me, names, myTurn, onMove }: BoardProps<ScopaView, ScopaMove>) {
@@ -81,7 +82,7 @@ export function ScopaBoard({ view, me, names, myTurn, onMove }: BoardProps<Scopa
     scoreLabel: `punti · prese ${view.capturedCounts[seat]}${view.scope[seat] ? ` · 🧹${view.scope[seat]}` : ''}`,
   });
   return (
-    <View style={{ flex: 1 }}>
+    <TableBg table="teal">
       <DropZone id="table" style={{ flex: 1 }} radius={22} inset={-10} accepts={(p) => myTurn && p.kind === 'hand'} onDrop={(p) => dropCard(p.ids[0])}>
       <Felt>
         <TableTop seats={othersOf(view.players, me).map(info)} />
@@ -109,7 +110,6 @@ export function ScopaBoard({ view, me, names, myTurn, onMove }: BoardProps<Scopa
           </T>
         )}
         </View>
-        <MyCorner info={me === null ? null : info(me)} style={{ right: '4.5%', bottom: '7%' }} />
       </Felt>
       </DropZone>
       <EventSticker
@@ -145,6 +145,7 @@ export function ScopaBoard({ view, me, names, myTurn, onMove }: BoardProps<Scopa
           </View>
         </>
       )}
-    </View>
+      <MyCorner info={me === null ? null : info(me)} />
+    </TableBg>
   );
 }

@@ -5,7 +5,7 @@ import { CARD_RATIO, CardGhost, PlayingCard } from '../ui/cards';
 import { Draggable, DropZone, type DragPayload } from '../ui/drag';
 import { Row, T, tap } from '../ui/kit';
 import { colors } from '../ui/theme';
-import { TableBg } from '../ui/tables';
+import { MyChip, type SeatInfo } from './common';
 import { useIsTv } from '../ui/settings';
 
 type SortMode = 'seme' | 'valore';
@@ -165,19 +165,22 @@ export function usePileWidth() {
  * Il tavolo dei giochi a combinazioni: velluto viola pulito, a sinistra una colonna con mazzo e
  * scarti grandi (la carta scoperta si vede bene), a destra le combinazioni calate.
  */
-export function CardTable({ piles, count = 1, top, children }: { piles: (width: number) => React.ReactNode; count?: number; top?: React.ReactNode; children: React.ReactNode }) {
+export function CardTable({ piles, count = 1, top, me, children }: { piles: (width: number) => React.ReactNode; count?: number; top?: React.ReactNode; me?: SeatInfo | null; children: React.ReactNode }) {
   const base = usePileWidth();
+  const narrow = useWindowDimensions().width < 600;
   const [h, setH] = useState(0);
   // Le pile si rimpiccioliscono solo se il tavolo è troppo basso per contenerle una sopra l'altra.
   const fit = h ? Math.min(base, (h - 20 - count * 34 - (count - 1) * 14) / count / 1.5) : base;
   const w = Math.max(36, Math.round(fit));
   return (
-    <TableBg table="teal" style={{ marginHorizontal: 4, flexDirection: 'row' }}>
-      <View onLayout={(e) => setH(e.nativeEvent.layout.height)} style={{ paddingVertical: 10, paddingHorizontal: 10, gap: 14, alignItems: 'center', justifyContent: 'center', borderRightWidth: 2, borderRightColor: 'rgba(255,255,255,0.12)', backgroundColor: 'rgba(0,0,0,0.18)' }}>{piles(w)}</View>
+    <View style={{ flex: 1, flexDirection: 'row' }}>
+      <View onLayout={(e) => setH(e.nativeEvent.layout.height)} style={{ paddingVertical: 10, paddingHorizontal: 10, gap: 14, alignItems: 'center', justifyContent: 'center', borderRightWidth: 2, borderRightColor: 'rgba(255,255,255,0.12)', backgroundColor: 'rgba(0,0,0,0.18)' }}>{narrow && me ? <MyChip info={me} /> : null}
+        {piles(w)}
+      </View>
       <View style={{ flex: 1, paddingTop: top ? 4 : 0 }}>
         {top}
         {children}
       </View>
-    </TableBg>
+    </View>
   );
 }

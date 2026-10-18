@@ -6,6 +6,7 @@ import { CardTable, MeldRow, MultiHand, usePileWidth } from './RummyParts';
 import { DeckPile } from '../ui/cards';
 import { DropZone, type DragPayload } from '../ui/drag';
 import { Button, Row, T, tap } from '../ui/kit';
+import { TableBg } from '../ui/tables';
 import { colors } from '../ui/theme';
 
 /**
@@ -64,8 +65,9 @@ export function MachiavelliBoard({ view, me, names, myTurn, onMove }: BoardProps
 
   const info = (seat: Seat): SeatInfo => ({ seat, name: names[seat], active: view.turn === seat, cards: view.handCounts[seat], deck: 'fr', score: view.handCounts[seat], scoreLabel: 'carte da calare' });
   return (
-    <View style={{ flex: 1 }}>
+    <TableBg table="teal">
       <CardTable
+        me={me === null ? null : info(me)}
         top={<TableTop seats={othersOf(view.players, me).map(info)} />}
         count={1}
         piles={(pileW) =>
@@ -112,7 +114,6 @@ export function MachiavelliBoard({ view, me, names, myTurn, onMove }: BoardProps
             )}
           </ScrollView>
         </DropZone>
-        <MyCorner info={me === null ? null : info(me)} note={myTurn ? hint : undefined} />
       </CardTable>
       {me !== null && (
         <>
@@ -135,6 +136,7 @@ export function MachiavelliBoard({ view, me, names, myTurn, onMove }: BoardProps
           )}
         </>
       )}
-    </View>
+      <MyCorner wideOnly info={me === null ? null : info(me)} note={myTurn ? hint : undefined} />
+    </TableBg>
   );
 }

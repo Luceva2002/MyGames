@@ -203,10 +203,13 @@ export function MyBar({ info, goal, hint, tone = 'info' }: { info: SeatInfo | nu
  * Il mio angolo del tavolo, in basso a destra: la mia icona e i miei punti. Niente cartello del
  * turno: quando tocca a me il bordo si accende e pulsa.
  */
-export function MyCorner({ info, note, style }: { info: SeatInfo | null; note?: string; style?: object }) {
-  if (!info) return null;
+export function MyCorner({ info, note, style, wideOnly }: { info: SeatInfo | null; note?: string; style?: object; wideOnly?: boolean }) {
+  const { width } = useWindowDimensions();
+  if (!info || (wideOnly && width < 600)) return null;
+  // Sul telefono la mano occupa tutto il fondo: il mio angolo va in alto a destra, di fronte all'avversario.
+  const narrow = width < 600;
   return (
-    <View pointerEvents="none" style={[{ position: 'absolute', right: 6, bottom: 6, zIndex: 20, alignItems: 'flex-end', gap: 4 }, style]}>
+    <View pointerEvents="none" style={[{ position: 'absolute', right: 6, zIndex: 20, alignItems: 'flex-end', gap: 4 }, narrow ? { top: 6, flexDirection: 'column-reverse' } : { bottom: 6 }, style]}>
       {note ? (
         <View style={styles.cornerNote}>
           <T size={11} weight="800" center>
@@ -237,6 +240,20 @@ export function MyCorner({ info, note, style }: { info: SeatInfo | null; note?: 
         </View>
       </Pulse>
     </View>
+  );
+}
+
+/** Versione compatta del mio posto (icona e punti), per le colonne strette sul telefono. */
+export function MyChip({ info }: { info: SeatInfo }) {
+  return (
+    <Pulse active={info.active}>
+      <View style={[styles.myChip, info.active && { borderColor: colors.accent }]} accessibilityLabel={`Tu, ${info.score ?? ''} ${info.scoreLabel ?? ''}`}>
+        <SeatAvatar seat={info.seat} name={info.name} size={34} />
+        <T size={16} weight="900" color={colors.accent}>
+          {info.score ?? ''}
+        </T>
+      </View>
+    </Pulse>
   );
 }
 
@@ -361,11 +378,8 @@ export function Slot({ width, ratio = 1.6, label, glow, children, style }: { wid
 /** Il panno del tavolo con la cornice di legno. */
 export function Felt({ children, style, table = 'teal' }: { children: ReactNode; style?: object; table?: TableName }) {
   return (
-    <View style={[styles.feltFrame, style]}>
-      <TableBg table={table} style={styles.felt}>
-        {children}
-      </TableBg>
-    </View>
+    // Il tavolo vero è sotto tutta la partita (TableBg nella radice del gioco): qui c'è solo il panno.
+    <View style={[styles.feltFrame, styles.felt, style]}>{children}</View>
   );
 }
 
@@ -397,12 +411,13 @@ const styles = StyleSheet.create({
   badge: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 6, paddingLeft: 6, paddingRight: 12, borderRadius: 18, borderWidth: 3, borderColor: colors.line, minWidth: 120, backgroundColor: colors.surface, boxShadow: `0px 4px 0px ${colors.line}` },
   opponents: { gap: 10, paddingHorizontal: 12, paddingVertical: 8 },
   // La mano sale un po' sul bordo del tavolo, come le carte tenute in mano sopra il panno.
-  hand: { flexDirection: 'row', justifyContent: 'center', alignItems: 'flex-end', paddingHorizontal: 8, paddingTop: 16, marginTop: -34, zIndex: 5 },
+  hand: { flexDirection: 'row', justifyContent: 'center', alignItems: 'flex-end', paddingHorizontal: 8, paddingTop: 16, zIndex: 5 },
   feltFrame: { flex: 1, marginHorizontal: 4 },
-  felt: { alignItems: 'center', justifyContent: 'flex-start', gap: 10 },
+  felt: { alignItems: 'center', justifyContent: 'flex-start', gap: 10, padding: 8 },
   tableSeat: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 16, backgroundColor: '#12052BB3', borderWidth: 2.5, borderColor: '#FFFFFF22' },
   myBar: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 4, paddingLeft: 4, paddingRight: 12, borderRadius: 999, backgroundColor: colors.surface, borderWidth: 3, borderColor: colors.line },
   cornerNote: { maxWidth: 220, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, backgroundColor: '#12052BCC' },
+  myChip: { alignItems: 'center', gap: 2, padding: 4, borderRadius: 14, backgroundColor: '#12052BCC', borderWidth: 2.5, borderColor: '#FFFFFF33' },
   goal: { backgroundColor: colors.accent, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 3, borderWidth: 2, borderColor: colors.line, marginTop: 4 },
   slot: { borderWidth: 2, borderStyle: 'dashed', borderColor: 'rgba(255,255,255,0.3)', backgroundColor: 'rgba(0,0,0,0.22)', alignItems: 'center', justifyContent: 'center' },
   slotBadge: { paddingHorizontal: 7, paddingVertical: 1.5, borderRadius: 8, backgroundColor: 'rgba(0,0,0,0.45)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },

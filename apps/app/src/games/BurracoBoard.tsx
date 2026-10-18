@@ -54,8 +54,9 @@ export function BurracoBoard({ view, me, names, myTurn, onMove }: BoardProps<Bur
   const meldsOf = (team: number) => view.melds.filter((m) => m.team === team);
   const info = (seat: Seat): SeatInfo => ({ seat, name: names[seat] + (me !== null && seat !== me && view.players === 4 && teamOf(seat, 4) === myTeam ? ' 🤝' : ''), active: view.turn === seat, cards: view.handCounts[seat], deck: 'fr', score: view.teamScores[teamOf(seat, view.players)], scoreLabel: view.pozzettoTaken[teamOf(seat, view.players)] ? 'punti · pozzetto ✓' : 'punti' });
   return (
-    <View style={{ flex: 1 }}>
+    <TableBg table="teal">
       <CardTable
+        me={me === null ? null : info(me)}
         top={<TableTop seats={othersOf(view.players, me).map(info)} />}
         count={2}
         piles={(pileW) =>
@@ -122,7 +123,6 @@ export function BurracoBoard({ view, me, names, myTurn, onMove }: BoardProps<Bur
           ))}
         </ScrollView>
       </DropZone>
-        <MyCorner info={me === null ? null : info(me)} note={myTurn ? (view.phase === 'draw' ? 'Pesca o prendi tutti gli scarti' : 'Cala, attacca o scarta') : undefined} />
       </CardTable>
       {me !== null && (
         <>
@@ -141,6 +141,7 @@ export function BurracoBoard({ view, me, names, myTurn, onMove }: BoardProps<Bur
           </Row>
         </>
       )}
-    </View>
+      <MyCorner wideOnly info={me === null ? null : info(me)} note={myTurn ? (view.phase === 'draw' ? 'Pesca o prendi tutti gli scarti' : 'Cala, attacca o scarta') : undefined} />
+    </TableBg>
   );
 }

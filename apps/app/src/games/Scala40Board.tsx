@@ -67,8 +67,9 @@ export function Scala40Board({ view, me, names, myTurn, onMove }: BoardProps<Sca
 
   const info = (seat: Seat): SeatInfo => ({ seat, name: names[seat] + (view.out[seat] ? ' · fuori' : view.opened[seat] ? ' · aperto' : ''), active: view.turn === seat, cards: view.out[seat] ? 0 : view.handCounts[seat], deck: 'fr', score: view.scores[seat], scoreLabel: 'punti' });
   return (
-    <View style={{ flex: 1 }}>
+    <TableBg table="teal">
       <CardTable
+        me={me === null ? null : info(me)}
         top={<TableTop seats={othersOf(view.players, me).map(info)} />}
         count={2}
         piles={(pileW) =>
@@ -124,7 +125,6 @@ export function Scala40Board({ view, me, names, myTurn, onMove }: BoardProps<Sca
             {view.melds.length === 0 && <T color="#ffffff66">Ancora nessuna combinazione in tavola</T>}
           </TableArea>
         </DropZone>
-        <MyCorner info={me === null ? null : info(me)} note={myTurn ? banner : undefined} />
       </CardTable>
       {me !== null && (
         <>
@@ -165,6 +165,7 @@ export function Scala40Board({ view, me, names, myTurn, onMove }: BoardProps<Sca
           </Row>
         </>
       )}
-    </View>
+      <MyCorner wideOnly info={me === null ? null : info(me)} note={myTurn ? banner : undefined} />
+    </TableBg>
   );
 }

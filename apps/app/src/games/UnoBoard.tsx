@@ -6,6 +6,7 @@ import { CardBack, DeckPile, PlayingCard, UNO_COLORS } from '../ui/cards';
 import { Draggable, DropZone } from '../ui/drag';
 import { FlyIn } from '../ui/motion';
 import { Button, Row, T, tap } from '../ui/kit';
+import { TableBg } from '../ui/tables';
 import { colors } from '../ui/theme';
 
 const COLOR_LABEL: Record<string, string> = { r: 'Rosso', g: 'Verde', b: 'Blu', y: 'Giallo' };
@@ -24,7 +25,7 @@ export function UnoBoard({ view, me, names, myTurn, onMove }: BoardProps<UnoView
 
   const uinfo = (seat: Seat): SeatInfo => ({ seat, name: names[seat] + (view.handCounts[seat] === 1 ? ' · UNO!' : ''), active: view.turn === seat, cards: view.handCounts[seat], deck: 'uno', score: view.handCounts[seat], scoreLabel: 'carte' });
   return (
-    <View style={{ flex: 1 }}>
+    <TableBg table="teal">
       <DropZone id="table" style={{ flex: 1 }} radius={22} inset={-10} accepts={(p) => myTurn && p.kind === 'hand'} onDrop={(p) => {
         const c = view.hand.find((x) => x.id === p.ids[0]);
         if (c) playCard(c);
@@ -70,7 +71,6 @@ export function UnoBoard({ view, me, names, myTurn, onMove }: BoardProps<UnoView
           </T>
         )}
         </View>
-        <MyCorner info={me === null ? null : uinfo(me)} style={{ right: '4.5%', bottom: '7%' }} />
       </Felt>
       </DropZone>
       <EventSticker eventKey={view.last ? view.top.id + view.last.text : null} text={unoSticker(view)} />
@@ -109,7 +109,8 @@ export function UnoBoard({ view, me, names, myTurn, onMove }: BoardProps<UnoView
           <Button small kind="ghost" color={colors.text} label="Annulla" onPress={() => setWild(null)} />
         </View>
       )}
-    </View>
+      <MyCorner info={me === null ? null : uinfo(me)} />
+    </TableBg>
   );
 }
 
