@@ -187,10 +187,10 @@ export default function GameDetail() {
             ))}
             {canAdd && (
               <View style={{ gap: 8, justifyContent: 'center', width: '47%', maxWidth: 170, flexGrow: 1 }}>
-                <Pressable accessibilityRole="button" onPress={() => addSeat(false)} style={styles.addTile}>
+                {!meta.hiddenInfo && <Pressable accessibilityRole="button" onPress={() => addSeat(false)} style={styles.addTile}>
                   <T size={22} weight="900" color={colors.accent}>+</T>
                   <T size={14} weight="800">Persona</T>
-                </Pressable>
+                </Pressable>}
                 <Pressable accessibilityRole="button" onPress={() => addSeat(true)} style={styles.addTile}>
                   <T size={22} weight="900" color={colors.accent3}>+</T>
                   <T size={14} weight="800">Computer</T>
@@ -198,9 +198,9 @@ export default function GameDetail() {
               </View>
             )}
           </View>
-          {meta.hiddenInfo && active.filter((s) => !s.bot).length > 1 && (
+          {meta.hiddenInfo && (
             <T size={13} color={colors.muted}>
-              Sullo stesso telefono vi passerete il dispositivo a ogni turno, così nessuno vede le carte degli altri. Con la stanza invece ognuno usa il suo telefono.
+              Qui ognuno ha carte o ruoli segreti: su questo dispositivo giochi contro il computer. Per giocare tra persone usa «Gioca con amici»: ognuno entra col suo telefono, anche solo dal browser.
             </T>
           )}
         </Panel>

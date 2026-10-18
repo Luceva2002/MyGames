@@ -19,13 +19,17 @@ export function serverUrl(): string {
   return `ws://${host}:${DEFAULT_PORT}`;
 }
 
+/** Sito pubblico di Tavolata, dove entra chi è invitato senza avere l'app. */
+const PUBLIC_WEB_URL = 'https://tavolata-five.vercel.app';
+
 /** Indirizzo da far aprire agli altri per entrare nella stanza. */
 export function joinUrl(code: string): string | null {
   const fixed = process.env.EXPO_PUBLIC_WEB_URL;
   if (fixed) return `${fixed.replace(/\/$/, '')}/room/join?code=${code}`;
   if (Platform.OS === 'web' && typeof location !== 'undefined') return `${location.origin}/room/join?code=${code}`;
+  // Dall'app installata il link porta sempre al sito: chi è invitato entra dal browser, senza app.
   const host = Constants.expoConfig?.hostUri?.split(':')[0];
-  return host ? `http://${host}:8081/room/join?code=${code}` : null;
+  return host ? `http://${host}:8081/room/join?code=${code}` : `${PUBLIC_WEB_URL}/room/join?code=${code}`;
 }
 
 interface OnlineState {
