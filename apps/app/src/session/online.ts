@@ -128,3 +128,19 @@ export function useOnline(): OnlineState {
   }, []);
   return state;
 }
+
+/**
+ * "Gioca con amici", come in Jackbox: un tocco crea la stanza (col gioco già scelto, se c'è).
+ * Uno schermo grande fa da tavolo; un telefono entra come giocatore col nome salvato.
+ * Restituisce il codice della stanza, o null se il server non risponde.
+ */
+export async function quickRoom(gameId?: string, bigScreen = false): Promise<string | null> {
+  if (current.snapshot && current.room) {
+    if (gameId && current.snapshot.gameId !== gameId) send('setGame', { gameId });
+    return current.snapshot.code;
+  }
+  if (bigScreen) return createRoom({ name: 'Schermo', role: 'screen', gameId });
+  const { loadNames } = await import('./names');
+  const names = await loadNames();
+  return createRoom({ name: names[0]?.trim() || 'Io', role: 'player', gameId });
+}

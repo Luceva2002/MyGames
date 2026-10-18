@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Image, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { router } from 'expo-router';
 import { assignAvatars, catalog, playerCounts, type Category, type CatalogEntry } from '@giochi/engine';
-import { createRoom, joinUrl, useOnline } from '../session/online';
+import { createRoom, joinUrl, quickRoom, useOnline } from '../session/online';
 import { CharacterAvatar } from '../ui/avatars';
 import { QrCode } from '../ui/QrCode';
 import { GAME_ART, HERO } from '../ui/art';
@@ -181,7 +181,10 @@ export default function Home() {
           icon="📺"
           title="Crea una stanza"
           text="Questo schermo fa da tavolo"
-          onPress={() => (online.snapshot ? router.push({ pathname: '/room/[code]', params: { code: online.snapshot.code } }) : router.push('/room/host'))}
+          onPress={async () => {
+            const code = await quickRoom(undefined, width > 760);
+            if (code) router.push({ pathname: '/room/[code]', params: { code } });
+          }}
         />
         <BigAction icon="📱" title="Entra con un codice" text="Il telefono diventa il controller" onPress={() => router.push('/room/join')} />
       </Row>

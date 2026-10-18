@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Image, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { Image, Pressable, StyleSheet, Text, useWindowDimensions, View, Platform, Share } from 'react-native';
 import { router } from 'expo-router';
 import { useKeepAwake } from 'expo-keep-awake';
 import { assignAvatars, canControl, GAMES, getGame, playerCounts, type RoomSnapshot } from '@giochi/engine';
@@ -8,6 +8,8 @@ import { clearOnlineError, joinUrl, leaveRoom, send, sendMove, useOnline } from 
 import { GAME_ART } from '../../ui/art';
 import { BotFigure } from '../../ui/avatars';
 import { CharacterPickerModal } from '../../ui/CharacterPicker';
+import { PopIn } from '../../ui/motion';
+import { sfx } from '../../ui/sound';
 import { SeatAvatars } from '../../ui/avatars';
 import { getSettings, setSettings } from '../../ui/settings';
 import { Button, Confirm, focusRing, Panel, PlayerTag, Row, Screen, T, tap } from '../../ui/kit';
@@ -125,6 +127,12 @@ function Lobby({ snapshot, myId, isHost, tv, error, onExit, reconnecting }: {
   const canStart = !!game && allowed.includes(total);
   const meIndex = players.findIndex((p) => p.id === myId);
   const [picking, setPicking] = useState(false);
+  // Chi entra si sente, come in Jackbox: un "ding" a ogni nuovo giocatore.
+  const seen = useRef(players.length);
+  useEffect(() => {
+    if (players.length > seen.current) sfx('turn');
+    seen.current = players.length;
+  }, [players.length]);
   // Le maschere di tutti al tavolo: chi non ha scelto ne riceve una libera, come in partita.
   const avatars = assignAvatars([...players.map((m) => ({ name: m.name, bot: false, avatar: m.avatar })), ...snapshot.botNames.map((name) => ({ name, bot: true }))]);
   // Codice della stanza almeno all'8% dell'altezza della TV (V-PTY-1).
@@ -151,19 +159,11 @@ function Lobby({ snapshot, myId, isHost, tv, error, onExit, reconnecting }: {
           <Text accessibilityLabel={`Codice stanza ${snapshot.code.split('').join(' ')}`} style={{ color: colors.accent, fontSize: codeSize, fontFamily: font.display, letterSpacing: codeSize * 0.15, textShadowColor: colors.line, textShadowOffset: { width: 0, height: 5 }, textShadowRadius: 0 }}>
             {snapshot.code}
           </Text>
-          {url && tv && (
-            <>
-              <QrCode value={url} size={Math.min(height * 0.28, 260)} />
-              <T size={13} color={colors.muted} center>
-                Inquadra il QR o apri {url.replace(/\/room\/join.*/, '')} → «Entra con un codice»
-              </T>
-            </>
-          )}
-          {!tv && (
-            <T size={14} color={colors.muted} center>
-              Dillo agli altri: entrano da «Entra con un codice».
-            </T>
-          )}
+          {url && (tv || wide) && <QrCode value={url} size={Math.min(height * 0.26, 240)} />}
+          {url && <InviteButtons url={url} code={snapshot.code} />}
+          <T size={13} color={colors.muted} center>
+            {url ? `Gli altri aprono ${url.replace(/\/room\/join.*/, '').replace(/^https?:\/\//, '')} e scrivono il codice, oppure usano il link.` : 'Dillo agli altri: entrano da «Entra con un codice».'}
+          </T>
         </Panel>
 
         <Panel style={{ flex: 1 }}>
@@ -172,7 +172,8 @@ function Lobby({ snapshot, myId, isHost, tv, error, onExit, reconnecting }: {
           </T>
           <SeatAvatars.Provider value={avatars}>
           {players.map((m, i) => (
-            <Row key={m.id} gap={10} wrap style={styles.playerRow}>
+            <PopIn key={m.id} style={{ alignSelf: 'stretch' }}>
+            <Row gap={10} wrap style={styles.playerRow}>
               <Pressable
                 style={{ flexShrink: 1, minWidth: 140 }}
                 disabled={m.id !== myId}
@@ -196,6 +197,7 @@ function Lobby({ snapshot, myId, isHost, tv, error, onExit, reconnecting }: {
                 </T>
               )}
             </Row>
+            </PopIn>
           ))}
           {snapshot.botNames.length > 0 && (
             // Le maschere in lobby a figura intera (SPEC §9).
@@ -310,3 +312,33 @@ const styles = StyleSheet.create({
   gameArt: { width: 52, height: 52, borderRadius: radius.s, borderWidth: 2, borderColor: colors.line },
   reconnect: { position: 'absolute', top: 8, alignSelf: 'center', backgroundColor: colors.accent, borderRadius: 999, paddingHorizontal: 16, paddingVertical: 10 },
 });
+
+/** Invito come in Jackbox: il link porta dritto alla stanza col codice già scritto. */
+function InviteButtons({ url, code }: { url: string; code: string }) {
+  const [copied, setCopied] = useState(false);
+  const message = `Vieni a giocare su Tavolata! Stanza ${code}: ${url}`;
+  const share = async () => {
+    tap();
+    const nav = typeof navigator !== 'undefined' ? (navigator as Navigator & { share?: (d: { title?: string; text?: string; url?: string }) => Promise<void> }) : null;
+    if (Platform.OS === 'web' && nav?.share) {
+      nav.share({ title: 'Tavolata', text: `Stanza ${code}`, url }).catch(() => {});
+    } else if (Platform.OS !== 'web') {
+      Share.share({ message }).catch(() => {});
+    } else copy();
+  };
+  const copy = () => {
+    tap();
+    if (Platform.OS === 'web' && typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(url).then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1800);
+      }).catch(() => {});
+    } else Share.share({ message }).catch(() => {});
+  };
+  return (
+    <Row gap={8} wrap style={{ justifyContent: 'center' }}>
+      <Button small label="Condividi link" icon="📤" onPress={share} />
+      <Button small kind="ghost" color={colors.text} label={copied ? '✓ Copiato' : 'Copia link'} onPress={copy} />
+    </Row>
+  );
+}

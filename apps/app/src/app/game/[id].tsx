@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Image, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { Image, Pressable, StyleSheet, TextInput, useWindowDimensions, View } from 'react-native';
 import { GAME_ART } from '../../ui/art';
 import { getSettings, setSettings } from '../../ui/settings';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -7,6 +7,7 @@ import { assignAvatars, BOT_CHARACTERS, botByName, catalog, pickBots, playerCoun
 import { BotAvatar, CharacterAvatar } from '../../ui/avatars';
 import { CharacterPickerModal } from '../../ui/CharacterPicker';
 import { setPendingMatch, type SeatConfig } from '../../session/local';
+import { quickRoom, useOnline } from '../../session/online';
 import { defaultName, loadNames, saveNames } from '../../session/names';
 import { Button, Panel, Row, Screen, SeatDot, T, tap } from '../../ui/kit';
 import { colors, radius } from '../../ui/theme';
@@ -20,6 +21,8 @@ export default function GameDetail() {
   // Una maschera diversa per ogni posto, scelta a caso e cambiabile con un tocco.
   const [masks, setMasks] = useState(() => pickBots(10, Math.random, [getSettings().avatar]).map((b) => b.name));
   const [picking, setPicking] = useState<number | null>(null);
+  const online = useOnline();
+  const { width } = useWindowDimensions();
 
   useEffect(() => {
     loadNames().then((saved) => {
@@ -207,12 +210,20 @@ export default function GameDetail() {
         <View style={{ gap: 12 }}>
           <Button label="Gioca su questo dispositivo" icon="▶" onPress={startLocal} />
           <Button
-            label="Gioca coi telefoni (stanza)"
+            label={online.status === 'connecting' ? 'Creo la stanza…' : 'Gioca con amici'}
             icon="📱"
             kind="ghost"
             color={colors.text}
-            onPress={() => router.push({ pathname: '/room/host', params: { game: meta.id } })}
+            onPress={async () => {
+              const code = await quickRoom(meta.id, width > 760);
+              if (code) router.push({ pathname: '/room/[code]', params: { code } });
+            }}
           />
+          {online.error && (
+            <T size={13} color={colors.danger} center>
+              ⚠ {online.error}
+            </T>
+          )}
         </View>
       )}
       <CharacterPickerModal
