@@ -57,7 +57,7 @@ export function BurracoBoard({ view, me, names, myTurn, onMove }: BoardProps<Bur
     <TableBg table="teal">
       <CardTable
         me={me === null ? null : info(me)}
-        top={<TableTop seats={othersOf(view.players, me).map(info)} />}
+        top={<TableTop corner={false} seats={othersOf(view.players, me).map(info)} />}
         count={2}
         piles={(pileW) =>
           <>

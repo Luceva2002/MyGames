@@ -74,10 +74,14 @@ function TrickTable({ players, plays, names, width, winner, me, turn }: { player
   );
 }
 
-/** Dove sta il mazzo: in alto a destra; sul telefono a sinistra a metà tavolo (in alto a destra c'è il mio angolo). */
+/**
+ * Dove sta il mazzo: in alto a destra; sul telefono in una fila sotto gli avversari, così non
+ * copre i posti della presa (in alto a destra c'è il mio angolo).
+ */
 function useDeckSpot() {
   const { width } = useWindowDimensions();
-  return width < 600 ? { left: 8, top: '30%' as const, flexDirection: 'column' as const } : { top: 8, right: 8 };
+  const narrow = width < 600;
+  return { narrow, style: narrow ? { position: 'relative' as const, alignSelf: 'flex-start' as const, marginLeft: 4 } : { position: 'absolute' as const, top: 8, right: 8 }, w: narrow ? 46 : 60 };
 }
 
 /** Il tavolo come zona dove lasciare la carta giocata. */
@@ -117,7 +121,7 @@ function partnerMark(players: number, me: Seat | null, seat: Seat) {
 
 export function BriscolaBoard({ view, me, names, myTurn, onMove }: BoardProps<BriscolaView, BriscolaMove>) {
   const handWidth = useCardWidth(3, 100);
-  const trickWidth = useCardWidth(5, 80);
+  const trickWidth = useCardWidth(3, 84);
   const deckSpot = useDeckSpot();
   const binfo = (seat: Seat): SeatInfo => ({ seat, name: names[seat] + partnerMark(view.players, me, seat), active: view.turn === seat, cards: view.handCounts[seat], score: view.capturedPoints[seat], scoreLabel: 'punti' });
   return (
@@ -125,12 +129,12 @@ export function BriscolaBoard({ view, me, names, myTurn, onMove }: BoardProps<Br
       <TableDrop enabled={myTurn} onCard={(id) => onMove({ card: id })}>
       <Felt>
         <TableTop seats={othersOf(view.players, me).map(binfo)} />
-        <Row style={{ position: 'absolute', alignItems: 'flex-start', zIndex: 10, ...deckSpot }} gap={10}>
-          <Slot width={me === null ? 74 : 60} label={`MAZZO · ${Math.max(0, view.deckCount - 1)}`} ratio={1.85}>
-            {view.deckCount > 1 ? <DeckPile count={view.deckCount - 1} width={me === null ? 68 : 54} /> : null}
+        <Row style={{ alignItems: 'flex-start', zIndex: 10, ...deckSpot.style }} gap={10}>
+          <Slot width={me === null ? 74 : deckSpot.w} label={`MAZZO · ${Math.max(0, view.deckCount - 1)}`} ratio={1.85}>
+            {view.deckCount > 1 ? <DeckPile count={view.deckCount - 1} width={me === null ? 68 : deckSpot.w - 6} /> : null}
           </Slot>
-          <Slot width={me === null ? 74 : 60} label="BRISCOLA" ratio={1.85} glow={colors.accent}>
-            {view.deckCount > 0 ? <PlayingCard card={view.trump} width={me === null ? 68 : 54} /> : null}
+          <Slot width={me === null ? 74 : deckSpot.w} label="BRISCOLA" ratio={1.85} glow={colors.accent}>
+            {view.deckCount > 0 ? <PlayingCard card={view.trump} width={me === null ? 68 : deckSpot.w - 6} /> : null}
           </Slot>
         </Row>
         {view.teamPoints ? (
@@ -153,7 +157,7 @@ export function BriscolaBoard({ view, me, names, myTurn, onMove }: BoardProps<Br
 
 export function TresetteBoard({ view, me, names, myTurn, onMove }: BoardProps<TresetteView, TresetteMove>) {
   const handWidth = useCardWidth(Math.max(view.hand.length, 5), 80);
-  const trickWidth = useCardWidth(5, 76);
+  const trickWidth = useCardWidth(3, 84);
   const teams = view.teamScores.length;
   const deckSpot = useDeckSpot();
   const tinfo = (seat: Seat): SeatInfo => ({ seat, name: names[seat] + partnerMark(view.players, me, seat), active: view.turn === seat, cards: view.handCounts[seat], score: view.teamScores[teamOf(seat, view.players)], scoreLabel: 'punti' });
@@ -180,9 +184,9 @@ export function TresetteBoard({ view, me, names, myTurn, onMove }: BoardProps<Tr
       <Felt>
         <TableTop seats={othersOf(view.players, me).map(tinfo)} />
         {view.deckCount > 0 && (
-          <View style={{ position: 'absolute', zIndex: 10, ...deckSpot }}>
-            <Slot width={me === null ? 74 : 60} label={`MAZZO · ${view.deckCount}`} ratio={1.85}>
-              <DeckPile count={view.deckCount} width={me === null ? 68 : 54} />
+          <View style={{ zIndex: 10, ...deckSpot.style }}>
+            <Slot width={me === null ? 74 : deckSpot.w} label={`MAZZO · ${view.deckCount}`} ratio={1.85}>
+              <DeckPile count={view.deckCount} width={me === null ? 68 : deckSpot.w - 6} />
             </Slot>
           </View>
         )}

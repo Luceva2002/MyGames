@@ -219,7 +219,7 @@ function TurnPill({ active, names, me, myTurn }: { active: Seat[]; names: string
   return (
     <View style={[styles.pill, { borderColor: seatColor(others[0] ?? 0) }]} accessibilityLiveRegion="polite">
       <T size={14} color={colors.muted} weight="700">
-        Tocca a
+        {narrow ? '⏳' : 'Tocca a'}
       </T>
       {others.map((s) => (
         narrow ? <SeatAvatar key={s} seat={s} name={names[s]} size={30} /> : <PlayerTag key={s} seat={s} name={names[s]} size={15} />

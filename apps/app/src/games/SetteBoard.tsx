@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import type { Card, Seat, SetteMove, SetteView } from '@giochi/engine';
 import { EventSticker, othersOf, type BoardProps } from './common';
 import { CardBack, PlayingCard } from '../ui/cards';
@@ -15,7 +15,7 @@ function HandRow({ cards, width, mine }: { cards: (Card | null)[]; width: number
   return (
     <Row gap={0} style={{ minHeight: width * 1.8 }}>
       {cards.map((c, i) => (
-        <FlyIn key={c?.id ?? `back${i}`} from={mine ? 'above' : 'above'} sound="deal" style={{ marginLeft: i ? -width * (mine ? 0.3 : 0.45) : 0 }}>
+        <FlyIn key={c?.id ?? `back${i}`} from={mine ? 'above' : 'above'} sound="deal" style={{ marginLeft: i ? -width * (mine ? (cards.length > 3 ? 0.6 : 0.3) : 0.45) : 0 }}>
           {c ? <PlayingCard card={c} width={width} sway={false} /> : <CardBack width={width} />}
         </FlyIn>
       ))}
@@ -35,7 +35,7 @@ function TotalMeter({ total, bust, big }: { total: number | null; bust: boolean;
           {' / 7½'}
         </T>
       </T>
-      <View style={[styles.meter, { width: big ? 160 : 90 }]}>
+      <View style={[styles.meter, { width: big ? 120 : 90 }]}>
         <View style={{ width: `${pct * 100}%`, height: '100%', borderRadius: 999, backgroundColor: bust ? colors.danger : total >= 6 ? colors.success : colors.accent }} />
       </View>
       {bust && (
@@ -48,10 +48,41 @@ function TotalMeter({ total, bust, big }: { total: number | null; bust: boolean;
 }
 
 /** Un avversario dall'altro lato del tavolo: icona, fiche, puntata e carte. */
-function SeatBox({ view, seat, name }: { view: SetteView; seat: Seat; name: string }) {
+function SeatBox({ view, seat, name, compact }: { view: SetteView; seat: Seat; name: string; compact?: boolean }) {
   const active = view.phase === 'play' && view.turn === seat;
   const banker = seat === view.banker;
   const delta = view.deltas?.[seat] ?? 0;
+  const total = view.totals[seat];
+  if (compact) {
+    // Sul telefono: una riga sola con icona, fiche e puntata, carte piccole e totale.
+    return (
+      <Pulse active={active} style={{ width: '48.5%' }}>
+        <View style={[styles.seat, styles.seatCompact, active && { borderColor: seatColor(seat), boxShadow: `0px 0px 10px ${seatColor(seat)}` }]}>
+          <SeatAvatar seat={seat} name={name} size={28} />
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <T size={11} weight="800" lines={1}>
+              {name}
+              {banker ? ' 🏦' : ''}
+            </T>
+            <T size={10} weight="800" color={colors.accent} lines={1}>
+              🪙{view.chips[seat]}
+              {!banker && view.bets[seat] !== null ? ` · ${view.bets[seat]}` : ''}
+            </T>
+            <T size={11} weight="900" lines={1} color={view.status[seat] === 'bust' ? colors.danger : delta > 0 ? colors.success : delta < 0 ? colors.danger : colors.text}>
+              {delta !== 0 ? `${delta > 0 ? '+' : ''}${delta} 🪙` : total !== null ? (view.status[seat] === 'bust' ? `sballato ${fmt(total)}` : `${fmt(total)}${view.status[seat] === 'stood' && view.phase === 'play' ? ' · sta' : ''}`) : ' '}
+            </T>
+          </View>
+          <Row gap={0}>
+            {view.hands[seat].map((c, i) => (
+              <View key={c?.id ?? `b${i}`} style={{ marginLeft: i ? -14 : 0 }}>
+                {c ? <PlayingCard card={c} width={22} sway={false} /> : <CardBack width={22} />}
+              </View>
+            ))}
+          </Row>
+        </View>
+      </Pulse>
+    );
+  }
   return (
     <Pulse active={active}>
       <View style={[styles.seat, active && { borderColor: seatColor(seat), boxShadow: `0px 0px 14px ${seatColor(seat)}` }]}>
@@ -100,6 +131,7 @@ export function SetteBoard({ view, me, names, myTurn, onMove }: BoardProps<Sette
   const mine = me !== null;
   const iAmBanker = me === view.banker;
   const myDelta = me !== null ? view.deltas?.[me] ?? 0 : 0;
+  const narrow = useWindowDimensions().width < 600;
   let hint = '';
   if (view.phase === 'bet') hint = needBet ? 'Quanto punti?' : iAmBanker ? 'Sei il banco: aspetta le puntate' : 'Si punta…';
   else if (view.phase === 'play') hint = myTurn ? (iAmBanker ? 'Tocca a te, banco: carta o stai?' : 'Carta o stai?') : `Tocca a ${names[view.turn]}`;
@@ -116,16 +148,16 @@ export function SetteBoard({ view, me, names, myTurn, onMove }: BoardProps<Sette
             🏦 Banco: {iAmBanker ? 'tu' : names[view.banker]}
           </T>
         </Row>
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'center' }}>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: narrow ? 6 : 8, justifyContent: narrow ? 'space-between' : 'center' }}>
           {othersOf(view.players, me).map((p) => (
-            <SeatBox key={p} view={view} seat={p} name={names[p]} />
+            <SeatBox key={p} view={view} seat={p} name={names[p]} compact={narrow} />
           ))}
         </View>
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 6 }}>
           <View>
-            <CardBack width={52} style={{ position: 'absolute', left: 4, top: 4 }} />
-            <CardBack width={52} style={{ position: 'absolute', left: 2, top: 2 }} />
-            <CardBack width={52} />
+            <CardBack width={narrow ? 44 : 52} style={{ position: 'absolute', left: 4, top: 4 }} />
+            <CardBack width={narrow ? 44 : 52} style={{ position: 'absolute', left: 2, top: 2 }} />
+            <CardBack width={narrow ? 44 : 52} />
           </View>
           <T size={14} weight="800" color="#ffffffcc" center>
             {hint}
@@ -135,7 +167,7 @@ export function SetteBoard({ view, me, names, myTurn, onMove }: BoardProps<Sette
         {mine && (
           <View style={{ alignItems: 'center', gap: 8 }}>
             <Row gap={16} style={{ alignItems: 'flex-end' }}>
-              <HandRow cards={view.hands[me!]} width={72} mine />
+              <HandRow cards={view.hands[me!]} width={narrow ? 64 : 72} mine />
               <TotalMeter total={view.totals[me!]} bust={view.status[me!] === 'bust'} big />
             </Row>
             <T size={14} weight="900" color={colors.accent}>
@@ -182,6 +214,7 @@ export function SetteBoard({ view, me, names, myTurn, onMove }: BoardProps<Sette
 
 const styles = StyleSheet.create({
   seat: { padding: 8, gap: 6, borderRadius: 16, backgroundColor: '#12052BB3', borderWidth: 2.5, borderColor: '#FFFFFF22', minWidth: 150 },
+  seatCompact: { flexDirection: 'row', alignItems: 'center', gap: 6, padding: 5, minWidth: 0, borderRadius: 12 },
   meter: { height: 10, borderRadius: 999, backgroundColor: '#12052B88', borderWidth: 2, borderColor: colors.line, overflow: 'hidden' },
   chip: { width: 58, height: 58, borderRadius: 29, backgroundColor: colors.accent, borderWidth: 4, borderColor: colors.line, borderStyle: 'dashed', alignItems: 'center', justifyContent: 'center', boxShadow: `0px 4px 0px ${colors.line}` },
 });

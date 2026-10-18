@@ -105,12 +105,45 @@ export interface SeatInfo {
 }
 
 /** Un avversario seduto dall'altro lato del tavolo: icona, nome, punti e le sue carte coperte. */
-export function TableSeat({ info }: { info: SeatInfo }) {
+export function TableSeat({ info, compact }: { info: SeatInfo; compact?: boolean }) {
   const { seat, name, active, score, scoreLabel, cards, deck = 'it' } = info;
-  const n = Math.min(cards ?? 0, 10);
+  const n = Math.min(cards ?? 0, compact ? 6 : 10);
+  const label = `${name}${score !== undefined ? `, ${score} ${scoreLabel ?? ''}` : ''}${cards !== undefined ? `, ${cards} carte` : ''}${active ? ', è il suo turno' : ''}`;
+  if (compact) {
+    // Sul telefono gli avversari stanno tutti su una riga: icona col punteggio, nome, carte in piccolo.
+    return (
+      <Pulse active={active} style={{ flex: 1, maxWidth: 96, minWidth: 0 }}>
+        <View style={[styles.tableSeat, styles.seatCompact, active && { borderColor: seatColor(seat), boxShadow: `0px 0px 10px ${seatColor(seat)}` }]} accessibilityLabel={label}>
+          <Row gap={4} style={{ alignItems: 'center' }}>
+            <SeatAvatar seat={seat} name={name} size={28} />
+            {score !== undefined && (
+              <T size={17} weight="900" color={colors.accent} lines={1}>
+                {score}
+              </T>
+            )}
+          </Row>
+          <T size={10} weight="800" lines={1} color={active ? seatColor(seat) : colors.text} center>
+            {name}
+          </T>
+          {n > 0 && (
+            <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', height: 22 }}>
+              {Array.from({ length: n }, (_, i) => (
+                <CardBack key={i} width={13} deck={deck} style={{ marginLeft: i ? -8 : 0, transform: [{ rotate: `${(i - (n - 1) / 2) * 5}deg` }] }} />
+              ))}
+              {(cards ?? 0) > n && (
+                <T size={9} weight="800" color={colors.muted}>
+                  {` ${cards}`}
+                </T>
+              )}
+            </View>
+          )}
+        </View>
+      </Pulse>
+    );
+  }
   return (
     <Pulse active={active}>
-      <View style={[styles.tableSeat, active && { borderColor: seatColor(seat), boxShadow: `0px 0px 14px ${seatColor(seat)}` }]} accessibilityLabel={`${name}${score !== undefined ? `, ${score} ${scoreLabel ?? ''}` : ''}${cards !== undefined ? `, ${cards} carte` : ''}${active ? ', è il suo turno' : ''}`}>
+      <View style={[styles.tableSeat, active && { borderColor: seatColor(seat), boxShadow: `0px 0px 14px ${seatColor(seat)}` }]} accessibilityLabel={label}>
         <Row gap={8}>
           <SeatAvatar seat={seat} name={name} size={40} />
           <View>
@@ -149,9 +182,22 @@ export function TableSeat({ info }: { info: SeatInfo }) {
   );
 }
 
-/** Gli avversari in fila sul bordo lontano del tavolo. */
-export function TableTop({ seats }: { seats: SeatInfo[] }) {
+/**
+ * Gli avversari in fila sul bordo lontano del tavolo. Sul telefono stanno su una riga sola, in
+ * formato compatto, e lasciano libero l'angolo in alto a destra dove sta il mio posto.
+ */
+export function TableTop({ seats, corner = true }: { seats: SeatInfo[]; /** Lascia libero l'angolo in alto a destra per il mio posto. */ corner?: boolean }) {
+  const { width } = useWindowDimensions();
   if (!seats.length) return null;
+  if (width < 600) {
+    return (
+      <View style={{ flexDirection: 'row', gap: 6, alignSelf: 'stretch', paddingTop: 2, paddingRight: corner ? 92 : 0 }}>
+        {seats.map((s) => (
+          <TableSeat key={s.seat} info={s} compact />
+        ))}
+      </View>
+    );
+  }
   return (
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-start', gap: 10, alignSelf: 'stretch', paddingTop: 2 }}>
       {seats.map((s) => (
@@ -218,18 +264,18 @@ export function MyCorner({ info, note, style, wideOnly }: { info: SeatInfo | nul
         </View>
       ) : null}
       <Pulse active={info.active}>
-        <View style={[styles.myBar, info.active && { borderColor: colors.accent, boxShadow: `0px 0px 14px ${colors.accent}` }]}>
-          <SeatAvatar seat={info.seat} name={info.name} size={40} />
+        <View style={[styles.myBar, narrow && styles.myBarNarrow, info.active && { borderColor: colors.accent, boxShadow: `0px 0px 14px ${colors.accent}` }]}>
+          <SeatAvatar seat={info.seat} name={info.name} size={narrow ? 32 : 40} />
           <View>
             <T size={12} weight="800" color={info.active ? colors.accent : colors.muted}>
               {info.active ? 'Tu ▶' : 'Tu'}
             </T>
             {info.score !== undefined && (
               <Row gap={4} style={{ alignItems: 'baseline' }}>
-                <T size={22} weight="900" color={colors.accent}>
+                <T size={narrow ? 18 : 22} weight="900" color={colors.accent}>
                   {info.score}
                 </T>
-                {info.scoreLabel ? (
+                {info.scoreLabel && !narrow ? (
                   <T size={11} color={colors.muted}>
                     {info.scoreLabel}
                   </T>
@@ -299,7 +345,7 @@ export function Opponents({ children, goal }: { children: ReactNode; goal?: stri
  * La mano a ventaglio, alla Balatro: le carte si aprono ad arco e si possono toccare o trascinare
  * sul tavolo. `drag` dice cosa porta con sé ogni carta (null: non si trascina adesso).
  */
-export function Hand({ cards, width, selected, playable, onPress, drag, onLift }: {
+export function Hand({ cards, width: baseWidth, selected, playable, onPress, drag, onLift }: {
   cards: Card[];
   width: number;
   selected?: string | null;
@@ -308,9 +354,12 @@ export function Hand({ cards, width, selected, playable, onPress, drag, onLift }
   drag?: (card: Card) => DragPayload | null;
   onLift?: (card: Card, lifted: boolean) => void;
 }) {
-  // Le carte si sovrappongono quanto basta per stare tutte nello schermo.
+  // Le carte si sovrappongono quanto basta per stare tutte nel panno (bordo del tavolo escluso).
   const { width: screenW } = useWindowDimensions();
-  const avail = Math.min(screenW, 1000) - 24;
+  const narrow = screenW < 600;
+  const avail = Math.min(screenW, 1000) - (narrow ? 60 : 24);
+  // Sul telefono le carte restano grandi abbastanza da leggerle: se sono tante si sovrappongono di più.
+  const width = narrow ? Math.max(baseWidth, 54) : baseWidth;
   const n = cards.length;
   const overlap = n > 1 && n * (width + 8) > avail ? Math.max(-width * 0.7, (avail - n * width) / (n - 1)) : 8;
   // Alla prima comparsa le carte arrivano una dopo l'altra, come distribuite; poi solo quelle pescate.
@@ -416,6 +465,8 @@ const styles = StyleSheet.create({
   felt: { alignItems: 'center', justifyContent: 'flex-start', gap: 10, padding: 8 },
   tableSeat: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 16, backgroundColor: '#12052BB3', borderWidth: 2.5, borderColor: '#FFFFFF22' },
   myBar: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 4, paddingLeft: 4, paddingRight: 12, borderRadius: 999, backgroundColor: colors.surface, borderWidth: 3, borderColor: colors.line },
+  myBarNarrow: { gap: 5, paddingRight: 10, maxWidth: 88 },
+  seatCompact: { paddingHorizontal: 4, paddingVertical: 4, borderRadius: 12, alignItems: 'center', gap: 1 },
   cornerNote: { maxWidth: 220, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, backgroundColor: '#12052BCC' },
   myChip: { alignItems: 'center', gap: 2, padding: 4, borderRadius: 14, backgroundColor: '#12052BCC', borderWidth: 2.5, borderColor: '#FFFFFF33' },
   goal: { backgroundColor: colors.accent, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 3, borderWidth: 2, borderColor: colors.line, marginTop: 4 },

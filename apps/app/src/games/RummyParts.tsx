@@ -18,7 +18,7 @@ export function sortCards(cards: Card[], mode: SortMode): Card[] {
 }
 
 /** Mano con selezione multipla, a ventaglio su due righe se serve. */
-export function MultiHand({ cards, selected, onToggle, width, highlight, draggable, dropHere }: {
+export function MultiHand({ cards, selected, onToggle, width: baseWidth, highlight, draggable, dropHere }: {
   cards: Card[];
   selected: string[];
   onToggle?: (id: string) => void;
@@ -33,7 +33,10 @@ export function MultiHand({ cards, selected, onToggle, width, highlight, draggab
   const sorted = useMemo(() => sortCards(cards, mode), [cards, mode]);
   // Ogni carta lascia vedere almeno metà di sé (valore e semi); se non ci stanno, si va su due file.
   const { width: screenW } = useWindowDimensions();
-  const avail = Math.min(screenW, 1000) - 24;
+  // Sul telefono conta il panno (senza il bordo del tavolo) e le carte restano leggibili.
+  const narrow = screenW < 600;
+  const avail = Math.min(screenW, 1000) - (narrow ? 60 : 24);
+  const width = narrow ? Math.max(baseWidth, 50) : baseWidth;
   const perRow = Math.max(2, Math.floor((avail - width) / (width * 0.5)) + 1);
   const nRows = Math.max(1, Math.ceil(sorted.length / perRow));
   const per = Math.ceil(sorted.length / nRows);

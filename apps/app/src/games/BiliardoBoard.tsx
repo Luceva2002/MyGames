@@ -13,7 +13,7 @@ const BALL_COLORS: Record<number, string> = {
 };
 const colorOf = (id: number) => BALL_COLORS[id > 8 ? id - 8 : id];
 
-function PoolBall({ id, x, y, scale }: { id: number; x: number; y: number; scale: number }) {
+function PoolBall({ id, x, y, scale, upright }: { id: number; x: number; y: number; scale: number; upright?: boolean }) {
   const d = BALL_R * 2 * scale;
   const stripe = isStripe(id);
   return (
@@ -31,6 +31,8 @@ function PoolBall({ id, x, y, scale }: { id: number; x: number; y: number; scale
         justifyContent: 'center',
         borderWidth: 0.5,
         borderColor: '#0006',
+        // Sul tavolo girato le palle si raddrizzano, così i numeri si leggono.
+        transform: upright ? [{ rotate: '90deg' }] : undefined,
       }}
     >
       {stripe && <View style={{ position: 'absolute', left: 0, right: 0, top: d * 0.22, bottom: d * 0.22, backgroundColor: colorOf(id) }} />}
@@ -75,7 +77,9 @@ export function BiliardoBoard({ view, me, names, myTurn, onMove }: BoardProps<Bi
   const reduced = useReducedMotion();
   const { width, height } = useWindowDimensions();
   const rail = 18;
-  const tableW = Math.min(width - 24 - rail * 2, (height - 300) * 2, 1000);
+  // Sul telefono in verticale il tavolo si gira per lungo: molto più grande, con la testa in alto.
+  const portrait = height > width * 1.2;
+  const tableW = portrait ? Math.min((width - 24 - rail * 2) * (TABLE_W / TABLE_H), height - 330) : Math.min(width - 24 - rail * 2, (height - 300) * 2, 1000);
   const scale = tableW / TABLE_W;
   const tableH = TABLE_H * scale;
   const [aim, setAim] = useState<{ x: number; y: number } | null>(null);
@@ -121,8 +125,9 @@ export function BiliardoBoard({ view, me, names, myTurn, onMove }: BoardProps<Bi
 
   const handleTouch = (lx: number, ly: number) => {
     if (!canAct) return;
-    const x = lx / scale;
-    const y = ly / scale;
+    // Col tavolo girato il punto toccato si riporta nelle coordinate del gioco.
+    const x = portrait ? (tableW - ly) / scale : lx / scale;
+    const y = portrait ? lx / scale : ly / scale;
     if (placing) {
       onMove({ type: 'place', x, y });
       setPlacing(false);
@@ -140,7 +145,7 @@ export function BiliardoBoard({ view, me, names, myTurn, onMove }: BoardProps<Bi
     <TableBg table="billiard" scrim={0.2} style={{ alignItems: 'center', gap: 10, paddingTop: 8 }}>
       <Row gap={20} wrap style={{ justifyContent: 'center' }}>
         {[0, 1].map((p) => (
-          <View key={p} style={{ alignItems: 'center', opacity: view.turn === p ? 1 : 0.6 }}>
+          <View key={p} style={{ alignItems: 'center', opacity: view.turn === p ? 1 : 0.7, backgroundColor: '#12052BD9', borderRadius: 14, paddingHorizontal: 12, paddingVertical: 4, borderWidth: 2, borderColor: view.turn === p ? colors.accent : '#FFFFFF22' }}>
             <Row gap={6}>
               <SeatDot seat={p} />
               <T weight="900">{names[p]}</T>
@@ -153,11 +158,18 @@ export function BiliardoBoard({ view, me, names, myTurn, onMove }: BoardProps<Bi
       </Row>
       <View style={{ padding: rail, backgroundColor: '#5D3A1A', borderRadius: 16 }}>
         <View
-          style={{ width: tableW, height: tableH, backgroundColor: '#0B6E4F', borderRadius: 4 }}
+          style={{ width: portrait ? tableH : tableW, height: portrait ? tableW : tableH }}
           onStartShouldSetResponder={() => canAct}
           onMoveShouldSetResponder={() => canAct}
           onResponderGrant={(e) => handleTouch(e.nativeEvent.locationX, e.nativeEvent.locationY)}
           onResponderMove={(e) => !placing && handleTouch(e.nativeEvent.locationX, e.nativeEvent.locationY)}
+        >
+        <View
+          pointerEvents="none"
+          style={[
+            { width: tableW, height: tableH, backgroundColor: '#0B6E4F', borderRadius: 4 },
+            portrait && { position: 'absolute', left: (tableH - tableW) / 2, top: (tableW - tableH) / 2, transform: [{ rotate: '-90deg' }] },
+          ]}
         >
           {/* Panno del tavolo: texture generata con Higgsfield. */}
           <View pointerEvents="none" style={{ position: "absolute", width: tableW, height: tableH }}><Image source={TABLES.felt} style={{ width: tableW, height: tableH, borderRadius: 4 }} resizeMode="cover" /></View>
@@ -173,9 +185,10 @@ export function BiliardoBoard({ view, me, names, myTurn, onMove }: BoardProps<Bi
               </Svg>
             )}
             {shownBalls.filter((b) => !b.in).map((b) => (
-              <PoolBall key={b.id} id={b.id} x={b.x} y={b.y} scale={scale} />
+              <PoolBall key={b.id} id={b.id} x={b.x} y={b.y} scale={scale} upright={portrait} />
             ))}
           </View>
+        </View>
         </View>
       </View>
       {view.lastShot && (

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { View } from 'react-native';
+import { useWindowDimensions, View } from 'react-native';
 import { captureOptions, cardName, teamOf, type ScopaMove, type ScopaView, type Seat } from '@giochi/engine';
 import { Banner, MyCorner, EventSticker, Felt, Hand, MyBar, othersOf, Slot, TableTop, type SeatInfo, turnText, useCardWidth, type BoardProps } from './common';
 import { CardsSummaryTable, teamLabel } from './summary';
@@ -14,6 +14,8 @@ import { colors } from '../ui/theme';
 export function ScopaBoard({ view, me, names, myTurn, onMove }: BoardProps<ScopaView, ScopaMove>) {
   const [selected, setSelected] = useState<string | null>(null);
   const handWidth = useCardWidth(3, 100);
+  // Sul telefono il mazzo sta sul bordo sinistro: le carte in tavola gli lasciano posto.
+  const narrow = useWindowDimensions().width < 600;
   const tableWidth = useCardWidth(Math.max(view.table.length, 5), 76);
   useEffect(() => setSelected(null), [view.turn, view.phase]);
 
@@ -86,7 +88,7 @@ export function ScopaBoard({ view, me, names, myTurn, onMove }: BoardProps<Scopa
       <DropZone id="table" style={{ flex: 1 }} radius={22} inset={-10} accepts={(p) => myTurn && p.kind === 'hand'} onDrop={(p) => dropCard(p.ids[0])}>
       <Felt>
         <TableTop seats={othersOf(view.players, me).map(info)} />
-        <View style={{ flex: 1, alignSelf: 'stretch', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+        <View style={{ flex: 1, alignSelf: 'stretch', alignItems: 'center', justifyContent: 'center', gap: 10, paddingLeft: narrow && me !== null ? 66 : 0 }}>
         <View style={{ position: 'absolute', left: 0, top: '50%', marginTop: -70, zIndex: 10 }}>
           <Slot width={me === null ? 74 : 60} label={`MAZZO · ${view.deckCount}`} ratio={1.85}>
             {view.deckCount > 0 ? <DeckPile count={view.deckCount} width={me === null ? 68 : 54} /> : null}

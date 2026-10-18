@@ -97,7 +97,7 @@ export const PlayingCard = memo(function PlayingCard({ card, width, selected, di
   const numeral = (card.deck === 'it' && card.rank <= 7) || (card.deck === 'fr' && card.suit !== 'j' && card.rank <= 10);
   const face = (
     <Sway id={card.id} enabled={(sway ?? !onPress) && !reduced}>
-      <View style={[{ width, height }, dimmed && { opacity: 0.45 }, style]}>
+      <View style={[{ width, height }, dimmed && { opacity: 0.62 }, style]}>
         <View
           accessibilityLabel={cardName(card)}
           style={[

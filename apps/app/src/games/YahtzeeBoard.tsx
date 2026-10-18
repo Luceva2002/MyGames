@@ -28,7 +28,8 @@ export function Die({ value, size, held, onPress, blank }: { value: number; size
         tap();
         onPress?.();
       }}
-      style={{ alignItems: 'center', gap: 6 }}
+      // Larga quanto il dado: la scritta TENUTO può sporgere un po' senza allargare la fila.
+      style={{ alignItems: 'center', gap: 6, width: size }}
     >
       <View
         style={{
