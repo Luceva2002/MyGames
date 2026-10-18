@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { ActivityIndicator, Image, Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Image, Modal, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import type { GameMeta, GameResult, Seat } from '@giochi/engine';
 import { BOARDS } from './registry';
 import { GAME_ART } from '../ui/art';
-import { BotFigure, SeatAvatars } from '../ui/avatars';
+import { BotFigure, SeatAvatar, SeatAvatars } from '../ui/avatars';
 import { botByName } from '@giochi/engine';
 import { Button, Confirm, focusRing, PlayerTag, Row, T, tap } from '../ui/kit';
 import { DragProvider } from '../ui/drag';
@@ -194,12 +194,14 @@ function IconButton({ label, glyph, onPress }: { label: string; glyph: string; o
 
 /** Di chi è il turno, leggibile in un secondo da telefono e TV (V-ST-1). */
 function TurnPill({ active, names, me, myTurn }: { active: Seat[]; names: string[]; me: Seat | null; myTurn: boolean }) {
+  // Sul telefono basta l'icona di chi gioca, così il nome del gioco nella barra resta leggibile.
+  const narrow = useWindowDimensions().width < 480;
   if (!active.length) return null;
   if (myTurn) {
     return (
       <View style={[styles.pill, { backgroundColor: colors.accent }]} accessibilityLiveRegion="polite">
         <T size={15} weight="900" color={colors.onAccent}>
-          ▶ Tocca a te
+          {narrow ? '▶ Tu' : '▶ Tocca a te'}
         </T>
       </View>
     );
@@ -220,7 +222,7 @@ function TurnPill({ active, names, me, myTurn }: { active: Seat[]; names: string
         Tocca a
       </T>
       {others.map((s) => (
-        <PlayerTag key={s} seat={s} name={names[s]} size={15} />
+        narrow ? <SeatAvatar key={s} seat={s} name={names[s]} size={30} /> : <PlayerTag key={s} seat={s} name={names[s]} size={15} />
       ))}
     </View>
   );

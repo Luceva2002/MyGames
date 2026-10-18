@@ -117,7 +117,7 @@ export function BriscolaBoard({ view, me, names, myTurn, onMove }: BoardProps<Br
       <TableDrop enabled={myTurn} onCard={(id) => onMove({ card: id })}>
       <Felt>
         <TableTop seats={othersOf(view.players, me).map(binfo)} />
-        <Row style={{ position: 'absolute', bottom: '7%', left: '4.5%', alignItems: 'flex-end', zIndex: 10 }} gap={10}>
+        <Row style={{ position: 'absolute', top: '4.5%', right: '4.5%', alignItems: 'flex-start', zIndex: 10 }} gap={10}>
           <Slot width={me === null ? 74 : 60} label={`MAZZO · ${Math.max(0, view.deckCount - 1)}`} ratio={1.85}>
             {view.deckCount > 1 ? <DeckPile count={view.deckCount - 1} width={me === null ? 68 : 54} /> : null}
           </Slot>
@@ -171,7 +171,7 @@ export function TresetteBoard({ view, me, names, myTurn, onMove }: BoardProps<Tr
       <Felt>
         <TableTop seats={othersOf(view.players, me).map(tinfo)} />
         {view.deckCount > 0 && (
-          <View style={{ position: 'absolute', bottom: '7%', left: '4.5%', zIndex: 10 }}>
+          <View style={{ position: 'absolute', top: '4.5%', right: '4.5%', zIndex: 10 }}>
             <Slot width={me === null ? 74 : 60} label={`MAZZO · ${view.deckCount}`} ratio={1.85}>
               <DeckPile count={view.deckCount} width={me === null ? 68 : 54} />
             </Slot>

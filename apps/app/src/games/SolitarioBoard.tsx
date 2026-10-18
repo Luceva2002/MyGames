@@ -39,7 +39,8 @@ function sameFrom(a: SolitarioFrom | null, b: SolitarioFrom) {
 
 export function SolitarioBoard({ view, myTurn, onMove }: BoardProps<SolitarioView, SolitarioMove>) {
   const { width } = useWindowDimensions();
-  const cw = Math.min(96, (Math.min(width, 900) - 16 - 6 * 8) / 7);
+  // Il tavolo ha il bordo dorato (circa 9% della larghezza): le 7 colonne devono starci dentro.
+  const cw = Math.min(96, (Math.min(width, 900) * (width < 700 ? 0.8 : 0.9) - 12 - 6 * 6) / 7);
   const ch = cw * CARD_RATIO;
   const [sel, setSel] = useState<SolitarioFrom | null>(null);
   const [lift, setLift] = useState<{ pile: number; index: number } | null>(null);
@@ -91,7 +92,7 @@ export function SolitarioBoard({ view, myTurn, onMove }: BoardProps<SolitarioVie
 
   return (
     <TableBg table="teal">
-      <Row style={{ padding: 8, justifyContent: 'center' }} gap={8}>
+      <Row style={{ padding: 4, justifyContent: 'center' }} gap={6}>
         <Pressable
           onPress={() => {
             tap();
@@ -150,7 +151,7 @@ export function SolitarioBoard({ view, myTurn, onMove }: BoardProps<SolitarioVie
           );
         })}
       </Row>
-      <ScrollView contentContainerStyle={{ flexDirection: 'row', justifyContent: 'center', gap: 8, padding: 8, paddingBottom: 40 }}>
+      <ScrollView contentContainerStyle={{ flexDirection: 'row', justifyContent: 'center', gap: 6, padding: 4, paddingBottom: 40 }}>
         {view.tableau.map((pile, p) => (
           <DropZone
             key={p}

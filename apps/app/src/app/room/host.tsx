@@ -24,7 +24,7 @@ export default function HostRoom() {
 
   return (
     <Screen>
-      <Button small kind="ghost" color={colors.muted} label="‹ Indietro" onPress={() => router.back()} style={{ alignSelf: 'flex-start' }} />
+      <Button small kind="ghost" color={colors.muted} label="‹ Indietro" onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))} style={{ alignSelf: 'flex-start' }} />
       <T size={30} weight="900">
         Crea una stanza
       </T>

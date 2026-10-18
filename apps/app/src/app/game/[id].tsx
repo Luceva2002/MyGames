@@ -70,7 +70,7 @@ export default function GameDetail() {
 
   return (
     <Screen>
-      <Button small kind="ghost" color={colors.muted} label="‹ Giochi" onPress={() => router.back()} style={{ alignSelf: 'flex-start' }} />
+      <Button small kind="ghost" color={colors.muted} label="‹ Giochi" onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))} style={{ alignSelf: 'flex-start' }} />
       <View style={styles.hero}>
         {GAME_ART[meta.id] && <Image source={GAME_ART[meta.id]} style={styles.heroArt} accessibilityIgnoresInvertColors />}
         <View style={{ flex: 1, gap: 6, minWidth: 220 }}>
@@ -183,7 +183,7 @@ export default function GameDetail() {
               </View>
             ))}
             {canAdd && (
-              <View style={{ gap: 8, justifyContent: 'center' }}>
+              <View style={{ gap: 8, justifyContent: 'center', width: '47%', maxWidth: 170, flexGrow: 1 }}>
                 <Pressable accessibilityRole="button" onPress={() => addSeat(false)} style={styles.addTile}>
                   <T size={22} weight="900" color={colors.accent}>+</T>
                   <T size={14} weight="800">Persona</T>
@@ -242,9 +242,9 @@ const styles = StyleSheet.create({
   badge: { backgroundColor: '#0007', borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 },
   count: { width: 56, height: 56, borderRadius: 28, borderWidth: 2, borderColor: colors.line, alignItems: 'center', justifyContent: 'center' },
   seatGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  seatCard: { width: 150, alignItems: 'center', gap: 8, padding: 12, borderRadius: radius.m, backgroundColor: colors.surface2, borderWidth: 3, borderColor: colors.line },
+  seatCard: { width: '47%', maxWidth: 170, flexGrow: 1, alignItems: 'center', gap: 8, padding: 12, borderRadius: radius.m, backgroundColor: colors.surface2, borderWidth: 3, borderColor: colors.line },
   remove: { position: 'absolute', top: -8, right: -8, width: 30, height: 30, borderRadius: 15, backgroundColor: colors.accent2, borderWidth: 2, borderColor: colors.line, alignItems: 'center', justifyContent: 'center' },
-  addTile: { width: 150, minHeight: 64, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', borderRadius: radius.m, borderWidth: 3, borderStyle: 'dashed', borderColor: colors.dim },
+  addTile: { alignSelf: 'stretch', minHeight: 64, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', borderRadius: radius.m, borderWidth: 3, borderStyle: 'dashed', borderColor: colors.dim },
   input: { alignSelf: 'stretch', textAlign: 'center', minHeight: 44, backgroundColor: colors.surface2, color: colors.text, borderRadius: radius.s, paddingHorizontal: 12, paddingVertical: 12, fontSize: 16, fontWeight: '600' },
   toggle: { minHeight: 48, justifyContent: 'center', paddingHorizontal: 12, paddingVertical: 10, borderRadius: radius.s, borderWidth: 1.5, borderColor: colors.line },
 });

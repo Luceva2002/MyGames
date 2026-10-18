@@ -172,11 +172,19 @@ function Lobby({ snapshot, myId, isHost, tv, error, onExit, reconnecting }: {
           </T>
           <SeatAvatars.Provider value={avatars}>
           {players.map((m, i) => (
-            <Row key={m.id} gap={10} style={styles.playerRow}>
-              <View style={{ flex: 1 }}>
-                <PlayerTag seat={i} name={m.name} size={18} suffix={m.id === myId ? ' (tu)' : ''} />
-              </View>
-              {m.id === myId && <Button small kind="ghost" color={colors.accent} label="Cambia personaggio" onPress={() => setPicking(true)} />}
+            <Row key={m.id} gap={10} wrap style={styles.playerRow}>
+              <Pressable
+                style={{ flexShrink: 1, minWidth: 140 }}
+                disabled={m.id !== myId}
+                accessibilityRole={m.id === myId ? 'button' : undefined}
+                accessibilityLabel={m.id === myId ? 'Cambia il tuo personaggio' : undefined}
+                onPress={() => {
+                  tap();
+                  setPicking(true);
+                }}
+              >
+                <PlayerTag seat={i} name={m.name} size={18} suffix={m.id === myId ? ' (tu) ✎' : ''} />
+              </Pressable>
               {!m.connected && (
                 <T size={13} color={colors.danger} weight="800">
                   📡 si sta ricollegando
@@ -298,7 +306,7 @@ function Lobby({ snapshot, myId, isHost, tv, error, onExit, reconnecting }: {
 const styles = StyleSheet.create({
   joined: { backgroundColor: colors.success, borderRadius: 999, paddingHorizontal: 14, paddingVertical: 8 },
   playerRow: { minHeight: 40 },
-  gameChoice: { width: 230, flexDirection: 'row', alignItems: 'center', padding: 8, borderRadius: radius.m, borderWidth: 3, borderColor: 'transparent', backgroundColor: colors.surface2, gap: 10, minHeight: MIN_TOUCH },
-  gameArt: { width: 64, height: 64, borderRadius: radius.s, borderWidth: 2, borderColor: colors.line },
+  gameChoice: { width: '47%', minWidth: 150, flexGrow: 1, flexDirection: 'row', alignItems: 'center', padding: 8, borderRadius: radius.m, borderWidth: 3, borderColor: 'transparent', backgroundColor: colors.surface2, gap: 10, minHeight: MIN_TOUCH },
+  gameArt: { width: 52, height: 52, borderRadius: radius.s, borderWidth: 2, borderColor: colors.line },
   reconnect: { position: 'absolute', top: 8, alignSelf: 'center', backgroundColor: colors.accent, borderRadius: 999, paddingHorizontal: 16, paddingVertical: 10 },
 });

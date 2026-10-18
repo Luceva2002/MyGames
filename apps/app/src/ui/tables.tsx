@@ -53,7 +53,7 @@ export function TableBg({ table, children, style, scrim = 0, rounded }: {
       onLayout={(e) => setTall(e.nativeEvent.layout.height > e.nativeEvent.layout.width * 1.15)}
       resizeMode={framed ? 'stretch' : 'cover'}
       // Il tavolo col bordo dorato si vede sempre intero; il contenuto sta dentro il bordo.
-      style={[{ flex: 1, overflow: 'hidden' }, rounded && !framed && { borderRadius: 18 }, framed && { padding: '4.5%' }, style]}
+      style={[{ flex: 1, overflow: 'hidden' }, rounded && !framed && { borderRadius: 18 }, framed && (tall ? { paddingHorizontal: '9%', paddingVertical: '9%' } : { padding: '4.5%' }), style]}
       // Senza misure esplicite l'immagine resta grande quanto il file (1344×752) e si vede solo
       // l'angolo in alto a sinistra del tavolo: la stiriamo a coprire tutto il riquadro.
       imageStyle={[{ width: '100%', height: '100%' }, rounded && !framed && { borderRadius: 18 }]}
