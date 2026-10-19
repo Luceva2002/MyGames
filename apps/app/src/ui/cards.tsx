@@ -3,12 +3,12 @@ import Animated, { cancelAnimation, useAnimatedStyle, useSharedValue, withDelay,
 import { Image, Modal, Pressable, StyleSheet, Text, useWindowDimensions, View, type StyleProp, type ViewStyle } from 'react-native';
 import { CARD_BACKS, CARD_FACES } from './deckArt';
 import { BigIndex, CardCorners, NumeralFace } from './suits';
-import Svg, { Path } from 'react-native-svg';
+import Svg, { Circle, G, Path, Rect, Text as SvgText } from 'react-native-svg';
 import { cardName, type Card } from '@giochi/engine';
 import { tapAllowed } from './drag';
 import { focusRing, tap } from './kit';
 import { useReducedMotion } from './settings';
-import { colors } from './theme';
+import { colors, font } from './theme';
 
 /** Proporzioni reali dei mazzi: piacentine più strette, francesi più larghe. */
 export function cardRatio(deck: Card['deck']): number {
@@ -45,34 +45,95 @@ function Sway({ id, enabled, children }: { id: string; enabled: boolean; childre
   return <Animated.View style={style}>{children}</Animated.View>;
 }
 
-export const UNO_COLORS: Record<string, string> = { r: '#E53935', g: '#43A047', b: '#1E88E5', y: '#FDD835', w: '#222222' };
-const UNO_LABEL: Record<number, string> = { 10: '⊘', 11: '⇄', 12: '+2', 13: '', 14: '+4' };
+/** I quattro colori di UNO nella palette di Tavolata (carta nera per i jolly). */
+export const UNO_COLORS: Record<string, string> = { r: '#FF4D6D', g: '#2FCB7A', b: '#3D8BFF', y: '#FFD23F', w: '#2A1650' };
+const UNO_INK = colors.line;
+const UNO_CREAM = '#FDFAE8';
 
+/** Simbolo d'azione disegnato in un quadrato 100×100, col tratto nero spesso delle altre carte. */
+function UnoAction({ rank, fill }: { rank: number; fill: string }) {
+  if (rank === 10)
+    // Salta: cerchio sbarrato.
+    return (
+      <G>
+        <Circle cx={50} cy={50} r={30} fill="none" stroke={UNO_INK} strokeWidth={22} />
+        <Circle cx={50} cy={50} r={30} fill="none" stroke={fill} strokeWidth={12} />
+        <Path d="M29 71 L71 29" stroke={UNO_INK} strokeWidth={22} strokeLinecap="round" />
+        <Path d="M29 71 L71 29" stroke={fill} strokeWidth={12} strokeLinecap="round" />
+      </G>
+    );
+  if (rank === 11) {
+    // Cambio giro: due frecce che si inseguono.
+    const arrow = 'M22 44 C22 26 40 18 58 22 L56 10 L82 28 L54 42 L56 32 C44 30 34 34 34 46 Z';
+    return (
+      <G stroke={UNO_INK} strokeWidth={6} strokeLinejoin="round" fill={fill}>
+        <Path d={arrow} />
+        <Path d={arrow} transform="rotate(180 50 50)" />
+      </G>
+    );
+  }
+  return null;
+}
+
+/**
+ * Carte di UNO nello stile di Tavolata: corpo colorato col contorno nero spesso, cucitura crema,
+ * rombo da Arlecchino al centro col valore (o il simbolo d'azione), indice in alto a sinistra.
+ * I jolly sono neri col rombo diviso nei quattro colori.
+ */
 function UnoFace({ card, w, h, chosenColor }: { card: Card; w: number; h: number; chosenColor?: string }) {
-  const bg = UNO_COLORS[card.suit];
-  const label = UNO_LABEL[card.rank] ?? String(card.rank);
   const wild = card.suit === 'w';
+  const fill = UNO_COLORS[card.suit];
+  const sw = Math.max(1.5, w * 0.035);
+  const r = w * 0.1;
+  const cx = w / 2;
+  const cy = h / 2;
+  const dw = w * 0.36;
+  const dh = h * 0.36;
+  const lozenge = `M${cx} ${cy - dh} L${cx + dw} ${cy} L${cx} ${cy + dh} L${cx - dw} ${cy} Z`;
+  const label = card.rank === 12 ? '+2' : card.rank === 14 ? '+4' : card.rank <= 9 ? String(card.rank) : '';
+  const corner = card.rank === 10 ? 'Ø' : card.rank === 11 ? '⇄' : card.rank === 13 ? '★' : label;
+  const fs = w * (label.length > 1 ? 0.3 : 0.42);
+  const icon = w * 0.42;
   return (
-    <View style={[StyleSheet.absoluteFill, { backgroundColor: bg, borderRadius: w * 0.1, borderWidth: w * 0.05, borderColor: '#fff' }]}>
-      <View style={[StyleSheet.absoluteFill, styles.center]}>
-        <View style={{ width: w * 0.78, height: h * 0.62, borderRadius: w, backgroundColor: '#fff', transform: [{ rotate: '-30deg' }], alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-          {wild ? (
-            <Svg width={w * 0.6} height={w * 0.6} viewBox="0 0 100 100" style={{ transform: [{ rotate: '30deg' }] }}>
-              <Path d="M50 50 L50 0 A50 50 0 0 1 100 50 Z" fill={UNO_COLORS.r} />
-              <Path d="M50 50 L100 50 A50 50 0 0 1 50 100 Z" fill={UNO_COLORS.b} />
-              <Path d="M50 50 L50 100 A50 50 0 0 1 0 50 Z" fill={UNO_COLORS.y} />
-              <Path d="M50 50 L0 50 A50 50 0 0 1 50 0 Z" fill={UNO_COLORS.g} />
-            </Svg>
-          ) : null}
-        </View>
-      </View>
-      <View style={[StyleSheet.absoluteFill, styles.center]}>
-        <Text style={{ fontSize: w * (label.length > 1 ? 0.36 : 0.48), fontWeight: '900', color: wild ? '#fff' : bg, textShadowColor: '#000', textShadowRadius: wild ? 4 : 1 }}>{label}</Text>
-      </View>
+    <View style={[StyleSheet.absoluteFill, { borderRadius: r, overflow: 'hidden' }]}>
+      <Svg width={w} height={h}>
+        <Rect x={sw / 2} y={sw / 2} width={w - sw} height={h - sw} rx={r} fill={fill} stroke={UNO_INK} strokeWidth={sw} />
+        <Rect x={w * 0.08} y={w * 0.08} width={w * 0.84} height={h - w * 0.16} rx={r * 0.7} fill="none" stroke={UNO_CREAM} strokeWidth={sw * 0.45} strokeDasharray={`${w * 0.04} ${w * 0.03}`} opacity={0.85} />
+        {wild ? (
+          <G stroke={UNO_INK} strokeWidth={sw} strokeLinejoin="round">
+            <Path d={`M${cx} ${cy - dh} L${cx + dw} ${cy} L${cx} ${cy} Z`} fill={UNO_COLORS.r} />
+            <Path d={`M${cx + dw} ${cy} L${cx} ${cy + dh} L${cx} ${cy} Z`} fill={UNO_COLORS.b} />
+            <Path d={`M${cx} ${cy + dh} L${cx - dw} ${cy} L${cx} ${cy} Z`} fill={UNO_COLORS.y} />
+            <Path d={`M${cx - dw} ${cy} L${cx} ${cy - dh} L${cx} ${cy} Z`} fill={UNO_COLORS.g} />
+          </G>
+        ) : (
+          <Path d={lozenge} fill={UNO_CREAM} stroke={UNO_INK} strokeWidth={sw} strokeLinejoin="round" />
+        )}
+        {card.rank === 10 || card.rank === 11 ? (
+          <G transform={`translate(${cx - icon / 2} ${cy - icon / 2}) scale(${icon / 100})`}>
+            <UnoAction rank={card.rank} fill={fill} />
+          </G>
+        ) : label ? (
+          <G>
+            {/* Prima il contorno nero, poi il riempimento sopra: il numero resta pieno e ben delineato. */}
+            <SvgText x={cx} y={cy + fs * 0.36} fontSize={fs} fontFamily={font.display} textAnchor="middle" fill={UNO_INK} stroke={UNO_INK} strokeWidth={sw * 1.6} strokeLinejoin="round">
+              {label}
+            </SvgText>
+            <SvgText x={cx} y={cy + fs * 0.36} fontSize={fs} fontFamily={font.display} textAnchor="middle" fill={wild ? '#fff' : fill}>
+              {label}
+            </SvgText>
+          </G>
+        ) : null}
+        <SvgText x={w * 0.13} y={w * 0.3} fontSize={w * 0.2} fontFamily={font.display} fill={UNO_INK} stroke={UNO_INK} strokeWidth={sw * 1.1} strokeLinejoin="round">
+          {corner}
+        </SvgText>
+        <SvgText x={w * 0.13} y={w * 0.3} fontSize={w * 0.2} fontFamily={font.display} fill={UNO_CREAM}>
+          {corner}
+        </SvgText>
+      </Svg>
       {chosenColor && (
-        <View style={{ position: 'absolute', bottom: h * 0.05, alignSelf: 'center', width: w * 0.3, height: w * 0.3, borderRadius: w, backgroundColor: UNO_COLORS[chosenColor], borderWidth: 2, borderColor: '#fff' }} />
+        <View style={{ position: 'absolute', bottom: h * 0.06, alignSelf: 'center', width: w * 0.26, height: w * 0.26, borderRadius: w, backgroundColor: UNO_COLORS[chosenColor], borderWidth: 2, borderColor: UNO_INK }} />
       )}
-      <Text style={{ position: 'absolute', left: w * 0.1, top: h * 0.04, color: '#fff', fontWeight: '900', fontSize: w * 0.18 }}>{label}</Text>
     </View>
   );
 }
