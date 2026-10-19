@@ -19,6 +19,8 @@ export const GAME_ART: Record<string, ImageSourcePropType> = {
   football: require('../../assets/games/football.jpg'),
   tris: require('../../assets/games/tris.jpg'),
   lupus: require('../../assets/games/lupus.jpg'),
+  // Mr. White: maschera bianca (volto) disegnata in codice con PIL nello stile delle altre copertine.
+  mrwhite: require('../../assets/games/mrwhite.jpg'),
 };
 
 export const HERO = require('../../assets/images/hero.jpg') as ImageSourcePropType;
