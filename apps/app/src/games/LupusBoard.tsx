@@ -5,8 +5,7 @@ import type { BoardProps } from './common';
 import { Button, focusRing, Panel, PlayerTag, Row, T, tap } from '../ui/kit';
 import { useIsTv, useReducedMotion } from '../ui/settings';
 import { sfx } from '../ui/sound';
-import { FlyIn } from '../ui/motion';
-import Animated, { Easing, runOnJS, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, { Easing, FadeIn, runOnJS, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { TableBg } from '../ui/tables';
 import { colors, MIN_TOUCH, radius, seatColor } from '../ui/theme';
 
@@ -230,12 +229,12 @@ export function LupusBoard({ view, me, names, myTurn, onMove }: BoardProps<Lupus
             <>
               <FlipRole role={myRole} width={220} />
               {/* Il nome del ruolo arriva appena la carta è girata, per non rovinare la sorpresa. */}
-              <FlyIn from="none" delay={220} style={{ gap: 8, alignItems: 'center' }}>
+              <Animated.View entering={FadeIn.duration(150).delay(220)} style={{ gap: 8, alignItems: 'center' }}>
                 <T size={28} weight="900" center color={myRole === 'lupo' ? colors.accent2 : colors.accent}>
                   Sei {roleDef.name}
                 </T>
                 <T center>{roleDef.description}</T>
-              </FlyIn>
+              </Animated.View>
               {view.teammates.length > 0 && (
                 <T center weight="800">
                   {myRole === 'lupo' ? 'Il tuo branco' : 'La tua loggia'}: {view.teammates.map((s) => names[s]).join(', ')}

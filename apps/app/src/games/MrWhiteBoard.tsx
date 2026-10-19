@@ -1,13 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { usePathname } from 'expo-router';
-import Animated, { Easing, runOnJS, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, { Easing, FadeIn, runOnJS, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { MRWHITE_ROLES, type MrWhiteMove, type MrWhiteView, type Seat } from '@giochi/engine';
 import type { BoardProps } from './common';
 import { Button, focusRing, Panel, PlayerTag, Row, T, tap } from '../ui/kit';
 import { useIsTv, useReducedMotion } from '../ui/settings';
 import { sfx } from '../ui/sound';
-import { FlyIn } from '../ui/motion';
 import { TableBg } from '../ui/tables';
 import { colors, MIN_TOUCH, OUTLINE, radius, seatColor, shadow } from '../ui/theme';
 
@@ -319,11 +318,11 @@ export function MrWhiteBoard({ view, me, names, myTurn, onMove }: BoardProps<MrW
           ) : revealed ? (
             <>
               <FlipWord word={view.myWord} white={view.iAmMrWhite} />
-              <FlyIn from="none" delay={220} style={{ gap: 8, alignItems: 'center' }}>
+              <Animated.View entering={FadeIn.duration(150).delay(220)} style={{ gap: 8, alignItems: 'center' }}>
                 <T center size={16}>
                   {view.iAmMrWhite ? 'Ascolta bene gli indizi degli altri e inventane uno credibile. Se ti scoprono puoi ancora vincere indovinando la parola.' : 'Ricordatela e non dirla a nessuno: al tuo turno darai un indizio.'}
                 </T>
-              </FlyIn>
+              </Animated.View>
               <View style={{ flex: 1 }} />
               <Button label={view.shared ? 'Ho visto, nascondi e passa' : 'Ho visto, nascondi'} onPress={() => onMove({ type: 'seen' })} style={{ alignSelf: 'stretch' }} />
             </>
