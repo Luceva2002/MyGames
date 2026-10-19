@@ -4,7 +4,7 @@ import { BURRACO_RULES, checkMeld, teamOf, type BurracoMove, type BurracoView, t
 import { Banner, MyCorner, MyBar, othersOf, Slot, TableTop, useCardWidth, type BoardProps, type SeatInfo } from './common';
 import { CardsSummaryTable, teamLabel } from './summary';
 import { CardTable, MeldRow, MultiHand, usePileWidth } from './RummyParts';
-import { CardBack, DeckPile, PlayingCard } from '../ui/cards';
+import { CardBack, DeckPile, PlayingCard, NoCardZoom } from '../ui/cards';
 import { Draggable, DropZone, type DragPayload } from '../ui/drag';
 import { Button, Row, T, tap } from '../ui/kit';
 import { TableBg } from '../ui/tables';
@@ -87,7 +87,11 @@ export function BurracoBoard({ view, me, names, myTurn, onMove }: BoardProps<Bur
                   }}
                 >
                   <Slot width={pileW + 6} ratio={1.45} label={view.discard.length > 1 ? `SCARTI · ${view.discard.length}` : 'SCARTI'} glow={drawing && view.discard.length ? colors.accent3 : undefined}>
-                    {view.discard.length ? <PlayingCard card={view.discard[view.discard.length - 1]} width={pileW} sway={false} /> : null}
+                    {view.discard.length ? (
+                      <NoCardZoom.Provider value={drawing}>
+                        <PlayingCard card={view.discard[view.discard.length - 1]} width={pileW} sway={false} />
+                      </NoCardZoom.Provider>
+                    ) : null}
                   </Slot>
                 </Pressable>
               </Draggable>

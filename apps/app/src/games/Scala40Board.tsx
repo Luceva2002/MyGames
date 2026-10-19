@@ -4,7 +4,7 @@ import { checkMeld, meldPoints40, SCALA40_RULES, type Card, type Scala40Move, ty
 import { Banner, MyCorner, MyBar, othersOf, Slot, TableTop, useCardWidth, type BoardProps, type SeatInfo } from './common';
 import { CardsSummaryTable } from './summary';
 import { CardTable, MeldRow, MultiHand, TableArea, usePileWidth } from './RummyParts';
-import { CardBack, DeckPile, PlayingCard } from '../ui/cards';
+import { CardBack, DeckPile, PlayingCard, NoCardZoom } from '../ui/cards';
 import { Draggable, DropZone, type DragPayload } from '../ui/drag';
 import { Button, Row, T, tap } from '../ui/kit';
 import { TableBg } from '../ui/tables';
@@ -97,9 +97,12 @@ export function Scala40Board({ view, me, names, myTurn, onMove }: BoardProps<Sca
               <DropZone id="discard" radius={8} inset={4} accepts={(p) => playing && p.kind === 'hand' && p.ids.length === 1 && !staged.length} onDrop={(p) => onMove({ type: 'discard', card: p.ids[0] })}>
                 <Slot width={pileW + 6} ratio={1.45} label="SCARTI" glow={drawing && view.discardTop ? colors.accent3 : undefined}>
                   {view.discardTop ? (
-                    <Draggable payload={drawing ? { kind: 'discard', ids: [view.discardTop.id] } : null} ghost={<PlayingCard card={view.discardTop} width={pileW} sway={false} />}>
-                      <PlayingCard card={view.discardTop} width={pileW} sway={false} />
-                    </Draggable>
+                    // Quando tocca a me pescare, il tocco prende lo scarto; altrimenti la carta si ingrandisce.
+                    <NoCardZoom.Provider value={drawing}>
+                      <Draggable payload={drawing ? { kind: 'discard', ids: [view.discardTop.id] } : null} ghost={<PlayingCard card={view.discardTop} width={pileW} sway={false} />}>
+                        <PlayingCard card={view.discardTop} width={pileW} sway={false} />
+                      </Draggable>
+                    </NoCardZoom.Provider>
                   ) : null}
                 </Slot>
               </DropZone>

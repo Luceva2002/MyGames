@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { Pressable, ScrollView, useWindowDimensions, View } from 'react-native';
 import type { Card, SolitarioFrom, SolitarioMove, SolitarioTo, SolitarioView } from '@giochi/engine';
 import type { BoardProps } from './common';
-import { CARD_RATIO, CardBack, CardGhost, DeckPile, PlayingCard } from '../ui/cards';
+import { CARD_RATIO, CardBack, CardGhost, DeckPile, NoCardZoom, PlayingCard } from '../ui/cards';
 import { Draggable, DropZone, type DragPayload } from '../ui/drag';
 import { Button, Row, T, tap } from '../ui/kit';
 import { TableBg } from '../ui/tables';
@@ -40,7 +40,10 @@ function sameFrom(a: SolitarioFrom | null, b: SolitarioFrom) {
 export function SolitarioBoard({ view, myTurn, onMove }: BoardProps<SolitarioView, SolitarioMove>) {
   const { width } = useWindowDimensions();
   // Il tavolo ha il bordo dorato (circa 9% della larghezza): le 7 colonne devono starci dentro.
-  const cw = Math.min(96, (Math.min(width, 900) * (width < 700 ? 0.8 : 0.9) - 12 - 6 * 6) / 7);
+  // Sul telefono le sette colonne usano tutta la larghezza del panno; sotto i 60 px le carte mostrano
+  // valore e seme grandi in cima, così si leggono anche impilate.
+  const cw = Math.min(96, width < 700 ? (width - 60 - 6 * 4) / 7 : (Math.min(width, 900) * 0.9 - 12 - 6 * 6) / 7);
+  const compact = cw < 60;
   const ch = cw * CARD_RATIO;
   const [sel, setSel] = useState<SolitarioFrom | null>(null);
   const [lift, setLift] = useState<{ pile: number; index: number } | null>(null);
@@ -92,7 +95,9 @@ export function SolitarioBoard({ view, myTurn, onMove }: BoardProps<SolitarioVie
 
   return (
     <TableBg table="teal">
-      <Row style={{ padding: 4, justifyContent: 'center' }} gap={6}>
+      {/* Nel solitario ogni tocco sposta le carte: niente lente. */}
+      <NoCardZoom.Provider value>
+      <Row style={{ padding: 4, paddingTop: 8, justifyContent: 'center' }} gap={compact ? 4 : 6}>
         <Pressable
           onPress={() => {
             tap();
@@ -110,19 +115,19 @@ export function SolitarioBoard({ view, myTurn, onMove }: BoardProps<SolitarioVie
             </View>
           )}
         </Pressable>
-        <View style={{ width: cw * 1.7, height: ch, flexDirection: 'row' }}>
+        <View style={{ width: cw * (compact ? 1.45 : 1.7), height: ch, flexDirection: 'row' }}>
           {view.waste.map((c, i) => {
             const isTop = i === view.waste.length - 1;
             return (
-              <View key={c.id} style={{ marginLeft: i ? -cw * 0.75 : 0 }}>
+              <View key={c.id} style={{ marginLeft: i ? -cw * (compact ? 0.78 : 0.75) : 0 }}>
                 <Draggable payload={isTop ? dragOf({ zone: 'waste' }, [c]) : null} ghost={<CardGhost cards={[c]} width={cw} />}>
-                  <PlayingCard card={c} width={cw} selected={isTop && sel?.zone === 'waste'} onPress={isTop ? () => select({ zone: 'waste' }) : undefined} />
+                  <PlayingCard card={c} width={cw} compact={compact} selected={isTop && sel?.zone === 'waste'} onPress={isTop ? () => select({ zone: 'waste' }) : undefined} />
                 </Draggable>
               </View>
             );
           })}
         </View>
-        <View style={{ width: cw * 0.3 }} />
+        <View style={{ width: cw * (compact ? 0.05 : 0.3) }} />
         {view.foundations.map((f, pile) => {
           const top = f[f.length - 1];
           return (
@@ -137,7 +142,7 @@ export function SolitarioBoard({ view, myTurn, onMove }: BoardProps<SolitarioVie
             <Pressable onPress={() => (sel ? drop({ zone: 'foundation', pile }) : top && select({ zone: 'foundation', pile }))}>
               {top ? (
                 <Draggable payload={dragOf({ zone: 'foundation', pile }, [top])} ghost={<CardGhost cards={[top]} width={cw} />}>
-                  <PlayingCard card={top} width={cw} selected={sel?.zone === 'foundation' && sel.pile === pile} />
+                  <PlayingCard card={top} width={cw} compact={compact} selected={sel?.zone === 'foundation' && sel.pile === pile} />
                 </Draggable>
               ) : (
                 <View style={{ width: cw, height: ch, borderRadius: cw * 0.1, borderWidth: 2, borderColor: '#ffffff44', alignItems: 'center', justifyContent: 'center' }}>
@@ -151,7 +156,7 @@ export function SolitarioBoard({ view, myTurn, onMove }: BoardProps<SolitarioVie
           );
         })}
       </Row>
-      <ScrollView contentContainerStyle={{ flexDirection: 'row', justifyContent: 'center', gap: 6, padding: 4, paddingBottom: 40 }}>
+      <ScrollView contentContainerStyle={{ flexDirection: 'row', justifyContent: 'center', gap: width < 700 ? 4 : 6, padding: 4, paddingBottom: 40 }}>
         {view.tableau.map((pile, p) => (
           <DropZone
             key={p}
@@ -169,12 +174,12 @@ export function SolitarioBoard({ view, myTurn, onMove }: BoardProps<SolitarioVie
             {pile.length === 0 && <View style={{ width: cw, height: ch, borderRadius: cw * 0.1, borderWidth: 2, borderColor: '#ffffff22' }} />}
             {pile.map((c, i) => {
               const selected = sel?.zone === 'tableau' && sel.pile === p && i >= sel.index;
-              const offset = pile[i - 1] ? ch * 0.3 : ch * 0.12;
+              const offset = pile[i - 1] ? ch * (compact ? 0.36 : 0.3) : ch * 0.12;
               return (
                 <View key={c?.id ?? `down${p}-${i}`} style={[{ marginTop: i ? -ch + offset : 0 }, lift?.pile === p && i > lift.index && { opacity: 0.25 }]}>
                   {c ? (
                     <Draggable payload={dragOf({ zone: 'tableau', pile: p, index: i }, pile.slice(i) as Card[])} ghost={<StackGhost cards={pile.slice(i) as Card[]} width={cw} offset={ch * 0.3} />} onLift={(l) => setLift(l ? { pile: p, index: i } : null)}>
-                      <PlayingCard card={c} width={cw} selected={selected} onPress={() => select({ zone: 'tableau', pile: p, index: i })} />
+                      <PlayingCard card={c} width={cw} compact={compact} selected={selected} onPress={() => select({ zone: 'tableau', pile: p, index: i })} />
                     </Draggable>
                   ) : (
                     <CardBack width={cw} deck="fr" />
@@ -186,6 +191,7 @@ export function SolitarioBoard({ view, myTurn, onMove }: BoardProps<SolitarioVie
           </DropZone>
         ))}
       </ScrollView>
+      </NoCardZoom.Provider>
       <Row style={{ padding: 10, justifyContent: 'space-between' }}>
         <T color={colors.muted}>Mosse: {view.moves}</T>
         {view.stuck && <T color={colors.accent}>Sembra bloccato…</T>}

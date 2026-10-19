@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, useWindowDimensions, View } from 'react-native';
 import type { Card } from '@giochi/engine';
-import { CARD_RATIO, CardGhost, PlayingCard } from '../ui/cards';
+import { CARD_RATIO, CardGhost, NoCardZoom, PlayingCard } from '../ui/cards';
 import { Draggable, DropZone, type DragPayload } from '../ui/drag';
 import { Row, T, tap } from '../ui/kit';
 import { colors } from '../ui/theme';
@@ -139,6 +139,7 @@ export function MeldRow({ cards, width, onPress, color, label, active, invalid, 
         gap: 2,
       }}
     >
+      <NoCardZoom.Provider value={!!onPress && !onCardPress}>
       <View style={{ flexDirection: 'row', minHeight: width * CARD_RATIO }}>
         {cards.map((c, i) => {
           const p = dragCard?.(c.id) ?? null;
@@ -150,6 +151,7 @@ export function MeldRow({ cards, width, onPress, color, label, active, invalid, 
           );
         })}
       </View>
+      </NoCardZoom.Provider>
       {label ? (
         <T size={11} weight="800" color={color ?? colors.muted}>
           {label}

@@ -456,7 +456,7 @@ export function turnText(myTurn: boolean, names: string[], turn: Seat, me: Seat 
 
 const styles = StyleSheet.create({
   stickerWrap: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' },
-  sticker: { backgroundColor: colors.accent2, borderWidth: 3, borderColor: colors.line, borderRadius: 18, paddingHorizontal: 22, paddingVertical: 10, transform: [{ rotate: '-6deg' }], boxShadow: `0px 6px 0px ${colors.line}` },
+  sticker: { backgroundColor: colors.accent2, borderWidth: 3, borderColor: colors.line, borderRadius: 18, paddingHorizontal: 22, paddingVertical: 10, transform: [{ rotate: '-3deg' }], boxShadow: `0px 6px 0px ${colors.line}` },
   badge: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 6, paddingLeft: 6, paddingRight: 12, borderRadius: 18, borderWidth: 3, borderColor: colors.line, minWidth: 120, backgroundColor: colors.surface, boxShadow: `0px 4px 0px ${colors.line}` },
   opponents: { gap: 10, paddingHorizontal: 12, paddingVertical: 8 },
   // La mano sale un po' sul bordo del tavolo, come le carte tenute in mano sopra il panno.
@@ -476,7 +476,7 @@ const styles = StyleSheet.create({
 });
 
 /**
- * Adesivo magenta inclinato al centro per gli eventi ("+1 scopa!", "Settebello"), visibile 1,2 s (SPEC §9).
+ * Adesivo magenta inclinato al centro per gli eventi ("+1 scopa!", "Settebello"), visibile 1 s (SPEC §9).
  * `eventKey` cambia a ogni nuovo evento; null non mostra niente.
  */
 export function EventSticker({ text, eventKey }: { text: string | null; eventKey: string | null }) {
@@ -484,7 +484,7 @@ export function EventSticker({ text, eventKey }: { text: string | null; eventKey
   useEffect(() => {
     if (!text || !eventKey) return;
     setShown(text);
-    const t = setTimeout(() => setShown(null), 1200);
+    const t = setTimeout(() => setShown(null), 1000);
     return () => clearTimeout(t);
   }, [eventKey]); // eslint-disable-line react-hooks/exhaustive-deps
   if (!shown) return null;

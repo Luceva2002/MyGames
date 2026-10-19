@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import Svg, { Circle, G, Path, Rect } from 'react-native-svg';
+import Svg, { Circle, G, Path, Rect, Text as SvgText } from 'react-native-svg';
 import type { Card } from '@giochi/engine';
 import { colors, font } from './theme';
 
@@ -90,7 +90,7 @@ export function SuitShape({ suit }: { suit: string }) {
 
 // Le francesi nel motore usano h/d/c/s come le italiane usano d/c/s/b: le rinomino per non confonderle.
 const FR_SUIT: Record<string, string> = { h: 'h', d: 'q', c: 'f', s: 'p' };
-const shapeOf = (card: Card) => (card.deck === 'fr' ? FR_SUIT[card.suit] : card.suit);
+export const shapeOf = (card: Card) => (card.deck === 'fr' ? FR_SUIT[card.suit] : card.suit);
 
 /**
  * Disposizione classica dei semi, in coordinate da 0 a 1 dentro la zona centrale della carta
@@ -136,6 +136,58 @@ export function CardCorners({ card, w }: { card: Card; w: number }) {
   );
 }
 
+
+/**
+ * L'asso, carta speciale: raggiera dorata, medaglione con la cucitura tratteggiata, seme grande al
+ * centro, quattro rombi da Arlecchino agli angoli e il nastro "ASSO" in basso. Tutto in codice,
+ * nello stesso tratto nero spesso delle altre carte.
+ */
+function AceArt({ card, w, h }: { card: Card; w: number; h: number }) {
+  const cx = w / 2;
+  const cy = h * 0.47;
+  const r = w * 0.36;
+  const rays = 16;
+  const pip = w * 0.44;
+  const sw = Math.max(1.5, w * 0.025);
+  // Il medaglione ha un colore che fa risaltare il seme: turchese sotto l'oro, oro sotto il turchese e il nero, rosa sotto il magenta.
+  const shape = shapeOf(card);
+  const tint = shape === 'd' ? '#C9F2EE' : shape === 'h' || shape === 'q' ? '#FFF1C2' : shape === 'c' ? '#FFD6E8' : '#FFE7A3';
+  const diamond = (x: number, y: number, s: number, fill: string, key: string) => (
+    <Path key={key} d={`M${x} ${y - s} L${x + s * 0.7} ${y} L${x} ${y + s} L${x - s * 0.7} ${y} Z`} fill={fill} stroke={INK} strokeWidth={sw * 0.7} strokeLinejoin="round" />
+  );
+  const ribbonY = h * 0.84;
+  const rw = w * 0.5;
+  const rh = w * 0.13;
+  return (
+    <G>
+      {Array.from({ length: rays }, (_, i) => {
+        const a = (i / rays) * Math.PI * 2;
+        const b = a + Math.PI / rays;
+        const R = r * 1.55;
+        return <Path key={`r${i}`} d={`M${cx} ${cy} L${cx + Math.cos(a) * R} ${cy + Math.sin(a) * R} L${cx + Math.cos(b) * R} ${cy + Math.sin(b) * R} Z`} fill={i % 2 ? '#FFF1C2' : '#FFE08A'} opacity={0.75} />;
+      })}
+      <Circle cx={cx} cy={cy} r={r} fill={tint} stroke={INK} strokeWidth={sw} />
+      <Circle cx={cx} cy={cy} r={r * 0.84} fill="none" stroke={INK} strokeWidth={sw * 0.5} strokeDasharray={`${w * 0.03} ${w * 0.025}`} />
+      <G transform={`translate(${cx - pip / 2} ${cy - pip / 2}) scale(${pip / 100})`}>
+        <SuitShape suit={shapeOf(card)} />
+      </G>
+      {diamond(w * 0.82, h * 0.1, w * 0.06, MAGENTA, 'd1')}
+      {diamond(w * 0.15, h * 0.72, w * 0.05, TURQUOISE, 'd2')}
+      {diamond(w * 0.85, h * 0.72, w * 0.05, YELLOW, 'd3')}
+      <Path
+        d={`M${cx - rw / 2 - rh * 0.6} ${ribbonY + rh * 0.25} L${cx - rw / 2} ${ribbonY - rh / 2} L${cx + rw / 2} ${ribbonY - rh / 2} L${cx + rw / 2 + rh * 0.6} ${ribbonY + rh * 0.25} L${cx + rw / 2} ${ribbonY + rh / 2} L${cx - rw / 2} ${ribbonY + rh / 2} Z`}
+        fill={MAGENTA}
+        stroke={INK}
+        strokeWidth={sw * 0.8}
+        strokeLinejoin="round"
+      />
+      <SvgText x={cx} y={ribbonY + rh * 0.3} fontSize={rh * 0.82} fontFamily={font.display} fill="#fff" textAnchor="middle" letterSpacing={w * 0.01}>
+        ASSO
+      </SvgText>
+    </G>
+  );
+}
+
 export const NumeralFace = memo(function NumeralFace({ card, w, h }: { card: Card; w: number; h: number }) {
   const shape = shapeOf(card);
   const pips = PIPS[card.rank] ?? [];
@@ -155,7 +207,8 @@ export const NumeralFace = memo(function NumeralFace({ card, w, h }: { card: Car
   return (
     <View style={[StyleSheet.absoluteFill, { backgroundColor: CREAM }]}>
       <Svg width={w} height={h} style={StyleSheet.absoluteFill}>
-        {pips.map(([px, py], i) => {
+        {ace && <AceArt card={card} w={w} h={h} />}
+        {!ace && pips.map(([px, py], i) => {
           const cx = ace ? w / 2 : left + px * (right - left);
           const cy = ace ? h / 2 : top + py * (bottom - top);
           const rot = flip && py > 0.5 ? ` rotate(180 50 50)` : '';
@@ -171,6 +224,25 @@ export const NumeralFace = memo(function NumeralFace({ card, w, h }: { card: Car
   );
 });
 
+/**
+ * Indice grande per le carte strette e sovrapposte (le colonne del solitario sul telefono):
+ * valore e seme grandi in una fascia in alto, leggibili anche quando si vede solo la cima.
+ */
+export function BigIndex({ card, w }: { card: Card; w: number }) {
+  const red = card.suit === 'h' || card.suit === 'd';
+  const fs = w * 0.4;
+  const pip = w * 0.34;
+  return (
+    <View pointerEvents="none" style={[styles.bigIndex, { height: w * 0.5, paddingHorizontal: w * 0.07, borderTopLeftRadius: w * 0.1, borderTopRightRadius: w * 0.1 }]}>
+      <Text style={{ color: red ? MAGENTA : INK, fontFamily: font.display, fontSize: fs, lineHeight: fs * 1.1, includeFontPadding: false }}>{valueLabel(card)}</Text>
+      <Svg width={pip} height={pip} viewBox="0 0 100 100">
+        <SuitShape suit={shapeOf(card)} />
+      </Svg>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
+  bigIndex: { position: 'absolute', left: 0, right: 0, top: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: CREAM, borderBottomWidth: 1, borderBottomColor: '#12052B22' },
   badge: { backgroundColor: MAGENTA, borderColor: INK, alignItems: 'center', justifyContent: 'center' },
 });

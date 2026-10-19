@@ -1,6 +1,6 @@
 import { useEffect, type ReactNode } from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
-import Animated, { cancelAnimation, SlideOutDown, SlideOutUp, useAnimatedStyle, useSharedValue, withDelay, withRepeat, withSequence, withSpring, withTiming } from 'react-native-reanimated';
+import Animated, { cancelAnimation, SlideOutDown, SlideOutUp, useAnimatedStyle, useSharedValue, withDelay, withSequence, withSpring, withTiming } from 'react-native-reanimated';
 import { useReducedMotion } from './settings';
 import { sfx, type Sfx } from './sound';
 
@@ -43,7 +43,7 @@ export function FlyIn({ from = 'above', fromX = 0, delay = 0, leave, sound, chil
       transform: [{ translateX: fromX * k }, { translateY: dy * k }, { scale: 1 + 0.25 * k }, { rotate: `${(from === 'below' ? 10 : fromX ? -25 : -10) * k}deg` }],
     };
   });
-  const exiting = !leave || reduced ? undefined : (leave === 'up' ? SlideOutUp : SlideOutDown).duration(520);
+  const exiting = !leave || reduced ? undefined : (leave === 'up' ? SlideOutUp : SlideOutDown).duration(320);
   return (
     <Animated.View style={[style, anim]} exiting={exiting}>
       {children}
@@ -51,30 +51,33 @@ export function FlyIn({ from = 'above', fromX = 0, delay = 0, leave, sound, chil
   );
 }
 
-/** Il cartello salta fuori: parte piccolo, rimbalza oltre la misura e si assesta inclinato. */
+/** Il cartello compare secco: un attimo di scala, senza rimbalzi né rotazioni (Luca: meno movimento). */
 export function PopIn({ children, style }: { children: ReactNode; style?: StyleProp<ViewStyle> }) {
   const reduced = useReducedMotion();
-  const s = useSharedValue(reduced ? 1 : 0.2);
-  const r = useSharedValue(reduced ? 0 : -18);
+  const s = useSharedValue(reduced ? 1 : 0.9);
+  const o = useSharedValue(reduced ? 1 : 0);
   useEffect(() => {
     if (reduced) return;
-    s.value = withSpring(1, { damping: 7, stiffness: 260 });
-    r.value = withSpring(0, { damping: 6, stiffness: 200 });
+    s.value = withTiming(1, { duration: 140 });
+    o.value = withTiming(1, { duration: 110 });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
-  const anim = useAnimatedStyle(() => ({ transform: [{ scale: s.value }, { rotate: `${r.value}deg` }] }));
+  const anim = useAnimatedStyle(() => ({ opacity: o.value, transform: [{ scale: s.value }] }));
   return <Animated.View style={[style, anim]}>{children}</Animated.View>;
 }
 
-/** Pulsa piano finché `active` è vero: per il proprio turno, così l'occhio ci cade subito. */
+/**
+ * Quando arriva il proprio turno il riquadro fa un piccolo scatto e poi resta fermo: il turno si
+ * legge dal bordo colorato, senza pulsare di continuo.
+ */
 export function Pulse({ active, children, style }: { active: boolean; children: ReactNode; style?: StyleProp<ViewStyle> }) {
   const reduced = useReducedMotion();
   const s = useSharedValue(1);
   useEffect(() => {
     if (!active || reduced) {
-      s.value = withTiming(1, { duration: 150 });
+      s.value = withTiming(1, { duration: 120 });
       return;
     }
-    s.value = withSequence(withSpring(1.12, { damping: 6, stiffness: 300 }), withRepeat(withSequence(withTiming(1.05, { duration: 600 }), withTiming(1, { duration: 600 })), -1, true));
+    s.value = withSequence(withTiming(1.05, { duration: 90 }), withTiming(1, { duration: 140 }));
     return () => cancelAnimation(s);
   }, [active, reduced, s]);
   const anim = useAnimatedStyle(() => ({ transform: [{ scale: s.value }] }));

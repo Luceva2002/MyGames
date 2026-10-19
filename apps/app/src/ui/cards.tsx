@@ -2,7 +2,7 @@ import { createContext, memo, useContext, useEffect, useState, type ReactNode } 
 import Animated, { cancelAnimation, useAnimatedStyle, useSharedValue, withDelay, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
 import { Image, Modal, Pressable, StyleSheet, Text, useWindowDimensions, View, type StyleProp, type ViewStyle } from 'react-native';
 import { CARD_BACKS, CARD_FACES } from './deckArt';
-import { CardCorners, NumeralFace } from './suits';
+import { BigIndex, CardCorners, NumeralFace } from './suits';
 import Svg, { Path } from 'react-native-svg';
 import { cardName, type Card } from '@giochi/engine';
 import { tapAllowed } from './drag';
@@ -81,6 +81,8 @@ export const CARD_RATIO = 1.55;
 
 /** Chi mostra una carta in grande: la fornisce CardZoomLayer, attorno a ogni partita. */
 const CardZoom = createContext<((card: Card) => void) | null>(null);
+/** Dentro un elemento che si tocca già (una combinazione a cui attaccare carte) il tocco resta suo. */
+export const NoCardZoom = createContext(false);
 
 /**
  * Lente per le carte: toccando una carta della mano (o tenendola premuta quando il tocco la gioca)
@@ -97,7 +99,7 @@ export function CardZoomLayer({ children }: { children: ReactNode }) {
         <Pressable style={styles.zoomScrim} onPress={() => setCard(null)} accessibilityLabel="Chiudi la carta">
           {card && (
             <>
-              <PlayingCard card={card} width={w} sway={false} />
+              <PlayingCard card={card} width={w} sway={false} zoomable={false} />
               <Text style={styles.zoomLabel}>{cardName(card)}</Text>
             </>
           )}
@@ -107,9 +109,14 @@ export function CardZoomLayer({ children }: { children: ReactNode }) {
   );
 }
 
-export const PlayingCard = memo(function PlayingCard({ card, width, selected, dimmed, onPress, style, chosenColor, sway, zoomable }: {
+export const PlayingCard = memo(function PlayingCard({ card, width, selected, dimmed, onPress, style, chosenColor, sway, zoomable, compact }: {
   card: Card;
-  /** Si può ingrandire: col tocco se il tocco non fa altro, altrimenti tenendola premuta. */
+  /** Carta stretta e sovrapposta: valore e seme grandi in alto, leggibili anche dalla sola cima. */
+  compact?: boolean;
+  /**
+   * Si può ingrandire: col tocco se il tocco non fa altro, altrimenti tenendola premuta. Di default
+   * sì, per ogni carta scoperta di una partita (mano, tavolo, scarti, prese).
+   */
   zoomable?: boolean;
   width: number;
   selected?: boolean;
@@ -117,18 +124,21 @@ export const PlayingCard = memo(function PlayingCard({ card, width, selected, di
   onPress?: () => void;
   style?: StyleProp<ViewStyle>;
   chosenColor?: string;
-  /** Dondola a riposo: di default le carte sul tavolo (non toccabili) dondolano, quelle in mano no. */
+  /** Dondola a riposo: solo se chiesto (di default le carte stanno ferme, meno movimento sul tavolo). */
   sway?: boolean;
 }) {
   const reduced = useReducedMotion();
   const zoomCtx = useContext(CardZoom);
-  const zoom = zoomable && zoomCtx ? () => zoomCtx(card) : undefined;
+  const blocked = useContext(NoCardZoom);
+  // Tocco per ingrandire solo se il tocco non serve ad altro; tenendo premuto si ingrandisce sempre.
+  const zoom = (zoomable ?? !blocked) && zoomCtx ? () => zoomCtx(card) : undefined;
+  const zoomHold = zoomable !== false && zoomCtx ? () => zoomCtx(card) : undefined;
   const height = width * cardRatio(card.deck);
   const radius = width * 0.1;
   // Numerali disegnati in codice; figure e Jolly sono immagini coi personaggi.
   const numeral = (card.deck === 'it' && card.rank <= 7) || (card.deck === 'fr' && card.suit !== 'j' && card.rank <= 10);
   const face = (
-    <Sway id={card.id} enabled={(sway ?? !onPress) && !reduced}>
+    <Sway id={card.id} enabled={(sway ?? false) && !reduced}>
       <View style={[{ width, height }, dimmed && { opacity: 0.62 }, style]}>
         <View
           accessibilityLabel={cardName(card)}
@@ -142,6 +152,7 @@ export const PlayingCard = memo(function PlayingCard({ card, width, selected, di
           {numeral && <NumeralFace card={card} w={width} h={height} />}
           {!numeral && card.deck !== 'uno' && <FigureFace card={card} w={width} h={height} />}
           {card.deck === 'uno' && <UnoFace card={card} w={width} h={height} chosenColor={chosenColor} />}
+          {compact && card.deck !== 'uno' && card.suit !== 'j' && <BigIndex card={card} w={width} />}
         </View>
       </View>
     </Sway>
@@ -171,7 +182,7 @@ export const PlayingCard = memo(function PlayingCard({ card, width, selected, di
         tap();
         onPress();
       }}
-      onLongPress={zoom}
+      onLongPress={zoomHold}
       delayLongPress={380}
       // Carta scelta: si alza del 14% (spec §4); premuta scende appena (feedback < 100 ms, V-FB-1);
       // col mouse sopra si solleva un poco, come in mano a un giocatore.
@@ -192,7 +203,7 @@ export function CardGhost({ cards, width }: { cards: Card[]; width: number }) {
     <View style={{ flexDirection: 'row' }}>
       {cards.map((c, i) => (
         <View key={c.id} style={{ marginLeft: i ? -width * 0.6 : 0, transform: [{ rotate: `${(i - (cards.length - 1) / 2) * 5}deg` }] }}>
-          <PlayingCard card={c} width={width} sway={false} />
+          <PlayingCard card={c} width={width} sway={false} zoomable={false} />
         </View>
       ))}
     </View>
