@@ -1,3 +1,4 @@
+import type { LastAction } from './narrate';
 import type { GameResult, Seat } from './core/types';
 
 /** Messaggi scambiati fra app e server delle stanze. */
@@ -43,6 +44,8 @@ export interface SeatView {
   avatars?: (string | null)[];
   active: Seat[];
   result: GameResult | null;
+  /** L'ultima mossa raccontata, per far capire cosa ha fatto chi ha appena giocato. */
+  lastAction?: LastAction | null;
 }
 
 export interface JoinOptions {

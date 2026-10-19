@@ -19,20 +19,6 @@ export function botMove<S, M>(game: Game<S, M>, state: S, seat: Seat): M {
   return game.bot(clone(state), seat);
 }
 
-/** Fa muovere i computer finché tocca a un umano o la partita finisce. Restituisce gli stati intermedi. */
-export function runBots<S, M>(game: Game<S, M>, state: S, isBot: (seat: Seat) => boolean, maxSteps = 500): S[] {
-  const steps: S[] = [];
-  let current = state;
-  for (let i = 0; i < maxSteps; i++) {
-    if (game.result(current) || !game.bot) break;
-    const botSeat = game.activePlayers(current).find(isBot);
-    if (botSeat === undefined) break;
-    current = applyMove(game, current, botSeat, botMove(game, current, botSeat));
-    steps.push(current);
-  }
-  return steps;
-}
-
 /** Simula una partita intera con soli computer: usata nei test. */
 export function simulate<S, M>(game: Game<S, M>, players: number, seed: number, options?: unknown, maxSteps = 5000) {
   let state = game.setup({ players, seed, options });

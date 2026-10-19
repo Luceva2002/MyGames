@@ -36,9 +36,7 @@ export const shadow = (y: number) => ({ boxShadow: `0px ${y}px 0px ${colors.line
  * sempre insieme al nome (P-ID-1, P-ID-2). Il blu scuro Okabe-Ito è schiarito: sul viola non si leggeva (V-CON-1).
  */
 export const seatColors = ['#E69F00', '#56B4E9', '#009E73', '#F0E442', '#CC79A7', '#D55E00', '#9AD0F5', '#C9C9C9', '#E69F00', '#56B4E9'];
-export const seatSymbols = ['●', '▲', '■', '◆', '★', '✚', '⬟', '♥', '✱', '⬢'];
 export const seatColor = (seat: number) => seatColors[seat % seatColors.length];
-export const seatSymbol = (seat: number) => seatSymbols[seat % seatSymbols.length];
 
 /** Bagel Fat One per titoli, punteggi e cartelli; Nunito per testi e bottoni. */
 export const font = {

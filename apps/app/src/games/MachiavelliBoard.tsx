@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { checkMeld, NO_WILD, type Card, type MachiavelliMove, type MachiavelliView , type Seat } from '@giochi/engine';
-import { Banner, MyCorner, MyBar, othersOf, Slot, TableTop, turnText, useCardWidth, type BoardProps, type SeatInfo } from './common';
-import { CardTable, MeldRow, MultiHand, usePileWidth } from './RummyParts';
+import { MyCorner, othersOf, Slot, TableTop, turnText, useCardWidth, type BoardProps, type SeatInfo } from './common';
+import { CardTable, MeldRow, MultiHand } from './RummyParts';
 import { DeckPile } from '../ui/cards';
 import { DropZone, type DragPayload } from '../ui/drag';
 import { Button, Row, T, tap } from '../ui/kit';

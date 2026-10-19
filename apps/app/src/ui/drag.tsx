@@ -48,7 +48,6 @@ interface DragApi {
 const ApiCtx = createContext<DragApi | null>(null);
 const StateCtx = createContext<{ payload: DragPayload | null; hover: string | null }>({ payload: null, hover: null });
 
-export const useDragState = () => useContext(StateCtx);
 
 function haptic(kind: 'pick' | 'hover' | 'drop') {
   if (!getSettings().haptics) return;

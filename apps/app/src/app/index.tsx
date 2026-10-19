@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Image, Modal, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
-import { router } from 'expo-router';
-import { assignAvatars, catalog, playerCounts, type Category, type CatalogEntry } from '@giochi/engine';
-import { createRoom, joinUrl, quickRoom, useOnline } from '../session/online';
+import { ActivityIndicator, Image, Modal, Pressable, StyleSheet, TextInput, useWindowDimensions, View } from 'react-native';
+import { router, useLocalSearchParams } from 'expo-router';
+import { assignAvatars, catalog, CODE_LENGTH, normalizeCode, playerCounts, type Category, type CatalogEntry } from '@giochi/engine';
+import { createRoom, joinUrl, quickJoin, quickRoom, useOnline } from '../session/online';
 import { canPassAndPlay } from '../session/local';
 import { CharacterAvatar } from '../ui/avatars';
 import { QrCode } from '../ui/QrCode';
@@ -21,16 +21,6 @@ const CATEGORIES: { id: Category | 'all'; label: string }[] = [
 
 const CATEGORY_LABEL: Record<Category, string> = { carte: 'carte', tavolo: 'tavolo', dadi: 'dadi', abilita: 'abilità', party: 'party' };
 
-type PlayMode = 'offline' | 'friends' | 'share' | 'online';
-
-/** Filtri per modo di gioco: da soli o sullo stesso telefono, con la TV in salotto, o ognuno da casa. */
-const MODES: { id: PlayMode; icon: string; label: string; hint: string; fits: (e: CatalogEntry) => boolean }[] = [
-  { id: 'offline', icon: '🤖', label: 'Offline', hint: 'Su questo dispositivo contro il computer', fits: (e) => e.status === 'ready' && !e.meta.humansOnly },
-  { id: 'friends', icon: '🫶', label: 'Offline con amici', hint: 'Tutti sullo stesso dispositivo', fits: (e) => e.status === 'ready' && canPassAndPlay(e.meta) },
-  { id: 'share', icon: '📺', label: 'Stanza in share', hint: 'Uno schermo fa da tavolo, i telefoni da controller', fits: (e) => e.status === 'ready' && e.meta.maxPlayers >= 2 },
-  { id: 'online', icon: '🌍', label: 'Online', hint: 'Ognuno dal suo telefono, anche a distanza', fits: (e) => e.status === 'ready' && e.meta.maxPlayers >= 2 },
-];
-
 function playersLabel(e: CatalogEntry) {
   const counts = playerCounts(e.meta);
   const { minPlayers: a, maxPlayers: b } = e.meta;
@@ -39,7 +29,6 @@ function playersLabel(e: CatalogEntry) {
 }
 
 function GameTile({ entry, width, onOpen }: { entry: CatalogEntry; width: number; onOpen: (e: CatalogEntry) => void }) {
-  const external = entry.status === 'external';
   const art = GAME_ART[entry.meta.id];
   return (
     <Pressable
@@ -62,13 +51,6 @@ function GameTile({ entry, width, onOpen }: { entry: CatalogEntry; width: number
     >
       <View style={{ width, height: width, backgroundColor: entry.meta.color }}>
         {art ? <Image source={art} style={{ width, height: width }} accessibilityIgnoresInvertColors /> : null}
-        {external && (
-          <View style={styles.ribbon}>
-            <T size={11} weight="900" color={colors.onAccent}>
-              APP A PARTE
-            </T>
-          </View>
-        )}
         <View style={styles.players}>
           <T size={12} weight="900" color="#fff">
             👤 {playersLabel(entry)}
@@ -208,11 +190,65 @@ function QuickOption({ icon, title, text, primary, onPress }: { icon: string; ti
   );
 }
 
+/**
+ * Entrare in una stanza dalla home, in un passo: si scrivono le 4 lettere e si entra appena sono
+ * complete (o si arriva col link/QR, che le ha già). Si entra col nome salvato o con quello di una
+ * maschera; nome e personaggio si cambiano poi dentro la stanza.
+ */
+function JoinBar({ initialCode }: { initialCode: string }) {
+  const online = useOnline();
+  const [code, setCode] = useState(initialCode);
+  const busy = online.status === 'connecting';
+  const go = async (c: string) => {
+    if (c.length !== CODE_LENGTH || busy) return;
+    const joined = await quickJoin(c);
+    if (joined) router.replace({ pathname: '/room/[code]', params: { code: joined } });
+  };
+  useEffect(() => {
+    if (initialCode.length === CODE_LENGTH) go(initialCode);
+  }, [initialCode]); // eslint-disable-line react-hooks/exhaustive-deps
+  return (
+    <View style={[styles.bigAction, styles.joinBar]}>
+      <T size={30}>📱</T>
+      <View style={{ flex: 1, gap: 6 }}>
+        <T size={20} weight="900" color={colors.onAccent}>
+          {busy ? 'Entro nella stanza…' : 'Entra con un codice'}
+        </T>
+        <Row gap={8}>
+          <TextInput
+            value={code}
+            onChangeText={(t) => {
+              const c = normalizeCode(t);
+              setCode(c);
+              if (c.length === CODE_LENGTH) go(c);
+            }}
+            placeholder="ABCD"
+            placeholderTextColor="#12052B55"
+            autoCapitalize="characters"
+            autoCorrect={false}
+            maxLength={CODE_LENGTH}
+            accessibilityLabel="Codice della stanza"
+            onSubmitEditing={() => go(code)}
+            style={styles.codeInput}
+          />
+          {busy && <ActivityIndicator color={colors.onAccent} />}
+        </Row>
+        {online.error && !busy ? (
+          <T size={13} weight="800" color="#B00030">
+            {online.error}
+          </T>
+        ) : null}
+      </View>
+    </View>
+  );
+}
+
 export default function Home() {
   const { width } = useWindowDimensions();
+  // Il link d'invito e il QR portano qui con ?code=ABCD: si entra subito, senza altre schermate.
+  const { code: codeParam } = useLocalSearchParams<{ code?: string }>();
+  const linkCode = normalizeCode(codeParam ?? '');
   const [category, setCategory] = useState<Category | 'all'>('all');
-  const [mode, setMode] = useState<PlayMode | null>(null);
-  const online = useOnline();
   const contentWidth = Math.min(width, 1100) - 32;
   const columns = contentWidth > 900 ? 5 : contentWidth > 640 ? 4 : contentWidth > 420 ? 3 : 2;
   // L'hero tiene le proporzioni dell'illustrazione (1600×720), così si vedono tutte e 4 le maschere.
@@ -223,22 +259,14 @@ export default function Home() {
 
   const entries = useMemo(
     () =>
-      catalog().filter(
-        (e) =>
-          (category === 'all' || e.meta.category === category) &&
-          (mode === null || MODES.find((m) => m.id === mode)!.fits(e)),
-      ),
-    [category, mode],
+      catalog().filter((e) => category === 'all' || e.meta.category === category),
+    [category],
   );
 
-  // Avvio rapido: un tocco sul gioco apre la scelta "come giochiamo"; col filtro del modo già
-  // scelto si parte subito, senza passare dalla pagina delle impostazioni della partita.
+  // Avvio rapido: un tocco sul gioco apre la scelta "come giochiamo".
   const [quick, setQuick] = useState<CatalogEntry | null>(null);
   const open = (e: CatalogEntry) => {
     if (e.status !== 'ready') return router.push({ pathname: '/game/[id]', params: { id: e.meta.id } });
-    if (mode === 'offline') return startVsComputer(e);
-    if (mode === 'friends') return router.push({ pathname: '/game/[id]', params: { id: e.meta.id } });
-    if (mode === 'share' || mode === 'online') return startRoom(e, mode === 'share');
     setQuick(e);
   };
 
@@ -311,42 +339,9 @@ export default function Home() {
             if (code) router.push({ pathname: '/room/[code]', params: { code } });
           }}
         />
-        <BigAction icon="📱" title="Entra con un codice" text="Il telefono diventa il controller" onPress={() => router.push('/room/join')} />
+        <JoinBar initialCode={linkCode} />
       </Row>
 
-      <View style={{ gap: 10 }}>
-        <T size={14} weight="800" color={colors.muted}>
-          COME GIOCATE?
-        </T>
-        <Row gap={10} wrap>
-          {MODES.map((m) => {
-            const active = mode === m.id;
-            return (
-              <Pressable
-                key={m.id}
-                accessibilityRole="button"
-                accessibilityState={{ selected: active }}
-                accessibilityLabel={`${m.label}: ${m.hint}`}
-                onPress={() => {
-                  tap();
-                  setMode(active ? null : m.id);
-                }}
-                style={(state) => [styles.modeButton, active && { backgroundColor: colors.accent, borderColor: colors.accent }, focusRing((state as { focused?: boolean }).focused ?? false)]}
-              >
-                <T size={22}>{m.icon}</T>
-                <View style={{ flexShrink: 1 }}>
-                  <T size={15} weight="900" color={active ? colors.onAccent : colors.text}>
-                    {m.label}
-                  </T>
-                  <T size={12} weight="700" color={active ? colors.onAccent : colors.dim}>
-                    {m.hint}
-                  </T>
-                </View>
-              </Pressable>
-            );
-          })}
-        </Row>
-      </View>
 
       <Row gap={8} wrap>
         {CATEGORIES.map((c) => (
@@ -373,12 +368,12 @@ const styles = StyleSheet.create({
   wordmark: { textShadowColor: colors.line, textShadowOffset: { width: 0, height: 5 }, textShadowRadius: 0 },
   gear: { width: MIN_TOUCH, height: MIN_TOUCH, borderRadius: MIN_TOUCH / 2, backgroundColor: colors.scrim, alignItems: 'center', justifyContent: 'center' },
   tile: { backgroundColor: colors.surface, borderRadius: radius.l, overflow: 'hidden', borderWidth: 3, borderColor: colors.line, marginBottom: 6 },
-  ribbon: { position: 'absolute', top: 10, right: 10, backgroundColor: colors.accent, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
   sheetScrim: { flex: 1, backgroundColor: colors.scrim, justifyContent: 'flex-end', alignItems: 'center' },
   sheet: { width: '100%', maxWidth: 520, gap: 10, padding: 18, paddingBottom: 26, borderTopLeftRadius: 28, borderTopRightRadius: 28, backgroundColor: colors.surface, borderWidth: 3, borderColor: colors.line },
   sheetArt: { width: 64, height: 64, borderRadius: 16, borderWidth: 3, borderColor: colors.line },
   quickOption: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 64, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 18, borderWidth: 3, borderColor: colors.line, backgroundColor: colors.surface2, boxShadow: `0px 4px 0px ${colors.line}` },
-  modeButton: { flexDirection: 'row', alignItems: 'center', gap: 10, flexGrow: 1, flexBasis: 200, minHeight: 56, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 18, borderWidth: 3, borderColor: colors.line, backgroundColor: colors.surface },
+  joinBar: { backgroundColor: '#FFFFFF', boxShadow: `0px 6px 0px ${colors.line}` },
+  codeInput: { flex: 1, maxWidth: 200, minHeight: 46, paddingHorizontal: 12, borderRadius: 12, borderWidth: 3, borderColor: colors.line, backgroundColor: '#F4F0FF', color: colors.onAccent, fontSize: 26, fontWeight: '900', letterSpacing: 8 },
   players: { position: 'absolute', bottom: 8, left: 8, backgroundColor: colors.scrim, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 },
   bigAction: { flexGrow: 1, flexBasis: 300, minHeight: 84, flexDirection: 'row', alignItems: 'center', gap: 14, padding: 18, borderRadius: radius.l, borderWidth: 3, borderColor: colors.line, boxShadow: `0px 6px 0px ${colors.line}`, marginBottom: 6 },
 });

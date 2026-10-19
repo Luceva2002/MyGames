@@ -5,6 +5,7 @@ import { useKeepAwake } from 'expo-keep-awake';
 import { assignAvatars, canControl, GAMES, getGame, playerCounts, type RoomSnapshot } from '@giochi/engine';
 import { GameFrame } from '../../games/GameFrame';
 import { clearOnlineError, joinUrl, leaveRoom, send, sendMove, useOnline } from '../../session/online';
+import { loadNames, saveNames } from '../../session/names';
 import { GAME_ART } from '../../ui/art';
 import { BotFigure } from '../../ui/avatars';
 import { CharacterPickerModal } from '../../ui/CharacterPicker';
@@ -39,7 +40,7 @@ export default function RoomScreen() {
         <T size={24} weight="900">
           {online.status === 'closed' ? 'La stanza è stata chiusa' : 'Non sei in nessuna stanza'}
         </T>
-        <Button label="Entra con un codice" onPress={() => router.replace('/room/join')} />
+        <Button label="Entra con un codice" onPress={() => router.replace('/')} />
         <Button label="Torna ai giochi" kind="ghost" color={colors.text} onPress={exit} />
       </Screen>
     );
@@ -81,6 +82,7 @@ export default function RoomScreen() {
           onMove={sendMove}
           pending={online.pending}
           result={seatView.result}
+          lastAction={seatView.lastAction}
           error={online.error}
           onExit={exit}
           onRestart={isHost ? () => send('restart') : undefined}
@@ -162,7 +164,7 @@ function Lobby({ snapshot, myId, isHost, tv, error, onExit, reconnecting }: {
           {url && (tv || wide) && <QrCode value={url} size={Math.min(height * 0.26, 240)} />}
           {url && <InviteButtons url={url} code={snapshot.code} />}
           <T size={13} color={colors.muted} center>
-            {url ? `Gli altri aprono ${url.replace(/\/room\/join.*/, '').replace(/^https?:\/\//, '')} e scrivono il codice, oppure usano il link.` : 'Dillo agli altri: entrano da «Entra con un codice».'}
+            {url ? `Gli altri aprono ${url.replace(/\/\?code=.*/, '').replace(/^https?:\/\//, '')} e scrivono il codice, oppure usano il link.` : 'Dillo agli altri: lo scrivono nella home, in «Entra con un codice».'}
           </T>
         </Panel>
 
@@ -178,7 +180,7 @@ function Lobby({ snapshot, myId, isHost, tv, error, onExit, reconnecting }: {
                 style={{ flexShrink: 1, minWidth: 140 }}
                 disabled={m.id !== myId}
                 accessibilityRole={m.id === myId ? 'button' : undefined}
-                accessibilityLabel={m.id === myId ? 'Cambia il tuo personaggio' : undefined}
+                accessibilityLabel={m.id === myId ? 'Cambia nome e personaggio' : undefined}
                 onPress={() => {
                   tap();
                   setPicking(true);
@@ -291,12 +293,17 @@ function Lobby({ snapshot, myId, isHost, tv, error, onExit, reconnecting }: {
       {reconnecting}
       <CharacterPickerModal
         visible={picking}
-        title="Il tuo personaggio"
+        title="Tu"
         value={meIndex >= 0 ? avatars[meIndex] : null}
         taken={avatars.filter((_, j) => j !== meIndex)}
         onPick={(avatar) => {
           send('avatar', { avatar });
           setSettings({ ...getSettings(), avatar });
+        }}
+        name={players.find((m) => m.id === myId)?.name}
+        onRename={(name) => {
+          send('rename', { name });
+          loadNames().then((n) => saveNames([name, ...n.slice(1)]));
         }}
         onClose={() => setPicking(false)}
       />

@@ -9,18 +9,20 @@ import {
   CODE_LENGTH,
   canControl,
   getGame,
+  narrate,
   newSeed,
   pickBots,
   playerCounts,
   type Game,
   type JoinOptions,
+  type LastAction,
   type RoomMember,
   type RoomSeat,
   type RoomSnapshot,
   type SeatView,
 } from '@giochi/engine';
 
-const BOT_DELAY_MS = 1000;
+const BOT_DELAY_MS = 1300;
 const RECONNECT_SECONDS = 120;
 
 const usedCodes = new Set<string>();
@@ -97,6 +99,7 @@ export class TableRoom extends Room {
       if (!this.isHost(client)) return;
       this.game = null;
       this.state_ = null;
+      this.lastAction = null;
       this.seats = [];
       this.botTimer?.clear();
       this.broadcastRoom();
@@ -106,7 +109,9 @@ export class TableRoom extends Room {
       const seat = this.seats.findIndex((s) => s.memberId === client.sessionId);
       if (seat < 0) return this.fail(client, 'Stai guardando: non hai un posto al tavolo.');
       try {
+        const before = this.state_;
         this.state_ = applyMove(this.game, this.state_, seat, msg.move);
+        this.tell(before, seat, msg.move);
         this.afterChange();
       } catch (e) {
         this.fail(client, (e as Error).message);
@@ -161,6 +166,7 @@ export class TableRoom extends Room {
     const total = players.length + this.bots;
     const allowed = playerCounts(game.meta);
     if (!allowed.includes(total)) return this.fail(client, `${game.meta.name} si gioca in ${allowed.join(', ')}.`);
+    this.lastAction = null;
     this.seats = [
       ...players.map((m): RoomSeat => ({ name: m.name, bot: false, memberId: m.id, avatar: m.avatar })),
       ...this.seatedBots().map((name): RoomSeat => ({ name, bot: true, memberId: null, avatar: botByName(name)?.id })),
@@ -171,6 +177,13 @@ export class TableRoom extends Room {
   }
 
   /** Dopo ogni mossa: manda a ciascuno la sua vista e, se tocca a un computer, lo fa muovere. */
+  /** L'ultima mossa raccontata, mandata a tutti insieme alla vista. */
+  private lastAction: LastAction | null = null;
+  private tell(before: unknown, seat: number, move: unknown) {
+    const text = this.game ? narrate(this.game.meta.id, before, this.state_, seat, move) : null;
+    if (text) this.lastAction = { seat, text, n: (this.lastAction?.n ?? 0) + 1 };
+  }
+
   private afterChange() {
     this.broadcastRoom();
     if (!this.game) return;
@@ -182,7 +195,7 @@ export class TableRoom extends Room {
     for (const client of this.clients) {
       const seatIndex = this.seats.findIndex((s) => s.memberId === client.sessionId);
       const me = seatIndex >= 0 ? seatIndex : null;
-      const msg: SeatView = { gameId: game.meta.id, view: game.view(this.state_, me), me, myTurn: me !== null && active.includes(me), names, avatars, active, result };
+      const msg: SeatView = { gameId: game.meta.id, view: game.view(this.state_, me), me, myTurn: me !== null && active.includes(me), names, avatars, active, result, lastAction: this.lastAction };
       client.send('view', msg);
     }
     this.botTimer?.clear();
@@ -192,7 +205,10 @@ export class TableRoom extends Room {
       this.botTimer = this.clock.setTimeout(() => {
         if (this.game !== game) return;
         try {
-          this.state_ = applyMove(game, this.state_, bot, botMove(game, this.state_, bot));
+          const before = this.state_;
+          const move = botMove(game, this.state_, bot);
+          this.state_ = applyMove(game, this.state_, bot, move);
+          this.tell(before, bot, move);
         } catch (e) {
           console.error(`[${this.roomId}] mossa del computer non valida`, e);
           return;

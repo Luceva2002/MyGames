@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { BURRACO_RULES, checkMeld, teamOf, type BurracoMove, type BurracoView, type Card , type Seat } from '@giochi/engine';
-import { Banner, MyCorner, MyBar, othersOf, Slot, TableTop, useCardWidth, type BoardProps, type SeatInfo } from './common';
+import { Banner, MyCorner, othersOf, Slot, TableTop, useCardWidth, type BoardProps, type SeatInfo } from './common';
 import { CardsSummaryTable, teamLabel } from './summary';
-import { CardTable, MeldRow, MultiHand, usePileWidth } from './RummyParts';
+import { CardTable, MeldRow, MultiHand } from './RummyParts';
 import { CardBack, DeckPile, PlayingCard, NoCardZoom } from '../ui/cards';
 import { Draggable, DropZone, type DragPayload } from '../ui/drag';
 import { Button, Row, T, tap } from '../ui/kit';

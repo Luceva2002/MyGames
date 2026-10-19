@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { ActivityIndicator, Image, Modal, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
-import type { GameMeta, GameResult, Seat } from '@giochi/engine';
+import type { GameMeta, GameResult, LastAction, Seat } from '@giochi/engine';
 import { BOARDS } from './registry';
 import { GAME_ART } from '../ui/art';
 import { BotFigure, SeatAvatar, SeatAvatars } from '../ui/avatars';
@@ -17,7 +17,7 @@ import { colors, MIN_TOUCH, radius, seatColor } from '../ui/theme';
  * Guscio comune a ogni partita (P-SHELL-3): barra in alto con uscita confermata, nome del gioco
  * e di chi è il turno; area di gioco; regole, errori, attesa di rete e risultati.
  */
-export function GameFrame({ meta, view, me, names, avatars, myTurn, active, onMove, result, error, onExit, onRestart, overlay, headerRight, tv, pending }: {
+export function GameFrame({ meta, view, me, names, avatars, myTurn, active, onMove, result, error, onExit, onRestart, overlay, headerRight, tv, pending, lastAction }: {
   meta: GameMeta;
   view: unknown;
   me: Seat | null;
@@ -29,6 +29,8 @@ export function GameFrame({ meta, view, me, names, avatars, myTurn, active, onMo
   active: Seat[];
   onMove: (m: unknown) => void;
   result: GameResult | null;
+  /** L'ultima mossa raccontata: si vede in una striscia sotto la barra, se l'ha fatta un altro. */
+  lastAction?: LastAction | null;
   error: string | null;
   onExit: () => void;
   onRestart?: () => void;
@@ -84,6 +86,7 @@ export function GameFrame({ meta, view, me, names, avatars, myTurn, active, onMo
             <TurnPill active={active} names={names} me={me} myTurn={myTurn} />
           </View>
         )}
+        <ActionStrip action={lastAction ?? null} me={me} names={names} />
         <View style={{ flex: 1 }} pointerEvents={pending ? 'none' : 'auto'}>
           <CardZoomLayer>
           <DragProvider>
@@ -261,6 +264,28 @@ function TurnPill({ active, names, me, myTurn }: { active: Seat[]; names: string
   );
 }
 
+/**
+ * Cosa ha appena fatto un avversario, in una riga sola sotto la barra: icona, nome e mossa
+ * ("Pulcinella gioca 7 di denari e prende 2 carte"). Le mie mosse non si ripetono.
+ */
+function ActionStrip({ action, me, names }: { action: LastAction | null; me: Seat | null; names: string[] }) {
+  if (!action || action.seat === me) return <View style={styles.stripSpace} />;
+  const text = action.text.replace(/%v(\d+)/g, (_, n) => (Number(n) === me ? 'te' : names[Number(n)] ?? ''));
+  return (
+    <PopIn key={action.n} style={styles.stripWrap}>
+      <View style={[styles.strip, { borderColor: seatColor(action.seat) }]} accessibilityLiveRegion="polite" accessibilityLabel={`${names[action.seat]} ${text}`}>
+        <SeatAvatar seat={action.seat} name={names[action.seat]} size={22} />
+        <T size={13} weight="800" lines={1} style={{ flexShrink: 1 }}>
+          {names[action.seat]}{' '}
+          <T size={13} weight="700" color={colors.muted}>
+            {text}
+          </T>
+        </T>
+      </View>
+    </PopIn>
+  );
+}
+
 /** Schermata che copre le carte finché il telefono non arriva alla persona giusta (V-HID-2). */
 export function HandoffCurtain({ seat, name, onReady }: { seat: Seat; name: string; onReady: () => void }) {
   return (
@@ -281,6 +306,9 @@ export function HandoffCurtain({ seat, name, onReady }: { seat: Seat; name: stri
 }
 
 const styles = StyleSheet.create({
+  stripSpace: { height: 0 },
+  stripWrap: { alignItems: 'center', paddingHorizontal: 10, paddingTop: 4 },
+  strip: { flexDirection: 'row', alignItems: 'center', gap: 6, maxWidth: '100%', paddingVertical: 3, paddingLeft: 3, paddingRight: 12, borderRadius: 999, backgroundColor: colors.surface, borderWidth: 2 },
   tvSafe: { paddingHorizontal: '5%', paddingVertical: '2.5%' },
   header: { paddingHorizontal: 12, paddingVertical: 8, borderBottomWidth: 3, borderColor: colors.line, minHeight: MIN_TOUCH + 16, backgroundColor: colors.brand },
   iconButton: { width: MIN_TOUCH, height: MIN_TOUCH, borderRadius: MIN_TOUCH / 2, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: colors.line },

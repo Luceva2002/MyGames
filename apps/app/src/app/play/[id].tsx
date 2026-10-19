@@ -43,6 +43,7 @@ function LocalMatch({ config }: { config: MatchConfig }) {
         active={m.active}
         onMove={m.play}
         result={m.result}
+        lastAction={m.lastAction}
         error={m.error}
         onExit={() => (router.canGoBack() ? router.back() : router.replace('/'))}
         onRestart={m.restart}

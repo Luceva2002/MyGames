@@ -1,9 +1,9 @@
-import { getSettings } from '../ui/settings';
+import { getSettings, setSettings } from '../ui/settings';
 import { useEffect, useState } from 'react';
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 import { Client, type Room } from '@colyseus/sdk';
-import { DEFAULT_PORT, ROOM_NAME, type JoinOptions, type RoomSnapshot, type SeatView } from '@giochi/engine';
+import { BOT_CHARACTERS, characterById, DEFAULT_PORT, ROOM_NAME, type JoinOptions, type RoomSnapshot, type SeatView } from '@giochi/engine';
 
 /**
  * Indirizzo del server delle stanze. Si può fissare con EXPO_PUBLIC_SERVER_URL;
@@ -25,17 +25,17 @@ const PUBLIC_WEB_URL = 'https://tavolata-five.vercel.app';
 /** Indirizzo da far aprire agli altri per entrare nella stanza. */
 export function joinUrl(code: string): string | null {
   const fixed = process.env.EXPO_PUBLIC_WEB_URL;
-  if (fixed) return `${fixed.replace(/\/$/, '')}/room/join?code=${code}`;
+  if (fixed) return `${fixed.replace(/\/$/, '')}/?code=${code}`;
   if (Platform.OS === 'web' && typeof location !== 'undefined') {
     // Da localhost il QR non può dire "localhost": il telefono aprirebbe sé stesso. Si usa
     // l'indirizzo del computer sulla Wi-Fi, che `make` passa in EXPO_PUBLIC_LAN_HOST.
     const lan = process.env.EXPO_PUBLIC_LAN_HOST;
-    if (lan && /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname)) return `${location.protocol}//${lan}${location.port ? `:${location.port}` : ''}/room/join?code=${code}`;
-    return `${location.origin}/room/join?code=${code}`;
+    if (lan && /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname)) return `${location.protocol}//${lan}${location.port ? `:${location.port}` : ''}/?code=${code}`;
+    return `${location.origin}/?code=${code}`;
   }
   // Dall'app installata il link porta sempre al sito: chi è invitato entra dal browser, senza app.
   const host = Constants.expoConfig?.hostUri?.split(':')[0];
-  return host ? `http://${host}:8081/room/join?code=${code}` : `${PUBLIC_WEB_URL}/room/join?code=${code}`;
+  return host ? `http://${host}:8081/?code=${code}` : `${PUBLIC_WEB_URL}/?code=${code}`;
 }
 
 interface OnlineState {
@@ -102,6 +102,22 @@ export async function joinRoom(code: string, options: JoinOptions) {
     set({ status: 'idle', error: friendly(e) });
     return null;
   }
+}
+
+/**
+ * Entrare al volo (link, QR o codice scritto in home): col nome salvato o, la prima volta, col
+ * nome di una maschera a caso; anche il personaggio, se non c'è, è scelto a caso.
+ */
+export async function quickJoin(code: string): Promise<string | null> {
+  const { loadNames, saveNames } = await import('./names');
+  const names = await loadNames();
+  let name = names[0]?.trim();
+  if (!getSettings().avatar) setSettings({ ...getSettings(), avatar: BOT_CHARACTERS[Math.floor(Math.random() * BOT_CHARACTERS.length)].id });
+  if (!name || name === 'Io') {
+    name = characterById(getSettings().avatar)?.name ?? 'Ospite';
+    saveNames([name, ...names.slice(1)]);
+  }
+  return joinRoom(code, { name, role: 'player' });
 }
 
 export function send(type: string, payload?: unknown) {

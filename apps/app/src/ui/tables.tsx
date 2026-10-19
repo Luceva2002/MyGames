@@ -1,18 +1,9 @@
 import { useState, type ReactNode } from 'react';
 import { ImageBackground, View, type ImageSourcePropType, type StyleProp, type ViewStyle } from 'react-native';
 
-/** Tavoli da gioco eleganti e puliti, senza bordi invasivi. */
+/** Sfondi dei giochi. Il tavolo delle carte (teal) è disegnato in codice: qui c'è solo il suo panno. */
 export const TABLES = {
-  /** Tavolo delle carte: velluto turchese scuro col bordo dorato, nella sala del Carnevale. */
-  teal: require('../../assets/tables/table-teal.jpg'),
-  // Tavolo delle carte: velluto viola elegante, tono su tono con l'app
-  purple: require('../../assets/tables/felt-purple.jpg'),
-  // Tavolo delle carte: classico panno verde da gioco
-  green: require('../../assets/tables/felt-green.jpg'),
-  blue: require('../../assets/tables/felt-blue.jpg'),
-  carnevale: require('../../assets/tables/felt-purple.jpg'),
-  /** Vassoio dei dadi (Yahtzee). */
-  dice: require('../../assets/tables/dice.jpg'),
+  teal: require('../../assets/tables/felt-teal.jpg'),
   /** Panno verde vero, per il biliardo. */
   felt: require('../../assets/tables/felt-green.jpg'),
   wood: require('../../assets/tables/wood.jpg'),
@@ -24,15 +15,6 @@ export const TABLES = {
 } satisfies Record<string, ImageSourcePropType>;
 
 export type TableName = keyof typeof TABLES;
-
-/** Versioni verticali per i telefoni */
-const PORTRAIT: Partial<Record<TableName, ImageSourcePropType>> = {
-  teal: require('../../assets/tables/table-teal-v.jpg'),
-  purple: require('../../assets/tables/felt-purple-v.jpg'),
-  green: require('../../assets/tables/felt-green-v.jpg'),
-  blue: require('../../assets/tables/felt-blue.jpg'),
-  carnevale: require('../../assets/tables/felt-purple-v.jpg'),
-};
 
 /**
  * Sfondo del tavolo. `scrim` scurisce l'immagine quando sopra ci sono testi,
@@ -85,7 +67,7 @@ function FeltTable({ children, style }: { children?: ReactNode; style?: StylePro
   );
 }
 
-const FELT = require('../../assets/tables/felt-teal.jpg');
+const FELT = TABLES.teal;
 
 export function TableBg({ table, children, style, scrim = 0, rounded }: {
   table: TableName;
@@ -94,19 +76,15 @@ export function TableBg({ table, children, style, scrim = 0, rounded }: {
   scrim?: number;
   rounded?: boolean;
 }) {
-  const [tall, setTall] = useState(false);
-  const framed = false;
   if (table === 'teal') return <FeltTable style={style}>{children}</FeltTable>;
   return (
     <ImageBackground
-      source={(tall && PORTRAIT[table]) || TABLES[table]}
-      onLayout={(e) => setTall(e.nativeEvent.layout.height > e.nativeEvent.layout.width * 1.15)}
-      resizeMode={framed ? 'stretch' : 'cover'}
-      // Il tavolo col bordo dorato si vede sempre intero; il contenuto sta dentro il bordo.
-      style={[{ flex: 1, overflow: 'hidden' }, rounded && !framed && { borderRadius: 18 }, framed && (tall ? { paddingHorizontal: '9%', paddingVertical: '9%' } : { padding: '4.5%' }), style]}
-      // Senza misure esplicite l'immagine resta grande quanto il file (1344×752) e si vede solo
-      // l'angolo in alto a sinistra del tavolo: la stiriamo a coprire tutto il riquadro.
-      imageStyle={[{ width: '100%', height: '100%' }, rounded && !framed && { borderRadius: 18 }]}
+      source={TABLES[table]}
+      resizeMode="cover"
+      style={[{ flex: 1, overflow: 'hidden' }, rounded && { borderRadius: 18 }, style]}
+      // Senza misure esplicite l'immagine resta grande quanto il file e si vede solo un angolo:
+      // la stiriamo a coprire tutto il riquadro.
+      imageStyle={[{ width: '100%', height: '100%' }, rounded && { borderRadius: 18 }]}
       accessibilityIgnoresInvertColors
     >
       {scrim > 0 && <View pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, backgroundColor: `rgba(0,0,0,${scrim})` }} />}

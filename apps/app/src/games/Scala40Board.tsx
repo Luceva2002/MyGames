@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { checkMeld, meldPoints40, SCALA40_RULES, type Card, type Scala40Move, type Scala40View , type Seat } from '@giochi/engine';
-import { Banner, MyCorner, MyBar, othersOf, Slot, TableTop, useCardWidth, type BoardProps, type SeatInfo } from './common';
+import { Banner, MyCorner, othersOf, Slot, TableTop, useCardWidth, type BoardProps, type SeatInfo } from './common';
 import { CardsSummaryTable } from './summary';
-import { CardTable, MeldRow, MultiHand, TableArea, usePileWidth } from './RummyParts';
+import { CardTable, MeldRow, MultiHand, TableArea } from './RummyParts';
 import { CardBack, DeckPile, PlayingCard, NoCardZoom } from '../ui/cards';
 import { Draggable, DropZone, type DragPayload } from '../ui/drag';
 import { Button, Row, T, tap } from '../ui/kit';

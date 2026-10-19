@@ -4,12 +4,12 @@ import { GAME_ART } from '../../ui/art';
 import { getSettings, setSettings } from '../../ui/settings';
 import { router, useLocalSearchParams } from 'expo-router';
 import { assignAvatars, BOT_CHARACTERS, botByName, catalog, pickBots, playerCounts } from '@giochi/engine';
-import { BotAvatar, CharacterAvatar } from '../../ui/avatars';
+import { CharacterAvatar } from '../../ui/avatars';
 import { CharacterPickerModal } from '../../ui/CharacterPicker';
 import { canPassAndPlay, setPendingMatch, type SeatConfig } from '../../session/local';
 import { quickRoom, useOnline } from '../../session/online';
 import { defaultName, loadNames, saveNames } from '../../session/names';
-import { Button, Panel, Row, Screen, SeatDot, T, tap } from '../../ui/kit';
+import { Button, Panel, Row, Screen, T, tap } from '../../ui/kit';
 import { colors, radius } from '../../ui/theme';
 
 export default function GameDetail() {

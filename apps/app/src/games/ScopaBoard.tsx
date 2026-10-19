@@ -1,13 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { useWindowDimensions, View } from 'react-native';
-import { captureOptions, cardName, teamOf, type ScopaMove, type ScopaView, type Seat } from '@giochi/engine';
-import { Banner, MyCorner, EventSticker, Felt, Hand, MyBar, othersOf, Slot, TableTop, type SeatInfo, turnText, useCardWidth, type BoardProps } from './common';
+import { captureOptions, teamOf, type ScopaMove, type ScopaView, type Seat } from '@giochi/engine';
+import { Banner, MyCorner, EventSticker, Felt, Hand, othersOf, Slot, TableTop, type SeatInfo, useCardWidth, type BoardProps } from './common';
 import { CardsSummaryTable, teamLabel } from './summary';
 import { DeckPile, PlayingCard } from '../ui/cards';
 import { DropZone, type DragPayload } from '../ui/drag';
 import { FlyIn } from '../ui/motion';
 import { sfx } from '../ui/sound';
-import { Button, Row, T } from '../ui/kit';
+import { Button, T } from '../ui/kit';
 import { TableBg } from '../ui/tables';
 import { colors } from '../ui/theme';
 
@@ -104,13 +104,6 @@ export function ScopaBoard({ view, me, names, myTurn, onMove }: BoardProps<Scopa
           ))}
           {view.table.length === 0 && <T color="#ffffff99">Tavolo vuoto</T>}
         </View>
-        {last && (
-          <T size={14} color="#ffffffcc" center>
-            {names[last.seat]} ha giocato {cardName(last.card)}
-            {last.taken.length ? ` e preso ${last.taken.length} ${last.taken.length === 1 ? 'carta' : 'carte'}` : ''}
-            {last.scopa ? '  🧹 SCOPA!' : ''}
-          </T>
-        )}
         </View>
       </Felt>
       </DropZone>

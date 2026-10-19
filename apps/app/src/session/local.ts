@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { applyMove, assignAvatars, botMove, getGame, newSeed, type Game, type Seat } from '@giochi/engine';
+import { applyMove, assignAvatars, botMove, getGame, narrate, newSeed, type Game, type LastAction, type Seat } from '@giochi/engine';
 
 export interface SeatConfig {
   name: string;
@@ -30,7 +30,7 @@ let pending: MatchConfig | null = null;
 export const setPendingMatch = (c: MatchConfig) => (pending = c);
 export const getPendingMatch = () => pending;
 
-const BOT_DELAY = 1000;
+const BOT_DELAY = 1300;
 
 /**
  * Partita su un solo dispositivo: le regole girano qui, i computer muovono da soli
@@ -40,6 +40,12 @@ export function useLocalMatch(config: MatchConfig) {
   const game = getGame(config.gameId) as Game;
   const [state, setState] = useState(() => game.setup({ players: config.seats.length, seed: newSeed(), options: config.options }));
   const [error, setError] = useState<string | null>(null);
+  // L'ultima mossa raccontata ("Pulcinella gioca 7 di denari"), per seguire cosa fanno gli altri.
+  const [lastAction, setLastAction] = useState<LastAction | null>(null);
+  const tell = (before: unknown, after: unknown, seat: Seat, move: unknown) => {
+    const text = narrate(config.gameId, before, after, seat, move);
+    if (text) setLastAction((a) => ({ seat, text, n: (a?.n ?? 0) + 1 }));
+  };
   const humans = useMemo(() => config.seats.flatMap((s, i) => (s.bot ? [] : [i])), [config.seats]);
   const isBot = useCallback((seat: Seat) => config.seats[seat]?.bot ?? false, [config.seats]);
   const result = game.result(state);
@@ -64,7 +70,10 @@ export function useLocalMatch(config: MatchConfig) {
     const timer = setTimeout(() => {
       const current = stateRef.current;
       if (!game.activePlayers(current).includes(bot)) return;
-      setState(applyMove(game, current, bot, botMove(game, current, bot)));
+      const move = botMove(game, current, bot);
+      const next = applyMove(game, current, bot, move);
+      tell(current, next, bot, move);
+      setState(next);
     }, game.pause?.(state) ?? BOT_DELAY);
     return () => clearTimeout(timer);
   }, [state]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -77,6 +86,7 @@ export function useLocalMatch(config: MatchConfig) {
       if (viewer === null) return;
       try {
         const next = applyMove(game, stateRef.current, viewer, move);
+        tell(stateRef.current, next, viewer, move);
         stateRef.current = next;
         setState(next);
         setError(null);
@@ -90,6 +100,7 @@ export function useLocalMatch(config: MatchConfig) {
   const restart = useCallback(() => {
     setState(game.setup({ players: config.seats.length, seed: newSeed(), options: config.options }));
     setError(null);
+    setLastAction(null);
     setRevealed(humans.length === 1 ? humans[0] : null);
   }, [game, config, humans]);
 
@@ -101,6 +112,7 @@ export function useLocalMatch(config: MatchConfig) {
     myTurn: viewer !== null && active.includes(viewer),
     active,
     result,
+    lastAction,
     error,
     clearError: () => setError(null),
     play,

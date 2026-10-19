@@ -34,10 +34,6 @@ export interface CatalogEntry {
   note?: string;
 }
 
-/** Giochi annunciati ma non ancora giocabili: compaiono nel catalogo come "in arrivo". */
-export const UPCOMING: CatalogEntry[] = [];
-
 export function catalog(): CatalogEntry[] {
-  const ready = GAMES.map((g): CatalogEntry => ({ meta: g.meta, status: 'ready' }));
-  return [...ready, ...UPCOMING.filter((u) => !GAMES.some((g) => g.meta.id === u.meta.id))];
+  return GAMES.map((g): CatalogEntry => ({ meta: g.meta, status: 'ready' }));
 }

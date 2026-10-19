@@ -6,7 +6,7 @@ import { Draggable, type DragPayload } from '../ui/drag';
 import { FlyIn, PopIn, Pulse } from '../ui/motion';
 import { Row, T } from '../ui/kit';
 import { SeatAvatar } from '../ui/avatars';
-import { TableBg, type TableName } from '../ui/tables';
+import { type TableName } from '../ui/tables';
 import { useIsTv } from '../ui/settings';
 import { colors, seatColor } from '../ui/theme';
 
@@ -204,44 +204,6 @@ export function TableTop({ seats, corner = true }: { seats: SeatInfo[]; /** Lasc
         <TableSeat key={s.seat} info={s} />
       ))}
     </View>
-  );
-}
-
-/** Il mio posto, sul bordo vicino: la mia icona e i miei punti accanto alla mano, con l'obiettivo. */
-export function MyBar({ info, goal, hint, tone = 'info' }: { info: SeatInfo | null; goal?: string; hint: string; tone?: 'info' | 'turn' }) {
-  return (
-    <Row gap={10} style={{ paddingHorizontal: 10, paddingTop: 6, justifyContent: 'center' }} wrap>
-      {info && (
-        <View style={[styles.myBar, info.active && { borderColor: colors.accent }]}>
-          <SeatAvatar seat={info.seat} name={info.name} size={36} />
-          <View>
-            <T size={12} weight="800" color={colors.muted}>
-              Tu
-            </T>
-            {info.score !== undefined && (
-              <Row gap={4} style={{ alignItems: 'baseline' }}>
-                <T size={22} weight="900" color={colors.accent}>
-                  {info.score}
-                </T>
-                {info.scoreLabel ? (
-                  <T size={11} color={colors.muted}>
-                    {info.scoreLabel}
-                  </T>
-                ) : null}
-              </Row>
-            )}
-          </View>
-        </View>
-      )}
-      <View style={{ alignItems: 'center', flexShrink: 1 }}>
-        <Banner text={hint} tone={tone} />
-        {goal ? (
-          <T size={11} weight="800" color={colors.dim} center>
-            🏁 {goal}
-          </T>
-        ) : null}
-      </View>
-    </Row>
   );
 }
 

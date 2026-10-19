@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useWindowDimensions, View } from 'react-native';
-import { BRISCOLA_POINTS, cardName, IT_SUIT_NAMES, teamOf, type BriscolaMove, type BriscolaView, type Card, type Seat, type TresetteMove, type TresetteView } from '@giochi/engine';
-import { Banner, MyCorner, EventSticker, Felt, Hand, MyBar, othersOf, Slot, TableTop, turnText, type SeatInfo, useCardWidth, type BoardProps } from './common';
+import { BRISCOLA_POINTS, cardName, teamOf, type BriscolaMove, type BriscolaView, type Card, type Seat, type TresetteMove, type TresetteView } from '@giochi/engine';
+import { Banner, MyCorner, EventSticker, Felt, Hand, othersOf, Slot, TableTop, type SeatInfo, useCardWidth, type BoardProps } from './common';
 import { CardsSummaryTable, teamLabel } from './summary';
 import { DeckPile, PlayingCard } from '../ui/cards';
 import { DropZone, type DragPayload } from '../ui/drag';

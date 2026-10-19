@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { UNO_COLORS as COLORS, unoLastText, type Card, type Seat, type UnoMove, type UnoView } from '@giochi/engine';
-import { Banner, MyCorner, EventSticker, Felt, Hand, MyBar, othersOf, TableTop, type SeatInfo, turnText, useCardWidth, type BoardProps } from './common';
+import { MyCorner, EventSticker, Felt, Hand, othersOf, TableTop, type SeatInfo, useCardWidth, type BoardProps } from './common';
 import { CardBack, DeckPile, PlayingCard, UNO_COLORS } from '../ui/cards';
 import { Draggable, DropZone } from '../ui/drag';
 import { FlyIn } from '../ui/motion';
