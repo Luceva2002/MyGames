@@ -15,6 +15,7 @@ import { FreccetteBoard } from './FreccetteBoard';
 import { FootballBoard } from './FootballBoard';
 import { BiliardoBoard } from './BiliardoBoard';
 import { LupusBoard } from './LupusBoard';
+import { MrWhiteBoard } from './MrWhiteBoard';
 
 /** Interfaccia di ogni gioco giocabile: riceve la vista del giocatore e manda le mosse. */
 export const BOARDS: Record<string, ComponentType<BoardProps>> = {
@@ -35,4 +36,5 @@ export const BOARDS: Record<string, ComponentType<BoardProps>> = {
   football: FootballBoard,
   biliardo: BiliardoBoard,
   lupus: LupusBoard,
+  mrwhite: MrWhiteBoard,
 };

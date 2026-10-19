@@ -16,9 +16,10 @@ import { freccette } from './games/freccette';
 import { football } from './games/football';
 import { biliardo } from './games/biliardo';
 import { lupus } from './games/lupus/lupus';
+import { mrwhite } from './games/mrwhite/mrwhite';
 
 /** Giochi giocabili, nell'ordine in cui compaiono nel catalogo. */
-export const GAMES: Game[] = [scopa, briscola, tresette, setteemezzo, scala40, burraco, machiavelli, uno, solitario, dama, scacchi, yahtzee, freccette, biliardo, football, tris, lupus];
+export const GAMES: Game[] = [scopa, briscola, tresette, setteemezzo, scala40, burraco, machiavelli, uno, solitario, dama, scacchi, yahtzee, freccette, biliardo, football, tris, lupus, mrwhite];
 
 export function getGame(id: string): Game | undefined {
   return GAMES.find((g) => g.meta.id === id);

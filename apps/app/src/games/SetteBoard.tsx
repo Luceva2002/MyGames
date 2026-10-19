@@ -16,7 +16,7 @@ function HandRow({ cards, width, mine }: { cards: (Card | null)[]; width: number
     <Row gap={0} style={{ minHeight: width * 1.8 }}>
       {cards.map((c, i) => (
         <FlyIn key={c?.id ?? `back${i}`} from={mine ? 'above' : 'above'} sound="deal" style={{ marginLeft: i ? -width * (mine ? (cards.length > 3 ? 0.6 : 0.3) : 0.45) : 0 }}>
-          {c ? <PlayingCard card={c} width={width} sway={false} /> : <CardBack width={width} />}
+          {c ? <PlayingCard card={c} width={width} sway={false} zoomable={mine} /> : <CardBack width={width} />}
         </FlyIn>
       ))}
     </Row>

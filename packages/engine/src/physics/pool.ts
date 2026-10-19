@@ -14,14 +14,18 @@ export const POCKETS = [
   { x: 1, y: 1.012, r: 0.052 },
   { x: 2, y: 1, r: 0.062 },
 ];
-export const MAX_SPEED = 3.4;
+export const MAX_SPEED = 5.5;
 
-const DT = 1 / 240;
-const FRICTION = 0.62;
+// Passo piccolo e più giri di urti per passo: le palline del triangolo si passano la spinta
+// in modo pulito, invece di incastrarsi o "scivolare" una sull'altra.
+const DT = 1 / 960;
+const FRICTION = 0.38;
 const CUSHION = 0.78;
-const BALL_RESTITUTION = 0.95;
-const MAX_STEPS = 240 * 25;
-const FRAME_EVERY = 4;
+const MAX_STEPS = 960 * 25;
+const FRAME_EVERY = 16;
+// Contatto fra palline: durata di circa 6 passi, rimbalzo come avorio/resina (e ≈ 0.93).
+const STIFFNESS = 126000;
+const DAMPING = 23;
 
 export interface Ball {
   id: number;
@@ -45,6 +49,8 @@ export interface ShotOutcome {
   cushionAfterContact: boolean;
   /** Posizioni (x, y per ogni pallina, nell'ordine dell'array) a 60 fotogrammi al secondo. */
   frames: number[][] | null;
+  /** Cosa succede e in quale fotogramma (per i suoni): urto fra palline, sponda, buca; v è la forza 0..1. */
+  events: { frame: number; kind: 'hit' | 'cushion' | 'pocket'; v: number }[] | null;
 }
 
 export function simulateShot(start: Ball[], shot: Shot, recordFrames = false): ShotOutcome {
@@ -57,7 +63,17 @@ export function simulateShot(start: Ball[], shot: Shot, recordFrames = false): S
   let firstHit: number | null = null;
   const pocketed: number[] = [];
   let cushionAfterContact = false;
+  const touching = new Set<number>();
   const frames: number[][] | null = recordFrames ? [] : null;
+  const events: ShotOutcome['events'] = recordFrames ? [] : null;
+  const note = (kind: 'hit' | 'cushion' | 'pocket', v: number) => {
+    if (!events || !frames) return;
+    const frame = frames.length;
+    // Un solo suono per tipo e fotogramma, il più forte.
+    const same = events.find((e) => e.frame === frame && e.kind === kind);
+    if (same) same.v = Math.max(same.v, v);
+    else events.push({ frame, kind, v: Math.min(1, v) });
+  };
   const snap = () => frames?.push(balls.flatMap((b) => (b.in ? [-1, -1] : [Math.round(b.x * 10000) / 10000, Math.round(b.y * 10000) / 10000])));
   snap();
 
@@ -90,11 +106,14 @@ export function simulateShot(start: Ball[], shot: Shot, recordFrames = false): S
           b.vx = 0;
           b.vy = 0;
           pocketed.push(b.id);
+          note('pocket', 1);
           break;
         }
       }
     }
-    // Urti fra palline
+    // Urti fra palline: contatto "morbido" (una molla rigidissima con un filo di smorzamento),
+    // calcolato per tutte le coppie insieme. Così nel triangolo la spinta si divide fra le palline
+    // e il gruppo si apre, invece di passare tutta all'ultima come nel pendolo di Newton.
     for (let i = 0; i < balls.length; i++) {
       const a = balls[i];
       if (a.in) continue;
@@ -104,24 +123,30 @@ export function simulateShot(start: Ball[], shot: Shot, recordFrames = false): S
         const dx = b.x - a.x;
         const dy = b.y - a.y;
         const d2 = dx * dx + dy * dy;
-        if (d2 >= 4 * BALL_R * BALL_R || d2 === 0) continue;
+        const key = i * 64 + j;
+        if (d2 >= 4 * BALL_R * BALL_R || d2 === 0) {
+          touching.delete(key);
+          continue;
+        }
         const d = Math.sqrt(d2);
         const nx = dx / d;
         const ny = dy / d;
-        const rel = (a.vx - b.vx) * nx + (a.vy - b.vy) * ny;
-        const overlap = 2 * BALL_R - d;
-        a.x -= (nx * overlap) / 2;
-        a.y -= (ny * overlap) / 2;
-        b.x += (nx * overlap) / 2;
-        b.y += (ny * overlap) / 2;
-        if (rel <= 0) continue;
-        const impulse = (rel * (1 + BALL_RESTITUTION)) / 2;
-        a.vx -= impulse * nx;
-        a.vy -= impulse * ny;
-        b.vx += impulse * nx;
-        b.vy += impulse * ny;
-        if (firstHit === null && (a.id === 0 || b.id === 0)) firstHit = a.id === 0 ? b.id : a.id;
-        moving = true;
+        const approach = (a.vx - b.vx) * nx + (a.vy - b.vy) * ny;
+        const f = STIFFNESS * (2 * BALL_R - d) + DAMPING * approach;
+        if (f > 0) {
+          a.vx -= f * DT * nx;
+          a.vy -= f * DT * ny;
+          b.vx += f * DT * nx;
+          b.vy += f * DT * ny;
+          moving = true;
+        }
+        if (!touching.has(key)) {
+          touching.add(key);
+          if (approach > 0) {
+            if (firstHit === null && (a.id === 0 || b.id === 0)) firstHit = a.id === 0 ? b.id : a.id;
+            note('hit', approach / MAX_SPEED);
+          }
+        }
       }
     }
     // Sponde
@@ -146,13 +171,14 @@ export function simulateShot(start: Ball[], shot: Shot, recordFrames = false): S
         b.vy = -b.vy * CUSHION;
         hit = true;
       }
+      if (hit) note('cushion', Math.sqrt(b.vx * b.vx + b.vy * b.vy) / MAX_SPEED);
       if (hit && firstHit !== null) cushionAfterContact = true;
     }
     if (step % FRAME_EVERY === 0) snap();
     if (!moving) break;
   }
   snap();
-  return { balls: balls.map(({ id, x, y, in: inn }) => ({ id, x, y, in: inn })), firstHit, pocketed, cushionAfterContact, frames };
+  return { balls: balls.map(({ id, x, y, in: inn }) => ({ id, x, y, in: inn })), firstHit, pocketed, cushionAfterContact, frames, events };
 }
 
 /** Il punto dove mettere la bianca è libero? */

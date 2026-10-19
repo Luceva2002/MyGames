@@ -22,6 +22,8 @@ export interface GameMeta {
   minutes: number;
   /** Numeri di giocatori ammessi, se non sono tutti quelli fra min e max (es. solo 2 o 4). */
   playerCounts?: number[];
+  /** Solo persone: il computer non sa giocarci (es. indizi detti a voce). */
+  humansOnly?: boolean;
 }
 
 export function playerCounts(meta: GameMeta): number[] {

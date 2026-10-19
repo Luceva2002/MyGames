@@ -216,7 +216,7 @@ function Lobby({ snapshot, myId, isHost, tv, error, onExit, reconnecting }: {
               ⏳ Aspetto i telefoni…
             </T>
           )}
-          {isHost && (
+          {isHost && !game?.meta.humansOnly && (
             <Row gap={8}>
               <Button small kind="ghost" color={colors.muted} label="− computer" a11y="Togli un computer" disabled={snapshot.bots === 0} onPress={() => send('setBots', { count: snapshot.bots - 1 })} />
               <Button small kind="ghost" color={colors.muted} label="+ computer" a11y="Aggiungi un computer" disabled={!!game && total >= game.meta.maxPlayers} onPress={() => send('setBots', { count: snapshot.bots + 1 })} />

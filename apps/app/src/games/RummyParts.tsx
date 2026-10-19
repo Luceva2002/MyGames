@@ -31,17 +31,31 @@ export function MultiHand({ cards, selected, onToggle, width: baseWidth, highlig
 }) {
   const [mode, setMode] = useState<SortMode>('seme');
   const sorted = useMemo(() => sortCards(cards, mode), [cards, mode]);
-  // Ogni carta lascia vedere almeno metà di sé (valore e semi); se non ci stanno, si va su due file.
-  const { width: screenW } = useWindowDimensions();
-  // Sul telefono conta il panno (senza il bordo del tavolo) e le carte restano leggibili.
+  // Le carte sono grandi quanto lo spazio permette e si sovrappongono lasciando sempre visibile
+  // la striscia di sinistra con valore e seme; i semi sono separati da un piccolo stacco. Se in una
+  // fila verrebbero troppo piccole si va su due file.
+  const { width: screenW, height: screenH } = useWindowDimensions();
   const narrow = screenW < 600;
-  const avail = Math.min(screenW, 1000) - (narrow ? 60 : 24);
-  const width = narrow ? Math.max(baseWidth, 50) : baseWidth;
-  const perRow = Math.max(2, Math.floor((avail - width) / (width * 0.5)) + 1);
-  const nRows = Math.max(1, Math.ceil(sorted.length / perRow));
+  // Sul computer a destra c'è il mio angolo col punteggio: la mano gli lascia posto.
+  const avail = Math.min(screenW, 1100) - (narrow ? 60 : 150);
+  const cap = Math.max(baseWidth, Math.min(narrow ? 74 : 88, (screenH * 0.17) / 1.45));
+  const SHOW = 0.42;
+  const SUIT_GAP = 7;
+  const fit = (k: number, gaps: number) => (avail - gaps * SUIT_GAP) / (1 + Math.max(0, k - 1) * SHOW);
+  const suitBreaks = (row: Card[]) => (mode === 'seme' ? row.filter((c, i) => i > 0 && c.suit !== row[i - 1].suit).length : 0);
+  const oneRow = fit(sorted.length, suitBreaks(sorted));
+  const nRows = oneRow >= (narrow ? 58 : 70) || sorted.length < 4 ? 1 : 2;
   const per = Math.ceil(sorted.length / nRows);
-  const rows = Array.from({ length: nRows }, (_, r) => sorted.slice(r * per, (r + 1) * per));
-  const stepOf = (k: number) => (k > 1 ? Math.min(width + 6, (avail - width) / (k - 1)) : width);
+  // Su due file si va a capo dove cambia il seme, se non sbilancia troppo le file.
+  let cut = per;
+  if (nRows === 2 && mode === 'seme') {
+    const breaks = sorted.flatMap((c, i) => (i > 0 && c.suit !== sorted[i - 1].suit ? [i] : []));
+    const best = breaks.sort((a, b) => Math.max(a, sorted.length - a) - Math.max(b, sorted.length - b))[0];
+    if (best !== undefined && Math.max(best, sorted.length - best) <= per + 2) cut = best;
+  }
+  const rows = nRows === 1 ? [sorted] : [sorted.slice(0, cut), sorted.slice(cut)];
+  const width = Math.round(Math.min(cap, ...rows.map((row) => fit(row.length, suitBreaks(row)))));
+  const stepOf = (k: number, gaps: number) => (k > 1 ? Math.min(width + 6, (avail - gaps * SUIT_GAP - width) / (k - 1)) : width);
   return (
     <View style={{ gap: 4 }}>
       <Row style={{ justifyContent: 'space-between', paddingHorizontal: 12 }}>
@@ -65,10 +79,11 @@ export function MultiHand({ cards, selected, onToggle, width: baseWidth, highlig
           <View key={r} style={{ flexDirection: 'row', justifyContent: 'center' }}>
           {row.map((c, i) => {
             const group = selected.includes(c.id) ? sorted.filter((x) => selected.includes(x.id)) : [c];
+            const newSuit = mode === 'seme' && i > 0 && c.suit !== row[i - 1].suit;
             return (
               <Draggable
                 key={c.id}
-                style={{ marginLeft: i ? stepOf(row.length) - width : 0 }}
+                style={{ marginLeft: i ? stepOf(row.length, suitBreaks(row)) - width + (newSuit ? SUIT_GAP : 0) : 0 }}
                 payload={draggable ? { kind: 'hand', ids: group.map((x) => x.id) } : null}
                 ghost={<CardGhost cards={group} width={width} />}
               >
@@ -77,6 +92,7 @@ export function MultiHand({ cards, selected, onToggle, width: baseWidth, highlig
                   width={width}
                   selected={selected.includes(c.id) || highlight === c.id}
                   onPress={onToggle ? () => onToggle(c.id) : undefined}
+                  zoomable
                 />
               </Draggable>
             );

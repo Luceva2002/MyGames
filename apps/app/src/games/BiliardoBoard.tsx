@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Image, Pressable, useWindowDimensions, View } from 'react-native';
+import { Image, StyleSheet, useWindowDimensions, View } from 'react-native';
 import Svg, { Circle, Line } from 'react-native-svg';
 import { BALL_R, isSolid, isStripe, POCKETS, simulateShot, TABLE_H, TABLE_W, type Ball, type BiliardoMove, type BiliardoState } from '@giochi/engine';
 import { Banner, type BoardProps } from './common';
@@ -7,6 +7,7 @@ import { Button, Chip, Row, SeatDot, T } from '../ui/kit';
 import { TableBg, TABLES } from '../ui/tables';
 import { colors } from '../ui/theme';
 import { useReducedMotion } from '../ui/settings';
+import { sfx } from '../ui/sound';
 
 const BALL_COLORS: Record<number, string> = {
   0: '#FAFAFA', 1: '#F9C80E', 2: '#1E5BC6', 3: '#D7263D', 4: '#6A2C91', 5: '#F86624', 6: '#1B998B', 7: '#7B2D26', 8: '#111111',
@@ -83,8 +84,10 @@ export function BiliardoBoard({ view, me, names, myTurn, onMove }: BoardProps<Bi
   const scale = tableW / TABLE_W;
   const tableH = TABLE_H * scale;
   const [aim, setAim] = useState<{ x: number; y: number } | null>(null);
-  const [power, setPower] = useState(0.55);
+  const [power, setPower] = useState(0.4);
   const [placing, setPlacing] = useState(false);
+  const [striking, setStriking] = useState(false);
+  const [trackW, setTrackW] = useState(0);
   const [frame, setFrame] = useState<number[] | null>(null);
   const lastId = useRef<number | null>(view.lastShot?.id ?? null);
   const raf = useRef<number | null>(null);
@@ -97,9 +100,20 @@ export function BiliardoBoard({ view, me, names, myTurn, onMove }: BoardProps<Bi
     // Con il movimento ridotto si salta l'animazione e si mostra subito il risultato (V-MO-2).
     if (reduced) return;
     const frames = anim.frames;
+    const events = anim.events ?? [];
     const t0 = Date.now();
+    let prev = -1;
     const loop = () => {
       const i = Math.floor(((Date.now() - t0) / 1000) * 60);
+      // Si sentono gli urti fra le biglie, le sponde e le buche, nel momento in cui succedono.
+      for (const e of events) {
+        if (e.frame > prev && e.frame <= i) {
+          if (e.kind === 'pocket') sfx('pocket');
+          else if (e.kind === 'hit' && e.v > 0.02) sfx('ball');
+          else if (e.kind === 'cushion' && e.v > 0.08) sfx('card');
+        }
+      }
+      prev = i;
       if (i >= frames.length) {
         setFrame(null);
         return;
@@ -122,6 +136,29 @@ export function BiliardoBoard({ view, me, names, myTurn, onMove }: BoardProps<Bi
   const cue = view.balls.find((b) => b.id === 0)!;
   const canAct = myTurn && !animating;
   const guide = canAct && aim && !placing ? aimGuide(view.balls, cue, aim.x - cue.x, aim.y - cue.y) : null;
+
+  // Stecca: punta dietro la bianca, lungo la mira; arretra con la forza e scatta in avanti al tiro.
+  const stick = (() => {
+    if (!guide || !aim) return null;
+    const l = Math.hypot(aim.x - cue.x, aim.y - cue.y) || 1;
+    const ux = (aim.x - cue.x) / l;
+    const uy = (aim.y - cue.y) / l;
+    const gap = BALL_R * 1.4 + (striking ? 0 : 0.03 + power * 0.2);
+    const len = 0.8;
+    const x1 = cue.x - ux * gap;
+    const y1 = cue.y - uy * gap;
+    return { x1, y1, x2: x1 - ux * len, y2: y1 - uy * len, tx: x1 - ux * 0.02, ty: y1 - uy * 0.02, bx: x1 - ux * len * 0.62, by: y1 - uy * len * 0.62 };
+  })();
+  const sw = Math.max(7, BALL_R * scale * 0.9);
+  const shoot = () => {
+    if (!aim || striking) return;
+    setStriking(true);
+    setTimeout(() => {
+      sfx('cue');
+      setStriking(false);
+      onMove({ type: 'shoot', dx: aim.x - cue.x, dy: aim.y - cue.y, power });
+    }, 120);
+  };
 
   const handleTouch = (lx: number, ly: number) => {
     if (!canAct) return;
@@ -184,6 +221,15 @@ export function BiliardoBoard({ view, me, names, myTurn, onMove }: BoardProps<Bi
                 <Circle cx={guide.x * scale} cy={guide.y * scale} r={BALL_R * scale} stroke="#fff" strokeWidth={1.5} fill="none" />
               </Svg>
             )}
+            {stick && (
+              // La stecca dietro la bianca: più è tirata indietro, più forte è il colpo.
+              <Svg width={tableW} height={tableH} style={{ position: 'absolute' }}>
+                <Line x1={stick.x1 * scale} y1={stick.y1 * scale} x2={stick.x2 * scale} y2={stick.y2 * scale} stroke="#00000055" strokeWidth={sw + 2} strokeLinecap="round" transform="translate(3,4)" />
+                <Line x1={stick.x1 * scale} y1={stick.y1 * scale} x2={stick.x2 * scale} y2={stick.y2 * scale} stroke="#C8894A" strokeWidth={sw} strokeLinecap="round" />
+                <Line x1={stick.bx * scale} y1={stick.by * scale} x2={stick.x2 * scale} y2={stick.y2 * scale} stroke="#3B1F0E" strokeWidth={sw + 2} strokeLinecap="round" />
+                <Line x1={stick.x1 * scale} y1={stick.y1 * scale} x2={stick.tx * scale} y2={stick.ty * scale} stroke="#EAF4FF" strokeWidth={sw - 1} strokeLinecap="butt" />
+              </Svg>
+            )}
             {shownBalls.filter((b) => !b.in).map((b) => (
               <PoolBall key={b.id} id={b.id} x={b.x} y={b.y} scale={scale} upright={portrait} />
             ))}
@@ -206,15 +252,26 @@ export function BiliardoBoard({ view, me, names, myTurn, onMove }: BoardProps<Bi
           )}
           {!placing && (
             <>
-              <Row gap={6} style={{ width: '100%' }}>
-                <T size={13} color={colors.muted}>
-                  Forza
+              <Row gap={10} style={{ width: '100%' }}>
+                <T size={13} weight="800" color={colors.muted} style={{ width: 74 }}>
+                  Forza {Math.round(power * 100)}%
                 </T>
-                {Array.from({ length: 10 }, (_, i) => (i + 1) / 10).map((p) => (
-                  <Pressable key={p} onPress={() => setPower(p)} style={{ flex: 1, height: 26, borderRadius: 4, backgroundColor: p <= power + 0.001 ? (p > 0.75 ? colors.danger : colors.accent) : colors.surface2 }} />
-                ))}
+                {/* Si trascina il dito sulla barra: la stecca sul tavolo arretra insieme. */}
+                <View
+                  accessibilityRole="adjustable"
+                  accessibilityLabel={`Forza del tiro ${Math.round(power * 100)} per cento`}
+                  onLayout={(e) => setTrackW(e.nativeEvent.layout.width)}
+                  onStartShouldSetResponder={() => true}
+                  onMoveShouldSetResponder={() => true}
+                  onResponderGrant={(e) => trackW && setPower(Math.max(0.05, Math.min(1, e.nativeEvent.locationX / trackW)))}
+                  onResponderMove={(e) => trackW && setPower(Math.max(0.05, Math.min(1, e.nativeEvent.locationX / trackW)))}
+                  style={styles.track}
+                >
+                  <View pointerEvents="none" style={[styles.fill, { width: `${power * 100}%`, backgroundColor: power > 0.75 ? colors.danger : colors.accent }]} />
+                  <View pointerEvents="none" style={[styles.knob, { left: Math.max(0, power * trackW - 14) }]} />
+                </View>
               </Row>
-              <Button label={aim ? 'Tira' : 'Trascina sul tavolo per mirare'} disabled={!aim} onPress={() => aim && onMove({ type: 'shoot', dx: aim.x - cue.x, dy: aim.y - cue.y, power })} style={{ alignSelf: 'stretch' }} />
+              <Button label={aim ? 'Tira!' : 'Tocca o trascina sul tavolo per mirare'} disabled={!aim || striking} onPress={shoot} style={{ alignSelf: 'stretch' }} />
             </>
           )}
           {placing && <T color={colors.accent}>Tocca il tavolo dove mettere la bianca</T>}
@@ -225,3 +282,9 @@ export function BiliardoBoard({ view, me, names, myTurn, onMove }: BoardProps<Bi
     </TableBg>
   );
 }
+
+const styles = StyleSheet.create({
+  track: { flex: 1, height: 30, borderRadius: 999, backgroundColor: colors.surface2, borderWidth: 3, borderColor: colors.line, overflow: 'visible', justifyContent: 'center' },
+  fill: { position: 'absolute', left: 0, top: 0, bottom: 0, borderRadius: 999 },
+  knob: { position: 'absolute', width: 28, height: 28, borderRadius: 14, backgroundColor: '#FFFBEE', borderWidth: 3, borderColor: colors.line, top: -2 },
+});

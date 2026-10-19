@@ -24,4 +24,5 @@ export * from './games/freccette';
 export * from './games/football';
 export * from './games/biliardo';
 export * from './games/lupus/lupus';
+export * from './games/mrwhite/mrwhite';
 export * from './bots';

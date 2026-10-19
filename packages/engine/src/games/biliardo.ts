@@ -36,12 +36,17 @@ function ownLeft(s: BiliardoState, seat: Seat): number {
 function rack(s: BiliardoState): Ball[] {
   const others = shuffle(s, [1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15]);
   const balls: Ball[] = [{ id: 0, x: HEAD.x, y: HEAD.y, in: false }];
-  const gap = BALL_R * 2 + 0.0004;
+  // Triangolo appena "lasco", con spostamenti minimi e sempre uguali: come un vero triangolo,
+  // le palline non sono perfettamente a contatto e all'apertura si sparpagliano.
+  const gap = BALL_R * 2 + 0.0025;
   let k = 0;
   for (let row = 0; row < 5; row++) {
     for (let j = 0; j <= row; j++) {
       const id = row === 2 && j === 1 ? 8 : others[k++];
-      balls.push({ id, x: FOOT.x + row * gap * 0.866, y: FOOT.y + (j - row / 2) * gap, in: false });
+      const n = row * 5 + j;
+      const jx = (((n * 7919) % 11) - 5) * 0.0003;
+      const jy = (((n * 104729) % 13) - 6) * 0.0003;
+      balls.push({ id, x: FOOT.x + row * gap * 0.866 + (row ? jx : 0), y: FOOT.y + (j - row / 2) * gap + (row ? jy : 0), in: false });
     }
   }
   return balls;
@@ -193,9 +198,9 @@ export const biliardo: Game<BiliardoState, BiliardoMove, BiliardoState> = {
     if (s.shots === 0) return { type: 'shoot', dx: 1, dy: noise(), power: 0.95 };
     if (best) {
       const l = Math.hypot(best.dx, best.dy);
-      return { type: 'shoot', dx: best.dx / l + noise(), dy: best.dy / l + noise(), power: Math.min(0.9, 0.25 + best.dist * 0.22) };
+      return { type: 'shoot', dx: best.dx / l + noise(), dy: best.dy / l + noise(), power: Math.min(0.6, 0.14 + best.dist * 0.12) };
     }
     const t = targets.sort((a, b) => Math.hypot(a.x - cue.x, a.y - cue.y) - Math.hypot(b.x - cue.x, b.y - cue.y))[0] ?? s.balls.find((b) => !b.in && b.id !== 0)!;
-    return { type: 'shoot', dx: t.x - cue.x + noise(), dy: t.y - cue.y + noise(), power: 0.5 };
+    return { type: 'shoot', dx: t.x - cue.x + noise(), dy: t.y - cue.y + noise(), power: 0.3 };
   },
 };

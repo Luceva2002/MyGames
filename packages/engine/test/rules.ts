@@ -1,4 +1,4 @@
-import { applyMove, burracoKind, BURRACO_RULES, checkMeld, captureOptions, damaMoves, primieraScore, scacchi, scoreFor, setteValue, unoDeck, type Card, type ChessState } from '../src';
+import { applyMove, mrwhite, sameWord, burracoKind, BURRACO_RULES, checkMeld, captureOptions, damaMoves, primieraScore, scacchi, scoreFor, setteValue, unoDeck, type Card, type ChessState } from '../src';
 
 const it = (suit: string, rank: number): Card => ({ id: `it-${suit}${rank}`, deck: 'it', suit, rank });
 
@@ -87,5 +87,40 @@ export const checks: { name: string; fn: () => void }[] = [
   {
     name: 'scopa: primiera',
     fn: () => eq(primieraScore([it('d', 7), it('c', 6), it('s', 1), it('b', 10)]), 21 + 18 + 16 + 10, 'primiera'),
+  },
+  {
+    name: 'mr. white: indovina la parola anche senza accenti e articolo',
+    fn: () => {
+      eq([sameWord('il caffe', 'Caffè'), sameWord('Lenti a contatto', 'lenti-a-contatto'), sameWord('', 'Tè'), sameWord('tè', 'Te')], [true, true, false, true], 'confronto');
+    },
+  },
+  {
+    name: 'mr. white: eliminato e indovina, vince da solo',
+    fn: () => {
+      let s = mrwhite.setup({ players: 5, seed: 3 });
+      s = applyMove(mrwhite, s, 0, { type: 'setup', undercover: true, shared: true });
+      eq([s.roles.filter((r) => r === 'mrwhite').length, s.roles.filter((r) => r === 'undercover').length], [1, 1], 'ruoli');
+      for (let p = 0; p < 5; p++) s = applyMove(mrwhite, s, p, { type: 'seen' });
+      eq(s.roles[s.starter] !== 'mrwhite', true, 'Mr. White non parla per primo');
+      eq(mrwhite.view(s, s.holder).myWord, null, 'col telefono sul tavolo la parola non si vede');
+      s = applyMove(mrwhite, s, s.holder, { type: 'toVote' });
+      const white = s.roles.indexOf('mrwhite');
+      s = applyMove(mrwhite, s, s.holder, { type: 'eliminate', target: white });
+      eq(mrwhite.activePlayers(s), [white], 'tocca a Mr. White indovinare');
+      s = applyMove(mrwhite, s, white, { type: 'guess', word: s.words.civile.toUpperCase() });
+      eq(mrwhite.result(s)?.winners, [white], 'vincitore');
+    },
+  },
+  {
+    name: 'mr. white: parità al voto, si rivota fra i pari merito',
+    fn: () => {
+      let s = mrwhite.setup({ players: 4, seed: 9 });
+      s = applyMove(mrwhite, s, 0, { type: 'setup', undercover: true, shared: false });
+      eq(s.undercover, false, 'con 4 giocatori niente Undercover');
+      for (let p = 0; p < 4; p++) s = applyMove(mrwhite, s, p, { type: 'seen' });
+      s = applyMove(mrwhite, s, s.starter, { type: 'toVote' });
+      for (const [p, t] of [[0, 1], [1, 0], [2, 1], [3, 0]]) s = applyMove(mrwhite, s, p, { type: 'vote', target: t });
+      eq([s.phase, s.runoff, mrwhite.activePlayers(s)], ['vote', [0, 1], [2, 3]], 'ballottaggio');
+    },
   },
 ];

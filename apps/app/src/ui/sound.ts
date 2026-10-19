@@ -14,6 +14,9 @@ const SOURCES = {
   win: require('../../assets/sounds/win.wav'),
   turn: require('../../assets/sounds/turn.wav'),
   hover: require('../../assets/sounds/hover.wav'),
+  ball: require('../../assets/sounds/ball.wav'),
+  cue: require('../../assets/sounds/cue.wav'),
+  pocket: require('../../assets/sounds/pocket.wav'),
 };
 
 export type Sfx = keyof typeof SOURCES;

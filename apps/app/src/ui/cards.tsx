@@ -1,6 +1,6 @@
-import { memo, useEffect } from 'react';
+import { createContext, memo, useContext, useEffect, useState, type ReactNode } from 'react';
 import Animated, { cancelAnimation, useAnimatedStyle, useSharedValue, withDelay, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
-import { Image, Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Image, Modal, Pressable, StyleSheet, Text, useWindowDimensions, View, type StyleProp, type ViewStyle } from 'react-native';
 import { CARD_BACKS, CARD_FACES } from './deckArt';
 import { CardCorners, NumeralFace } from './suits';
 import Svg, { Path } from 'react-native-svg';
@@ -79,8 +79,38 @@ function UnoFace({ card, w, h, chosenColor }: { card: Card; w: number; h: number
 
 export const CARD_RATIO = 1.55;
 
-export const PlayingCard = memo(function PlayingCard({ card, width, selected, dimmed, onPress, style, chosenColor, sway }: {
+/** Chi mostra una carta in grande: la fornisce CardZoomLayer, attorno a ogni partita. */
+const CardZoom = createContext<((card: Card) => void) | null>(null);
+
+/**
+ * Lente per le carte: toccando una carta della mano (o tenendola premuta quando il tocco la gioca)
+ * appare grande al centro, per leggerla bene anche su uno schermo piccolo. Un tocco la chiude.
+ */
+export function CardZoomLayer({ children }: { children: ReactNode }) {
+  const [card, setCard] = useState<Card | null>(null);
+  const { width, height } = useWindowDimensions();
+  const w = card ? Math.min(width * 0.62, (height * 0.6) / cardRatio(card.deck), 320) : 0;
+  return (
+    <CardZoom.Provider value={setCard}>
+      {children}
+      <Modal visible={!!card} transparent animationType="fade" onRequestClose={() => setCard(null)}>
+        <Pressable style={styles.zoomScrim} onPress={() => setCard(null)} accessibilityLabel="Chiudi la carta">
+          {card && (
+            <>
+              <PlayingCard card={card} width={w} sway={false} />
+              <Text style={styles.zoomLabel}>{cardName(card)}</Text>
+            </>
+          )}
+        </Pressable>
+      </Modal>
+    </CardZoom.Provider>
+  );
+}
+
+export const PlayingCard = memo(function PlayingCard({ card, width, selected, dimmed, onPress, style, chosenColor, sway, zoomable }: {
   card: Card;
+  /** Si può ingrandire: col tocco se il tocco non fa altro, altrimenti tenendola premuta. */
+  zoomable?: boolean;
   width: number;
   selected?: boolean;
   dimmed?: boolean;
@@ -91,6 +121,8 @@ export const PlayingCard = memo(function PlayingCard({ card, width, selected, di
   sway?: boolean;
 }) {
   const reduced = useReducedMotion();
+  const zoomCtx = useContext(CardZoom);
+  const zoom = zoomable && zoomCtx ? () => zoomCtx(card) : undefined;
   const height = width * cardRatio(card.deck);
   const radius = width * 0.1;
   // Numerali disegnati in codice; figure e Jolly sono immagini coi personaggi.
@@ -114,6 +146,20 @@ export const PlayingCard = memo(function PlayingCard({ card, width, selected, di
       </View>
     </Sway>
   );
+  if (!onPress && zoom) {
+    return (
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`${cardName(card)}, tocca per ingrandire`}
+        onPress={() => {
+          if (!tapAllowed()) return;
+          zoom();
+        }}
+      >
+        {face}
+      </Pressable>
+    );
+  }
   if (!onPress) return face;
   return (
     <Pressable
@@ -125,6 +171,8 @@ export const PlayingCard = memo(function PlayingCard({ card, width, selected, di
         tap();
         onPress();
       }}
+      onLongPress={zoom}
+      delayLongPress={380}
       // Carta scelta: si alza del 14% (spec §4); premuta scende appena (feedback < 100 ms, V-FB-1);
       // col mouse sopra si solleva un poco, come in mano a un giocatore.
       style={(state) => {
@@ -179,6 +227,8 @@ export function DeckPile({ count, width, deck = 'it' }: { count: number; width: 
 }
 
 const styles = StyleSheet.create({
+  zoomScrim: { flex: 1, backgroundColor: 'rgba(10,3,25,0.82)', alignItems: 'center', justifyContent: 'center', gap: 16 },
+  zoomLabel: { color: '#fff', fontSize: 20, fontWeight: '900' },
   // Cornice alla Balatro: crema, contorno spesso, ombra piena più una morbida (spec §4).
   card: {
     backgroundColor: '#FFFDF6',

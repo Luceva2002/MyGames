@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Image, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Image, Modal, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { router } from 'expo-router';
 import { assignAvatars, catalog, playerCounts, type Category, type CatalogEntry } from '@giochi/engine';
 import { createRoom, joinUrl, quickRoom, useOnline } from '../session/online';
@@ -25,7 +25,7 @@ type PlayMode = 'offline' | 'friends' | 'share' | 'online';
 
 /** Filtri per modo di gioco: da soli o sullo stesso telefono, con la TV in salotto, o ognuno da casa. */
 const MODES: { id: PlayMode; icon: string; label: string; hint: string; fits: (e: CatalogEntry) => boolean }[] = [
-  { id: 'offline', icon: '🤖', label: 'Offline', hint: 'Su questo dispositivo contro il computer', fits: (e) => e.status === 'ready' },
+  { id: 'offline', icon: '🤖', label: 'Offline', hint: 'Su questo dispositivo contro il computer', fits: (e) => e.status === 'ready' && !e.meta.humansOnly },
   { id: 'friends', icon: '🫶', label: 'Offline con amici', hint: 'Tutti sullo stesso dispositivo', fits: (e) => e.status === 'ready' && canPassAndPlay(e.meta) },
   { id: 'share', icon: '📺', label: 'Stanza in share', hint: 'Uno schermo fa da tavolo, i telefoni da controller', fits: (e) => e.status === 'ready' && e.meta.maxPlayers >= 2 },
   { id: 'online', icon: '🌍', label: 'Online', hint: 'Ognuno dal suo telefono, anche a distanza', fits: (e) => e.status === 'ready' && e.meta.maxPlayers >= 2 },
@@ -38,7 +38,7 @@ function playersLabel(e: CatalogEntry) {
   return a === b ? `${a}` : b >= 10 ? `${a}+` : `${a}–${b}`;
 }
 
-function GameTile({ entry, width }: { entry: CatalogEntry; width: number }) {
+function GameTile({ entry, width, onOpen }: { entry: CatalogEntry; width: number; onOpen: (e: CatalogEntry) => void }) {
   const external = entry.status === 'external';
   const art = GAME_ART[entry.meta.id];
   return (
@@ -47,7 +47,7 @@ function GameTile({ entry, width }: { entry: CatalogEntry; width: number }) {
       accessibilityLabel={`${entry.meta.name}. ${entry.meta.tagline}. ${playersLabel(entry)} giocatori`}
       onPress={() => {
         tap();
-        router.push({ pathname: '/game/[id]', params: { id: entry.meta.id } });
+        onOpen(entry);
       }}
       style={(state) => {
         const st = state as { pressed: boolean; hovered?: boolean; focused?: boolean };
@@ -118,6 +118,96 @@ function BigAction({ icon, title, text, primary, onPress }: { icon: string; titl
   );
 }
 
+/** Si parte subito contro il computer, col numero di giocatori più comune per quel gioco. */
+function startVsComputer(e: CatalogEntry) {
+  const counts = playerCounts(e.meta);
+  const n = counts.find((c) => c >= 2) ?? counts[0];
+  router.push({ pathname: '/play/[id]', params: { id: e.meta.id, bots: String(Math.max(0, n - 1)) } });
+}
+
+/** Stanza col gioco già scelto: `screen` se questo schermo fa da tavolo per tutti. */
+async function startRoom(e: CatalogEntry, screen: boolean) {
+  const code = await quickRoom(e.meta.id, screen);
+  if (code) router.push({ pathname: '/room/[code]', params: { code } });
+}
+
+/** La scelta rapida di come giocare, sopra la home: due tocchi in tutto e si è al tavolo. */
+function QuickStart({ entry, onClose, wideScreen }: { entry: CatalogEntry | null; onClose: () => void; wideScreen: boolean }) {
+  const online = useOnline();
+  const e = entry;
+  const art = e ? GAME_ART[e.meta.id] : null;
+  const multi = !!e && e.meta.maxPlayers >= 2;
+  const go = (fn: () => void) => () => {
+    tap();
+    onClose();
+    fn();
+  };
+  return (
+    <Modal visible={!!e} transparent animationType="fade" onRequestClose={onClose}>
+      <Pressable style={styles.sheetScrim} onPress={onClose} accessibilityLabel="Chiudi">
+        {e && (
+          <Pressable style={styles.sheet} onPress={() => {}} accessibilityViewIsModal>
+            <Row gap={12}>
+              {art ? <Image source={art} style={styles.sheetArt} accessibilityIgnoresInvertColors /> : null}
+              <View style={{ flex: 1, gap: 2 }}>
+                <T size={24} weight="900">
+                  {e.meta.name}
+                </T>
+                <T size={13} color={colors.muted} lines={2}>
+                  {e.meta.tagline}
+                </T>
+              </View>
+            </Row>
+            <T size={14} weight="900" color={colors.muted}>
+              COME GIOCATE?
+            </T>
+            {!e.meta.humansOnly && <QuickOption icon="🤖" title={multi ? 'Contro il computer' : 'Gioca'} text={multi ? 'Parti subito, qui su questo dispositivo' : 'Parti subito'} primary onPress={go(() => startVsComputer(e))} />}
+            {multi && (
+              <QuickOption
+                icon="📱"
+                title={online.status === 'connecting' ? 'Creo la stanza…' : 'Con amici, ognuno col suo telefono'}
+                text="Crei la stanza e mandi il link o il QR"
+                onPress={go(() => startRoom(e, false))}
+              />
+            )}
+            {multi && wideScreen && <QuickOption icon="📺" title="Questo schermo fa da tavolo" text="Gli altri giocano dal telefono" onPress={go(() => startRoom(e, true))} />}
+            {multi && canPassAndPlay(e.meta) && <QuickOption icon="🫶" title="Tutti su questo dispositivo" text="Vi passate il telefono a turno" onPress={go(() => router.push({ pathname: '/game/[id]', params: { id: e.meta.id } }))} />}
+            <Pressable accessibilityRole="button" onPress={go(() => router.push({ pathname: '/game/[id]', params: { id: e.meta.id } }))} style={{ alignSelf: 'center', padding: 8 }}>
+              <T size={14} weight="800" color={colors.accent}>
+                Regole e più opzioni ›
+              </T>
+            </Pressable>
+          </Pressable>
+        )}
+      </Pressable>
+    </Modal>
+  );
+}
+
+function QuickOption({ icon, title, text, primary, onPress }: { icon: string; title: string; text: string; primary?: boolean; onPress: () => void }) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`${title}. ${text}`}
+      onPress={onPress}
+      style={(state) => [styles.quickOption, primary && { backgroundColor: colors.accent }, { transform: [{ translateY: (state as { pressed: boolean }).pressed ? 3 : 0 }] }, focusRing((state as { focused?: boolean }).focused ?? false)]}
+    >
+      <T size={26}>{icon}</T>
+      <View style={{ flex: 1 }}>
+        <T size={17} weight="900" color={primary ? colors.onAccent : colors.text}>
+          {title}
+        </T>
+        <T size={13} weight="700" color={primary ? colors.onAccent : colors.muted}>
+          {text}
+        </T>
+      </View>
+      <T size={20} weight="900" color={primary ? colors.onAccent : colors.accent}>
+        ›
+      </T>
+    </Pressable>
+  );
+}
+
 export default function Home() {
   const { width } = useWindowDimensions();
   const [category, setCategory] = useState<Category | 'all'>('all');
@@ -140,6 +230,17 @@ export default function Home() {
       ),
     [category, mode],
   );
+
+  // Avvio rapido: un tocco sul gioco apre la scelta "come giochiamo"; col filtro del modo già
+  // scelto si parte subito, senza passare dalla pagina delle impostazioni della partita.
+  const [quick, setQuick] = useState<CatalogEntry | null>(null);
+  const open = (e: CatalogEntry) => {
+    if (e.status !== 'ready') return router.push({ pathname: '/game/[id]', params: { id: e.meta.id } });
+    if (mode === 'offline') return startVsComputer(e);
+    if (mode === 'friends') return router.push({ pathname: '/game/[id]', params: { id: e.meta.id } });
+    if (mode === 'share' || mode === 'online') return startRoom(e, mode === 'share');
+    setQuick(e);
+  };
 
   const gear = (
     <Pressable
@@ -255,10 +356,11 @@ export default function Home() {
 
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
         {entries.map((e) => (
-          <GameTile key={e.meta.id} entry={e} width={tileWidth} />
+          <GameTile key={e.meta.id} entry={e} width={tileWidth} onOpen={open} />
         ))}
         {entries.length === 0 && <T color={colors.muted}>Nessun gioco con questi filtri.</T>}
       </View>
+      <QuickStart entry={quick} onClose={() => setQuick(null)} wideScreen={width > 760} />
     </Screen>
   );
 }
@@ -272,6 +374,10 @@ const styles = StyleSheet.create({
   gear: { width: MIN_TOUCH, height: MIN_TOUCH, borderRadius: MIN_TOUCH / 2, backgroundColor: colors.scrim, alignItems: 'center', justifyContent: 'center' },
   tile: { backgroundColor: colors.surface, borderRadius: radius.l, overflow: 'hidden', borderWidth: 3, borderColor: colors.line, marginBottom: 6 },
   ribbon: { position: 'absolute', top: 10, right: 10, backgroundColor: colors.accent, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
+  sheetScrim: { flex: 1, backgroundColor: colors.scrim, justifyContent: 'flex-end', alignItems: 'center' },
+  sheet: { width: '100%', maxWidth: 520, gap: 10, padding: 18, paddingBottom: 26, borderTopLeftRadius: 28, borderTopRightRadius: 28, backgroundColor: colors.surface, borderWidth: 3, borderColor: colors.line },
+  sheetArt: { width: 64, height: 64, borderRadius: 16, borderWidth: 3, borderColor: colors.line },
+  quickOption: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 64, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 18, borderWidth: 3, borderColor: colors.line, backgroundColor: colors.surface2, boxShadow: `0px 4px 0px ${colors.line}` },
   modeButton: { flexDirection: 'row', alignItems: 'center', gap: 10, flexGrow: 1, flexBasis: 200, minHeight: 56, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 18, borderWidth: 3, borderColor: colors.line, backgroundColor: colors.surface },
   players: { position: 'absolute', bottom: 8, left: 8, backgroundColor: colors.scrim, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 },
   bigAction: { flexGrow: 1, flexBasis: 300, minHeight: 84, flexDirection: 'row', alignItems: 'center', gap: 14, padding: 18, borderRadius: radius.l, borderWidth: 3, borderColor: colors.line, boxShadow: `0px 6px 0px ${colors.line}`, marginBottom: 6 },

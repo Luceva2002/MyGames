@@ -16,7 +16,7 @@ export default function GameDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const entry = catalog().find((e) => e.meta.id === id);
   const meta = entry?.meta;
-  const [count, setCount] = useState(meta ? Math.max(meta.minPlayers, Math.min(2, meta.maxPlayers)) : 2);
+  const [count, setCount] = useState(meta ? Math.max(meta.minPlayers, Math.min(meta.humansOnly ? 4 : 2, meta.maxPlayers)) : 2);
   const [seats, setSeats] = useState<SeatConfig[]>([]);
   // Una maschera diversa per ogni posto, scelta a caso e cambiabile con un tocco.
   const [masks, setMasks] = useState(() => pickBots(10, Math.random, [getSettings().avatar]).map((b) => b.name));
@@ -27,7 +27,7 @@ export default function GameDetail() {
   useEffect(() => {
     loadNames().then((saved) => {
       // Di partenza: tu contro il computer; si aggiungono persone o computer con un tocco.
-      setSeats(Array.from({ length: 10 }, (_, i) => ({ name: saved[i] ?? (i === 0 ? 'Io' : defaultName(i)), bot: i > 0 })));
+      setSeats(Array.from({ length: 10 }, (_, i) => ({ name: saved[i] ?? (i === 0 ? 'Io' : defaultName(i)), bot: i > 0 && !meta?.humansOnly })));
     });
   }, [meta]);
 
@@ -191,10 +191,10 @@ export default function GameDetail() {
                   <T size={22} weight="900" color={colors.accent}>+</T>
                   <T size={14} weight="800">Persona</T>
                 </Pressable>}
-                <Pressable accessibilityRole="button" onPress={() => addSeat(true)} style={styles.addTile}>
+                {!meta.humansOnly && <Pressable accessibilityRole="button" onPress={() => addSeat(true)} style={styles.addTile}>
                   <T size={22} weight="900" color={colors.accent3}>+</T>
                   <T size={14} weight="800">Computer</T>
-                </Pressable>
+                </Pressable>}
               </View>
             )}
           </View>

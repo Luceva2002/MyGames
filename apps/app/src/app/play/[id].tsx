@@ -12,7 +12,7 @@ export default function PlayLocal() {
   const { id, bots } = useLocalSearchParams<{ id: string; bots?: string }>();
   const config = useMemo(() => {
     const pending = getPendingMatch();
-    if (pending?.gameId === id) return pending;
+    if (pending?.gameId === id && !bots) return pending;
     return bots ? { gameId: id, seats: [{ name: 'Io', bot: false, avatar: getSettings().avatar ?? undefined }, ...pickBots(Number(bots), Math.random, [getSettings().avatar]).map((b) => ({ name: b.name, bot: true }))] } : null;
   }, [id, bots]);
   useEffect(() => {

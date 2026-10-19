@@ -20,7 +20,10 @@ export function TrisBoard({ view, me, names, myTurn, onMove }: BoardProps<TrisSt
           </T>
         ))}
       </View>
-      <Banner text={turnText(myTurn, names, view.turn, me)} tone={myTurn ? 'turn' : 'info'} />
+      <Banner
+        text={view.winLine ? `Tris di ${names[view.board[view.winLine[0]]!]}` : view.board.every((c) => c !== null) ? 'Pareggio' : turnText(myTurn, names, view.turn, me)}
+        tone={myTurn && !view.winLine ? 'turn' : 'info'}
+      />
       <View style={{ width: size, height: size, flexDirection: 'row', flexWrap: 'wrap', backgroundColor: colors.line, gap: 6, borderRadius: 18, padding: 6 }}>
         {view.board.map((owner, i) => {
           const winning = view.winLine?.includes(i);

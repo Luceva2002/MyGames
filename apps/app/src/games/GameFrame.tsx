@@ -7,6 +7,8 @@ import { BotFigure, SeatAvatar, SeatAvatars } from '../ui/avatars';
 import { botByName } from '@giochi/engine';
 import { Button, Confirm, focusRing, PlayerTag, Row, T, tap } from '../ui/kit';
 import { DragProvider } from '../ui/drag';
+import { CardZoomLayer } from '../ui/cards';
+import { PopIn } from '../ui/motion';
 import { sfx } from '../ui/sound';
 import { TvContext } from '../ui/settings';
 import { colors, MIN_TOUCH, radius, seatColor } from '../ui/theme';
@@ -41,7 +43,18 @@ export function GameFrame({ meta, view, me, names, avatars, myTurn, active, onMo
   const [rules, setRules] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const [dismissed, setDismissed] = useState(false);
-  useEffect(() => setDismissed(false), [result]);
+  // A fine partita il tavolo resta visibile qualche istante: si vede l'ultima mossa (la presa,
+  // la freccetta, la biglia in buca) prima che arrivi il riepilogo con chi ha vinto.
+  const [settled, setSettled] = useState(false);
+  // Il risultato può essere un oggetto nuovo a ogni giro: conta solo se cambia davvero.
+  const resultKey = result ? JSON.stringify(result) : null;
+  useEffect(() => {
+    setDismissed(false);
+    setSettled(false);
+    if (!result) return;
+    const t = setTimeout(() => setSettled(true), 2200);
+    return () => clearTimeout(t);
+  }, [resultKey]); // eslint-disable-line react-hooks/exhaustive-deps
   // Un "ding" quando tocca a te (non all'apertura della partita) e la fanfara se vinci.
   const started = useRef(false);
   useEffect(() => {
@@ -50,7 +63,7 @@ export function GameFrame({ meta, view, me, names, avatars, myTurn, active, onMo
   }, [myTurn]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (result && me !== null && result.winners.includes(me)) sfx('win');
-  }, [result]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [resultKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <TvContext.Provider value={!!tv}>
@@ -72,9 +85,11 @@ export function GameFrame({ meta, view, me, names, avatars, myTurn, active, onMo
           </View>
         )}
         <View style={{ flex: 1 }} pointerEvents={pending ? 'none' : 'auto'}>
+          <CardZoomLayer>
           <DragProvider>
             {Board ? <Board view={view} me={me} names={names} myTurn={myTurn && !pending} onMove={onMove} /> : <T>Interfaccia non disponibile.</T>}
           </DragProvider>
+          </CardZoomLayer>
         </View>
         {pending && (
           <View style={styles.pending} accessibilityLiveRegion="polite">
@@ -92,7 +107,25 @@ export function GameFrame({ meta, view, me, names, avatars, myTurn, active, onMo
           </View>
         )}
         {overlay}
-        {result && !dismissed && (
+        {result && !settled && (
+          <View pointerEvents="none" style={styles.endWrap}>
+            <PopIn>
+              <View style={styles.endSticker}>
+                <T size={26} weight="900" color="#fff" center>
+                  {me !== null && result.winners.includes(me) ? '🏆 Hai vinto!' : 'Partita finita!'}
+                </T>
+              </View>
+            </PopIn>
+          </View>
+        )}
+        {result && settled && dismissed && (
+          <View style={styles.endBar}>
+            {onRestart && <Button small label="Rivincita" icon="↻" onPress={onRestart} />}
+            <Button small kind="ghost" color={colors.text} label="Risultato" onPress={() => setDismissed(false)} />
+            <Button small kind="ghost" color={colors.muted} label="Esci" onPress={onExit} />
+          </View>
+        )}
+        {result && settled && !dismissed && (
           <View style={styles.cover}>
             <View style={styles.card}>
               {result.winners.some((w) => botByName(names[w])) ? (
@@ -256,5 +289,8 @@ const styles = StyleSheet.create({
   toast: { position: 'absolute', top: 80, alignSelf: 'center', backgroundColor: colors.danger, paddingHorizontal: 18, paddingVertical: 12, borderRadius: 999, maxWidth: '90%' },
   cover: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: colors.scrim, alignItems: 'center', justifyContent: 'center', padding: 16 },
   card: { backgroundColor: colors.surface, borderRadius: radius.l, padding: 24, gap: 14, width: '100%', maxWidth: 460, borderWidth: 3, borderColor: colors.line, boxShadow: `0px 8px 0px ${colors.line}` },
+  endWrap: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, alignItems: 'center', justifyContent: 'center', zIndex: 40 },
+  endSticker: { backgroundColor: colors.accent2, borderWidth: 3, borderColor: colors.line, borderRadius: 18, paddingHorizontal: 22, paddingVertical: 10, transform: [{ rotate: '-5deg' }], boxShadow: `0px 6px 0px ${colors.line}` },
+  endBar: { position: 'absolute', left: 12, right: 12, bottom: 12, zIndex: 40, flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'center', padding: 10, borderRadius: 20, backgroundColor: colors.surface, borderWidth: 3, borderColor: colors.line },
   resultArt: { width: 96, height: 96, borderRadius: 20, alignSelf: 'center' },
 });

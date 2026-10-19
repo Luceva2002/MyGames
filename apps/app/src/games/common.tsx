@@ -381,7 +381,7 @@ export function Hand({ cards, width: baseWidth, selected, playable, onPress, dra
                 ghost={<CardGhost cards={[c]} width={width} />}
                 onLift={onLift ? (l) => onLift(c, l) : undefined}
               >
-                <PlayingCard card={c} width={width} selected={selected === c.id} dimmed={!isPlayable} onPress={onPress ? () => onPress(c) : undefined} />
+                <PlayingCard card={c} width={width} selected={selected === c.id} dimmed={!isPlayable} onPress={onPress ? () => onPress(c) : undefined} zoomable />
               </Draggable>
             </FlyIn>
           </View>
