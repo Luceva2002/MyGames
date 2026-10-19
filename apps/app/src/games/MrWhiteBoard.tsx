@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { usePathname } from 'expo-router';
-import Animated, { Easing, runOnJS, useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
+import Animated, { Easing, runOnJS, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { MRWHITE_ROLES, type MrWhiteMove, type MrWhiteView, type Seat } from '@giochi/engine';
 import type { BoardProps } from './common';
 import { Button, focusRing, Panel, PlayerTag, Row, T, tap } from '../ui/kit';
@@ -55,7 +55,7 @@ function WordCard({ word, white, back, width = CARD_W, label = 'La tua parola' }
   );
 }
 
-/** Il biglietto si gira con un mezzo giro e un piccolo rimbalzo; col movimento ridotto appare e basta. */
+/** Il biglietto si gira con un mezzo giro secco, senza rimbalzi; col movimento ridotto appare e basta. */
 function FlipWord({ word, white }: { word: string | null; white: boolean }) {
   const reduced = useReducedMotion();
   const [front, setFront] = useState(reduced);
@@ -63,15 +63,15 @@ function FlipWord({ word, white }: { word: string | null; white: boolean }) {
   useEffect(() => {
     if (reduced) return;
     sfx('scopa');
-    turn.value = withTiming(0.5, { duration: 240, easing: Easing.in(Easing.quad) }, (done) => {
+    turn.value = withTiming(0.5, { duration: 110, easing: Easing.in(Easing.quad) }, (done) => {
       if (!done) return;
       runOnJS(setFront)(true);
-      turn.value = withSpring(1, { damping: 10, stiffness: 150 });
+      turn.value = withTiming(1, { duration: 110, easing: Easing.out(Easing.quad) });
     });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const style = useAnimatedStyle(() => {
     const deg = turn.value <= 0.5 ? turn.value * 180 : (1 - turn.value) * 180;
-    return { transform: [{ perspective: 800 }, { rotateY: `${deg}deg` }, { scale: 1 + Math.sin(Math.min(turn.value, 1) * Math.PI) * 0.15 }] };
+    return { transform: [{ perspective: 800 }, { rotateY: `${deg}deg` }] };
   });
   return (
     <Animated.View style={style}>
@@ -319,7 +319,7 @@ export function MrWhiteBoard({ view, me, names, myTurn, onMove }: BoardProps<MrW
           ) : revealed ? (
             <>
               <FlipWord word={view.myWord} white={view.iAmMrWhite} />
-              <FlyIn from="none" delay={500} style={{ gap: 8, alignItems: 'center' }}>
+              <FlyIn from="none" delay={220} style={{ gap: 8, alignItems: 'center' }}>
                 <T center size={16}>
                   {view.iAmMrWhite ? 'Ascolta bene gli indizi degli altri e inventane uno credibile. Se ti scoprono puoi ancora vincere indovinando la parola.' : 'Ricordatela e non dirla a nessuno: al tuo turno darai un indizio.'}
                 </T>

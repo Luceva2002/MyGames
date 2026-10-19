@@ -6,7 +6,7 @@ import { Button, focusRing, Panel, PlayerTag, Row, T, tap } from '../ui/kit';
 import { useIsTv, useReducedMotion } from '../ui/settings';
 import { sfx } from '../ui/sound';
 import { FlyIn } from '../ui/motion';
-import Animated, { Easing, runOnJS, useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
+import Animated, { Easing, runOnJS, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { TableBg } from '../ui/tables';
 import { colors, MIN_TOUCH, radius, seatColor } from '../ui/theme';
 
@@ -31,37 +31,30 @@ function RoleCard({ role, width }: { role: RoleId | 'retro'; width: number }) {
 }
 
 /**
- * La carta del ruolo che si gira: parte coperta, ruota su se stessa, a metà giro mostra il ruolo
- * e atterra con un rimbalzo, un lampo di luce e un suono. Col movimento ridotto appare e basta.
+ * La carta del ruolo che si gira: un mezzo giro secco, senza rimbalzi né lampi.
+ * Col movimento ridotto appare e basta.
  */
 function FlipRole({ role, width }: { role: RoleId; width: number }) {
   const reduced = useReducedMotion();
   const [front, setFront] = useState(reduced);
   const turn = useSharedValue(reduced ? 1 : 0);
-  const glow = useSharedValue(0);
   useEffect(() => {
     if (reduced) return;
     sfx('scopa');
-    turn.value = withTiming(0.5, { duration: 260, easing: Easing.in(Easing.quad) }, (done) => {
+    turn.value = withTiming(0.5, { duration: 110, easing: Easing.in(Easing.quad) }, (done) => {
       if (!done) return;
       runOnJS(setFront)(true);
-      turn.value = withSpring(1, { damping: 9, stiffness: 140 });
-      glow.value = withSequence(withTiming(1, { duration: 160 }), withTiming(0, { duration: 900 }));
+      turn.value = withTiming(1, { duration: 110, easing: Easing.out(Easing.quad) });
     });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const card = useAnimatedStyle(() => {
     const deg = turn.value <= 0.5 ? turn.value * 180 : (1 - turn.value) * 180;
-    const lift = 1 + Math.sin(Math.min(turn.value, 1) * Math.PI) * 0.18;
-    return { transform: [{ perspective: 800 }, { rotateY: `${deg}deg` }, { scale: lift }] };
+    return { transform: [{ perspective: 800 }, { rotateY: `${deg}deg` }] };
   });
-  const ring = useAnimatedStyle(() => ({ opacity: glow.value, transform: [{ scale: 0.6 + (1 - glow.value) * 0.9 + glow.value * 0.4 }] }));
   return (
-    <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-      <Animated.View pointerEvents="none" style={[{ position: 'absolute', width: width * 1.5, height: width * 1.5, borderRadius: width, backgroundColor: role === 'lupo' ? '#FF2E8866' : '#FFE14D66', boxShadow: `0px 0px 60px ${role === 'lupo' ? colors.accent2 : colors.accent}` }, ring]} />
-      <Animated.View style={card}>
-        <RoleCard role={front ? role : 'retro'} width={width} />
-      </Animated.View>
-    </View>
+    <Animated.View style={card}>
+      <RoleCard role={front ? role : 'retro'} width={width} />
+    </Animated.View>
   );
 }
 
@@ -236,8 +229,8 @@ export function LupusBoard({ view, me, names, myTurn, onMove }: BoardProps<Lupus
           ) : revealed ? (
             <>
               <FlipRole role={myRole} width={220} />
-              {/* Il nome del ruolo arriva dopo il giro della carta, per non rovinare la sorpresa. */}
-              <FlyIn from="none" delay={550} style={{ gap: 8, alignItems: 'center' }}>
+              {/* Il nome del ruolo arriva appena la carta è girata, per non rovinare la sorpresa. */}
+              <FlyIn from="none" delay={220} style={{ gap: 8, alignItems: 'center' }}>
                 <T size={28} weight="900" center color={myRole === 'lupo' ? colors.accent2 : colors.accent}>
                   Sei {roleDef.name}
                 </T>
