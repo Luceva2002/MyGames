@@ -77,13 +77,17 @@ export function YahtzeeBoard({ view, me, names, myTurn, onMove }: BoardProps<Yah
   const rolled = view.rollsLeft < 3;
   const players = Array.from({ length: view.players }, (_, i) => i);
 
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
+  // Da computer (schermo largo) dadi a sinistra e scheda a destra, così si vede tutto senza scorrere.
+  const side = width >= 900 && width > height;
   const dieSize = Math.min(76, Math.floor((Math.min(width, 700) - 80) / 5.6));
   const canHold = myTurn && rolled && view.rollsLeft > 0;
   // Si vede la scheda di chi sta tirando: la mia quando tocca a me, quella del computer mentre gioca.
   const sheetSeat = myTurn && me !== null ? me : view.turn;
   return (
     <TableBg table="teal">
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={side ? { flexDirection: 'row', alignItems: 'center', gap: 16, padding: 12, flexGrow: 1 } : { flexGrow: 1 }}>
+      <View style={side ? { flex: 1, justifyContent: 'center' } : undefined}>
       {/* I giocatori in fila col totale: chi tira pulsa. */}
       <Row gap={8} wrap style={{ justifyContent: 'center', paddingTop: 8 }}>
         {players.map((p) => (
@@ -128,9 +132,11 @@ export function YahtzeeBoard({ view, me, names, myTurn, onMove }: BoardProps<Yah
           </Row>
         )}
       </View>
-      <View style={{ paddingHorizontal: 8, paddingBottom: 8 }}>
+      </View>
+      <View style={side ? { width: Math.min(560, width * 0.48) } : { paddingHorizontal: 8, paddingBottom: 8 }}>
       <ScoreSheet view={view} names={names} me={me} seat={sheetSeat} canPick={myTurn && rolled} onPick={(category) => onMove({ type: 'score', category })} />
       </View>
+      </ScrollView>
     </TableBg>
   );
 }
