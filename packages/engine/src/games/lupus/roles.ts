@@ -151,8 +151,3 @@ export const ROLE_ORDER: RoleId[] = [
   'criceto',
 ];
 
-export const TEAM_NAMES: Record<Team, string> = {
-  villaggio: 'Villaggio',
-  lupi: 'Lupi',
-  criceto: 'Criceto Mannaro',
-};

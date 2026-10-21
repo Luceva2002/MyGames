@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react';
 import { Image, Text, View, type ImageSourcePropType } from 'react-native';
-import { BOT_CHARACTERS, botByName, characterById } from '@giochi/engine';
+import { botByName, characterById } from '@giochi/engine';
 import { colors, OUTLINE, seatColor } from './theme';
 
 /** Le 16 maschere, sprite trasparenti a figura intera (design-proposte/pronti/bots e bots-trasparenti). */
@@ -79,23 +79,17 @@ export function SeatAvatar({ seat, name, size }: { seat: number; name: string; s
 }
 
 /** Tondo con testa e busto della maschera, per il tavolo. Restituisce null per i giocatori umani. */
-export function BotAvatar({ name, size, seat }: { name: string; size: number; seat?: number }) {
-  const bot = botByName(name);
-  if (!bot) return null;
-  return <CharacterAvatar id={bot.id} size={size} seat={seat} />;
-}
+/**
+ * Ogni maschera ha il suo colore di fondo, già dentro il ritratto (assets/avatars) e ripetuto qui
+ * per il cerchio: si riconoscono a colpo d'occhio anche piccole, nei punteggi e al tavolo.
+ */
+const AVATAR_BG: Record<string, string> = {
+  arlecchina: '#5CB8FF', arlecchino: '#FF2E88', balanzone: '#FFE14D', brighella: '#FF8A3D', capitano: '#FF6B6B', colombina: '#FF9EC7', forzuto: '#9BE15D', gianduja: '#FFC94D',
+  giullare: '#B8F03C', medico: '#FFE14D', meneghino: '#FFB38A', pantalone: '#19D3C5', pulcinella: '#4D7CFF', rosaura: '#7FD1FF', stenterello: '#7CF0B0', tartaglia: '#E4572E',
+};
+export const avatarBg = (id: string) => AVATAR_BG[id] ?? colors.brand;
 
 /** Tondo con testa e busto di una maschera, scelta per id. */
-/**
- * Ogni maschera ha il suo colore di fondo, preso dalla palette di Tavolata: si riconoscono a colpo
- * d'occhio anche piccole, nei punteggi e al tavolo.
- */
-const AVATAR_BG = ['#FFE14D', '#FF2E88', '#19D3C5', '#FF8A3D', '#9BE15D', '#5CB8FF', '#FF9EC7', '#B69CFF', '#FF6B6B', '#7CF0B0', '#FFC94D', '#E4572E', '#2EC4B6', '#FFB38A', '#8E6CFF', '#4D7CFF'];
-export const avatarBg = (id: string) => {
-  const i = BOT_CHARACTERS.findIndex((c) => c.id === id);
-  return i < 0 ? colors.brand : AVATAR_BG[i % AVATAR_BG.length];
-};
-
 export function CharacterAvatar({ id, size, seat }: { id: string; size: number; seat?: number }) {
   const ch = characterById(id);
   if (!ch || !PORTRAIT[id]) return null;
