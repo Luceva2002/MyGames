@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Pressable, View } from 'react-native';
-import { UNO_COLORS as COLORS, unoLastText, type Card, type Seat, type UnoMove, type UnoView } from '@giochi/engine';
+import { UNO_COLORS as COLORS, type Card, type Seat, type UnoMove, type UnoView } from '@giochi/engine';
 import { MyCorner, EventSticker, Felt, Hand, othersOf, TableTop, type SeatInfo, useCardWidth, type BoardProps } from './common';
 import { CardBack, DeckPile, PlayingCard, UNO_COLORS } from '../ui/cards';
 import { Draggable, DropZone } from '../ui/drag';
@@ -65,11 +65,6 @@ export function UnoBoard({ view, me, names, myTurn, onMove }: BoardProps<UnoView
         <T size={big ? 30 : 20} color="#ffffff88">
           {view.direction === 1 ? '↻' : '↺'}
         </T>
-        {view.last && (
-          <T size={big ? 20 : 14} color="#ffffffcc" center>
-            {unoLastText(view.last, names)}
-          </T>
-        )}
         </View>
       </Felt>
       </DropZone>

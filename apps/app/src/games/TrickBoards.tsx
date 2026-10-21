@@ -59,7 +59,8 @@ function TrickTable({ players, plays, names, width, winner, me, turn }: { player
                 }
               >
                 {play && (
-                  <FlyIn key={play.card.id} from={winner !== undefined ? 'none' : seat === me ? 'below' : 'above'} leave={winner === undefined ? undefined : winner === me ? 'down' : 'up'} sound={winner === undefined ? 'card' : undefined}>
+                  // La carta arriva dal lato di chi la gioca: dall'alto, da destra o da sinistra.
+                  <FlyIn key={play.card.id} from={winner !== undefined ? 'none' : seat === me ? 'below' : seatSpot(k, players) === 'top' ? 'above' : 'none'} fromX={winner !== undefined ? 0 : seatSpot(k, players) === 'left' ? -180 : seatSpot(k, players) === 'right' ? 180 : 0} leave={winner === undefined ? undefined : winner === me ? 'down' : 'up'} sound={winner === undefined ? 'card' : undefined}>
                     <View style={{ opacity: winner !== undefined && winner !== seat ? 0.55 : 1 }}>
                       <PlayingCard card={play.card} width={cw - 6} selected={winner === seat} />
                     </View>

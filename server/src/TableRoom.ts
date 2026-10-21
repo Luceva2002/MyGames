@@ -10,6 +10,7 @@ import {
   canControl,
   getGame,
   narrate,
+  narrateCards,
   newSeed,
   pickBots,
   playerCounts,
@@ -181,7 +182,7 @@ export class TableRoom extends Room {
   private lastAction: LastAction | null = null;
   private tell(before: unknown, seat: number, move: unknown) {
     const text = this.game ? narrate(this.game.meta.id, before, this.state_, seat, move) : null;
-    if (text) this.lastAction = { seat, text, n: (this.lastAction?.n ?? 0) + 1 };
+    if (text && this.game) this.lastAction = { seat, text, n: (this.lastAction?.n ?? 0) + 1, cards: narrateCards(this.game.meta.id, before, move) };
   }
 
   private afterChange() {

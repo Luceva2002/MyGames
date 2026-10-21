@@ -7,7 +7,7 @@ import { BotFigure, SeatAvatar, SeatAvatars } from '../ui/avatars';
 import { botByName } from '@giochi/engine';
 import { Button, Confirm, focusRing, PlayerTag, Row, T, tap } from '../ui/kit';
 import { DragProvider } from '../ui/drag';
-import { CardZoomLayer } from '../ui/cards';
+import { CardZoomLayer, PlayingCard } from '../ui/cards';
 import { PopIn } from '../ui/motion';
 import { sfx } from '../ui/sound';
 import { TvContext } from '../ui/settings';
@@ -93,6 +93,7 @@ export function GameFrame({ meta, view, me, names, avatars, myTurn, active, onMo
             {Board ? <Board view={view} me={me} names={names} myTurn={myTurn && !pending} onMove={onMove} /> : <T>Interfaccia non disponibile.</T>}
           </DragProvider>
           </CardZoomLayer>
+          <ActionToast action={lastAction ?? null} me={me} names={names} />
         </View>
         {pending && (
           <View style={styles.pending} accessibilityLiveRegion="polite">
@@ -286,6 +287,49 @@ function ActionStrip({ action, me, names }: { action: LastAction | null; me: Sea
   );
 }
 
+/**
+ * La mossa di un avversario in grande al centro del tavolo per un attimo: chi è, cosa fa e le carte
+ * che ha giocato o preso. Poi resta scritta nella striscia sotto la barra.
+ */
+function ActionToast({ action, me, names }: { action: LastAction | null; me: Seat | null; names: string[] }) {
+  const [shown, setShown] = useState<LastAction | null>(null);
+  useEffect(() => {
+    if (!action || action.seat === me) return;
+    setShown(action);
+    const t = setTimeout(() => setShown(null), 1500);
+    return () => clearTimeout(t);
+  }, [action?.n]); // eslint-disable-line react-hooks/exhaustive-deps
+  if (!shown) return null;
+  const text = shown.text.replace(/%v(\d+)/g, (_, n) => (Number(n) === me ? 'te' : names[Number(n)] ?? ''));
+  const cards = shown.cards ?? [];
+  return (
+    <View pointerEvents="none" style={styles.moveWrap}>
+      <PopIn key={shown.n}>
+        <View style={[styles.move, { borderColor: seatColor(shown.seat) }]}>
+          <Row gap={8} style={{ alignItems: 'center' }}>
+            <SeatAvatar seat={shown.seat} name={names[shown.seat]} size={34} />
+            <T size={15} weight="900" style={{ flexShrink: 1 }}>
+              {names[shown.seat]}
+              <T size={14} weight="700" color={colors.muted}>
+                {` ${text}`}
+              </T>
+            </T>
+          </Row>
+          {cards.length > 0 && (
+            <Row gap={6} style={{ justifyContent: 'center' }}>
+              {cards.map((c, i) => (
+                <View key={c.id} style={i === 0 && cards.length > 1 ? { marginRight: 8 } : undefined}>
+                  <PlayingCard card={c} width={cards.length > 4 ? 36 : 46} sway={false} zoomable={false} />
+                </View>
+              ))}
+            </Row>
+          )}
+        </View>
+      </PopIn>
+    </View>
+  );
+}
+
 /** Schermata che copre le carte finché il telefono non arriva alla persona giusta (V-HID-2). */
 export function HandoffCurtain({ seat, name, onReady }: { seat: Seat; name: string; onReady: () => void }) {
   return (
@@ -306,6 +350,8 @@ export function HandoffCurtain({ seat, name, onReady }: { seat: Seat; name: stri
 }
 
 const styles = StyleSheet.create({
+  moveWrap: { position: 'absolute', left: 0, right: 0, top: '20%', alignItems: 'center', paddingHorizontal: 16, zIndex: 30 },
+  move: { maxWidth: 380, gap: 8, paddingVertical: 8, paddingHorizontal: 12, borderRadius: 20, backgroundColor: colors.surface, borderWidth: 3, boxShadow: `0px 6px 0px ${colors.line}` },
   stripSpace: { height: 0 },
   stripWrap: { alignItems: 'center', paddingHorizontal: 10, paddingTop: 4 },
   strip: { flexDirection: 'row', alignItems: 'center', gap: 6, maxWidth: '100%', paddingVertical: 3, paddingLeft: 3, paddingRight: 12, borderRadius: 999, backgroundColor: colors.surface, borderWidth: 2 },

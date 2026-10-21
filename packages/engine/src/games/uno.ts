@@ -179,8 +179,3 @@ export const uno: Game<UnoState, UnoMove, UnoView> = {
   },
 };
 
-/** Testo dell'ultima giocata con i nomi al posto dei segnaposto. */
-export function unoLastText(last: UnoState['last'], names: string[]): string {
-  if (!last) return '';
-  return `${names[last.seat]} ${last.text.replace(/%v(\d+)/, (_, n) => names[Number(n)])}`;
-}
