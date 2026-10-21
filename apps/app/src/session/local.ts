@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { getSettings } from '../ui/settings';
 import { applyMove, assignAvatars, botMove, getGame, narrate, newSeed, type Game, type LastAction, type Seat } from '@giochi/engine';
 
 export interface SeatConfig {
@@ -70,7 +71,7 @@ export function useLocalMatch(config: MatchConfig) {
     const timer = setTimeout(() => {
       const current = stateRef.current;
       if (!game.activePlayers(current).includes(bot)) return;
-      const move = botMove(game, current, bot);
+      const move = botMove(game, current, bot, getSettings().botLevel);
       const next = applyMove(game, current, bot, move);
       tell(current, next, bot, move);
       setState(next);

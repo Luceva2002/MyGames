@@ -6,6 +6,7 @@ import { createRoom, joinUrl, quickJoin, quickRoom, useOnline } from '../session
 import { canPassAndPlay } from '../session/local';
 import { CharacterAvatar } from '../ui/avatars';
 import { PopIn } from '../ui/motion';
+import { LevelPicker } from '../ui/LevelPicker';
 import { QrCode } from '../ui/QrCode';
 import { GAME_ART, HERO } from '../ui/art';
 import { Chip, focusRing, Row, Screen, T, tap } from '../ui/kit';
@@ -146,11 +147,12 @@ function QuickStart({ entry, onClose, wideScreen }: { entry: CatalogEntry | null
               COME GIOCATE?
             </T>
             {!e.meta.humansOnly && <QuickOption icon="🤖" title={multi ? 'Contro il computer' : 'Gioca'} text="Parti subito, qui" primary onPress={go(() => startVsComputer(e))} />}
+            {!e.meta.humansOnly && multi && <LevelPicker />}
             {multi && (
               <QuickOption
                 icon="📱"
                 title={online.status === 'connecting' ? 'Creo la stanza…' : 'Con amici'}
-                text="Ognuno col suo telefono, con link o QR"
+                text="Ognuno col suo telefono"
                 onPress={go(() => startRoom(e, false))}
               />
             )}

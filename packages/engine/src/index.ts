@@ -27,3 +27,4 @@ export * from './games/lupus/lupus';
 export * from './games/mrwhite/mrwhite';
 export * from './bots';
 export * from './narrate';
+export * from './difficulty';

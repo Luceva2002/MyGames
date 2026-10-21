@@ -1,4 +1,5 @@
 import type { Game, Seat } from './types';
+import { levelMove, type BotLevel } from '../difficulty';
 
 export function clone<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
@@ -14,9 +15,9 @@ export function applyMove<S, M>(game: Game<S, M>, state: S, seat: Seat, move: M)
 }
 
 /** Mossa del computer. Il bot lavora su una copia: può consumare numeri casuali senza toccare la partita. */
-export function botMove<S, M>(game: Game<S, M>, state: S, seat: Seat): M {
+export function botMove<S, M>(game: Game<S, M>, state: S, seat: Seat, level: BotLevel = 'difficile'): M {
   if (!game.bot) throw new Error(`${game.meta.id}: nessun computer disponibile`);
-  return game.bot(clone(state), seat);
+  return levelMove(game, state, seat, level, () => game.bot!(clone(state), seat));
 }
 
 /** Simula una partita intera con soli computer: usata nei test. */

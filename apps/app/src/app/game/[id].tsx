@@ -3,9 +3,10 @@ import { Image, Pressable, StyleSheet, TextInput, useWindowDimensions, View } fr
 import { GAME_ART } from '../../ui/art';
 import { getSettings, setSettings } from '../../ui/settings';
 import { router, useLocalSearchParams } from 'expo-router';
-import { assignAvatars, BOT_CHARACTERS, botByName, catalog, pickBots, playerCounts } from '@giochi/engine';
+import { assignAvatars, BOT_CHARACTERS, catalog, pickBots, playerCounts } from '@giochi/engine';
 import { CharacterAvatar } from '../../ui/avatars';
 import { CharacterPickerModal } from '../../ui/CharacterPicker';
+import { LevelPicker } from '../../ui/LevelPicker';
 import { canPassAndPlay, setPendingMatch, type SeatConfig } from '../../session/local';
 import { quickRoom, useOnline } from '../../session/online';
 import { defaultName, loadNames, saveNames } from '../../session/names';
@@ -154,7 +155,7 @@ export default function GameDetail() {
                       {masks[i]}
                     </T>
                     <T size={12} color={colors.muted} center lines={1}>
-                      🤖 computer {botByName(masks[i])?.level}
+                      🤖 computer
                     </T>
                   </View>
                 ) : (
@@ -208,6 +209,7 @@ export default function GameDetail() {
 
       {ready && (
         <View style={{ gap: 12 }}>
+          {active.some((x) => x.bot) && <LevelPicker />}
           <Button label="Gioca su questo dispositivo" icon="▶" onPress={startLocal} />
           <Button
             label={online.status === 'connecting' ? 'Creo la stanza…' : 'Gioca con amici'}
