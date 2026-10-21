@@ -4,6 +4,7 @@ import {
   assignAvatars,
   botByName,
   botMove,
+  BOT_LEVELS,
   characterById,
   CODE_ALPHABET,
   CODE_LENGTH,
@@ -15,6 +16,7 @@ import {
   pickBots,
   playerCounts,
   type Game,
+  type BotLevel,
   type JoinOptions,
   type LastAction,
   type RoomMember,
@@ -50,6 +52,8 @@ export class TableRoom extends Room {
   private gameId: string | null = null;
   private bots = 0;
   private botNames = pickBots(16).map((b) => b.name);
+  /** Bravura di ogni maschera che gioca come computer (per nome); se manca è Normale. */
+  private botLevels: Record<string, BotLevel> = {};
   /** I computer al tavolo, senza le maschere già scelte da chi gioca. */
   private seatedBots() {
     const taken = new Set(this.members.map((m) => m.avatar).filter(Boolean));
@@ -75,6 +79,24 @@ export class TableRoom extends Room {
     this.onMessage('setBots', (client, msg: { count: number }) => {
       if (!this.isHost(client) || this.game) return;
       this.bots = Math.max(0, Math.min(9, Math.floor(msg.count)));
+      this.broadcastRoom();
+    });
+    // Il capotavola cambia la maschera o la bravura di un computer seduto al tavolo.
+    this.onMessage('setBot', (client, msg: { index: number; name?: string; level?: BotLevel }) => {
+      if (!this.isHost(client) || this.game) return;
+      const current = this.seatedBots()[msg.index];
+      if (!current) return;
+      let name = current;
+      if (msg.name && botByName(msg.name) && msg.name !== current) {
+        const i = this.botNames.indexOf(current);
+        const j = this.botNames.indexOf(msg.name);
+        if (j >= 0) [this.botNames[i], this.botNames[j]] = [this.botNames[j], this.botNames[i]];
+        name = msg.name;
+        // La bravura resta al posto, non alla maschera.
+        if (this.botLevels[current]) this.botLevels[name] = this.botLevels[current];
+        delete this.botLevels[current];
+      }
+      if (msg.level && BOT_LEVELS.some((l) => l.id === msg.level)) this.botLevels[name] = msg.level;
       this.broadcastRoom();
     });
     this.onMessage('avatar', (client, msg: { avatar: string }) => {
@@ -207,7 +229,7 @@ export class TableRoom extends Room {
         if (this.game !== game) return;
         try {
           const before = this.state_;
-          const move = botMove(game, this.state_, bot);
+          const move = botMove(game, this.state_, bot, this.botLevels[this.seats[bot]?.name ?? ''] ?? 'normale');
           this.state_ = applyMove(game, this.state_, bot, move);
           this.tell(before, bot, move);
         } catch (e) {
@@ -226,6 +248,7 @@ export class TableRoom extends Room {
       gameId: this.gameId,
       bots: this.bots,
       botNames: this.seatedBots(),
+      botLevels: this.seatedBots().map((n) => this.botLevels[n] ?? 'normale'),
       phase: this.game ? 'playing' : 'lobby',
       members: this.members,
       seats: this.seats,

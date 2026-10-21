@@ -1,4 +1,5 @@
 import type { LastAction } from './narrate';
+import type { BotLevel } from './difficulty';
 import type { GameResult, Seat } from './core/types';
 
 /** Messaggi scambiati fra app e server delle stanze. */
@@ -28,6 +29,8 @@ export interface RoomSnapshot {
   bots: number;
   /** Le maschere che siederanno al tavolo come computer, già scelte per mostrarle in lobby. */
   botNames: string[];
+  /** Bravura di ciascuno di quei computer, nello stesso ordine. */
+  botLevels?: BotLevel[];
   phase: 'lobby' | 'playing';
   members: RoomMember[];
   seats: RoomSeat[];

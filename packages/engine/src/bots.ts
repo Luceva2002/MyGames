@@ -47,7 +47,7 @@ export function pickBots(n: number, random: () => number = Math.random, exclude:
 
 /** Ritrova la maschera dal nome mostrato al tavolo (anche "Nome 🤖" per chi ha lasciato il posto). */
 export function botByName(name: string): BotCharacter | undefined {
-  // Il nome può avere aggiunte come " 🤖" o " 🤝": basta che inizi col nome della maschera.
+  // Il nome può avere aggiunte come " " o " 🤝": basta che inizi col nome della maschera.
   return BOT_CHARACTERS.find((b) => name === b.name || name.startsWith(`${b.name} `));
 }
 

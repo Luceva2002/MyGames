@@ -40,13 +40,15 @@ export function CharacterPicker({ value, onChange, size = 64, disabled = [] }: {
 }
 
 /** Finestra per scegliere la maschera di un posto (partita sullo stesso telefono, stanza online). */
-export function CharacterPickerModal({ visible, title, value, taken = [], onPick, onClose, name, onRename }: {
+export function CharacterPickerModal({ visible, title, value, taken = [], onPick, onClose, name, onRename, header }: {
   visible: boolean;
   title: string;
   value: string | null;
   /** Se c'è, sopra le maschere si può cambiare anche il nome (nella stanza). */
   name?: string;
   onRename?: (name: string) => void;
+  /** Altro da scegliere sopra le maschere (la bravura di un computer). */
+  header?: React.ReactNode;
   /** Maschere già prese da altri posti: si vedono ma non si scelgono. */
   taken?: string[];
   onPick: (id: string) => void;
@@ -66,6 +68,7 @@ export function CharacterPickerModal({ visible, title, value, taken = [], onPick
           <T size={22} weight="900">
             {title}
           </T>
+          {header}
           {onRename && (
             <TextInput
               value={draft}

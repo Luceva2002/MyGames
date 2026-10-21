@@ -2,18 +2,18 @@ import { useEffect, useRef, useState } from 'react';
 import { Image, Pressable, StyleSheet, Text, useWindowDimensions, View, Platform, Share } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useStayAwake } from '../../ui/keepAwake';
-import { assignAvatars, canControl, CODE_LENGTH, GAMES, getGame, normalizeCode, playerCounts, type RoomSnapshot } from '@giochi/engine';
+import { assignAvatars, BOT_CHARACTERS, BOT_LEVELS, canControl, CODE_LENGTH, GAMES, getGame, normalizeCode, playerCounts, type RoomSnapshot } from '@giochi/engine';
 import { GameFrame } from '../../games/GameFrame';
 import { clearOnlineError, joinUrl, leaveRoom, rejoin, send, sendMove, useOnline } from '../../session/online';
 import { loadNames, saveNames } from '../../session/names';
 import { GAME_ART } from '../../ui/art';
-import { BotFigure } from '../../ui/avatars';
+import { CharacterAvatar } from '../../ui/avatars';
+import { LevelPicker } from '../../ui/LevelPicker';
 import { CharacterPickerModal } from '../../ui/CharacterPicker';
 import { PopIn } from '../../ui/motion';
 import { sfx } from '../../ui/sound';
-import { SeatAvatars } from '../../ui/avatars';
 import { getSettings, setSettings } from '../../ui/settings';
-import { Button, Confirm, focusRing, Panel, PlayerTag, Row, Screen, T, tap } from '../../ui/kit';
+import { Button, Confirm, focusRing, Panel, Row, Screen, T, tap } from '../../ui/kit';
 import { QrCode } from '../../ui/QrCode';
 import { TvContext } from '../../ui/settings';
 import { colors, font, MIN_TOUCH, radius } from '../../ui/theme';
@@ -152,6 +152,7 @@ function Lobby({ snapshot, myId, isHost, tv, error, onExit, reconnecting }: {
   const canStart = !!game && allowed.includes(total);
   const meIndex = players.findIndex((p) => p.id === myId);
   const [picking, setPicking] = useState(false);
+  const [editingBot, setEditingBot] = useState<number | null>(null);
   // Chi entra si sente, come in Jackbox: un "ding" a ogni nuovo giocatore.
   const seen = useRef(players.length);
   useEffect(() => {
@@ -199,47 +200,36 @@ function Lobby({ snapshot, myId, isHost, tv, error, onExit, reconnecting }: {
           <T size={18} weight="900">
             Al tavolo · {players.length + snapshot.bots}
           </T>
-          <SeatAvatars.Provider value={avatars}>
-          {players.map((m, i) => (
-            <PopIn key={m.id} style={{ alignSelf: 'stretch' }}>
-            <Row gap={10} wrap style={styles.playerRow}>
-              <Pressable
-                style={{ flexShrink: 1, minWidth: 140 }}
-                disabled={m.id !== myId}
-                accessibilityRole={m.id === myId ? 'button' : undefined}
-                accessibilityLabel={m.id === myId ? 'Cambia nome e personaggio' : undefined}
-                onPress={() => {
-                  tap();
-                  setPicking(true);
-                }}
-              >
-                <PlayerTag seat={i} name={m.name} size={18} suffix={m.id === myId ? ' (tu) ✎' : ''} />
-              </Pressable>
-              {!m.connected && (
-                <T size={13} color={colors.danger} weight="800">
-                  📡 si sta ricollegando
-                </T>
-              )}
-              {leader?.id === m.id && (
-                <T size={12} color={colors.accent} weight="900">
-                  👑 CAPOTAVOLA
-                </T>
-              )}
-            </Row>
-            </PopIn>
-          ))}
-          {snapshot.botNames.length > 0 && (
-            // Le maschere in lobby a figura intera (SPEC §9).
-            <Row gap={12} wrap style={{ alignItems: 'flex-end' }}>
-              {snapshot.botNames.map((name, i) => (
-                <View key={name} style={{ alignItems: 'center', gap: 4 }}>
-                  <BotFigure name={name} height={tv ? 200 : 130} />
-                  <PlayerTag seat={players.length + i} name={name} size={14} />
-                </View>
-              ))}
-            </Row>
-          )}
-          </SeatAvatars.Provider>
+          {/* Tutti uguali: persone e computer con la stessa icona tonda, in griglia. */}
+          <View style={styles.seatGrid}>
+            {players.map((m, i) => (
+              <PopIn key={m.id}>
+                <SeatCard
+                  avatar={avatars[i]}
+                  seat={i}
+                  name={m.name}
+                  note={!m.connected ? '📡 si ricollega' : m.id === myId ? 'tu ✎' : leader?.id === m.id ? '👑 capotavola' : 'telefono'}
+                  noteColor={!m.connected ? colors.danger : leader?.id === m.id && m.id !== myId ? colors.accent : colors.muted}
+                  crown={leader?.id === m.id}
+                  onPress={m.id === myId ? () => setPicking(true) : undefined}
+                  a11y={m.id === myId ? 'Cambia nome e personaggio' : undefined}
+                />
+              </PopIn>
+            ))}
+            {snapshot.botNames.map((name, i) => (
+              <PopIn key={name}>
+                <SeatCard
+                  avatar={avatars[players.length + i]}
+                  seat={players.length + i}
+                  name={name}
+                  note={`🤖 ${BOT_LEVELS.find((l) => l.id === (snapshot.botLevels?.[i] ?? 'normale'))?.label ?? 'Normale'}${isHost ? ' ✎' : ''}`}
+                  noteColor={colors.accent3}
+                  onPress={isHost ? () => setEditingBot(i) : undefined}
+                  a11y={isHost ? `Cambia maschera e bravura di ${name}` : undefined}
+                />
+              </PopIn>
+            ))}
+          </View>
           {players.length === 0 && (
             <T color={colors.muted} size={16}>
               ⏳ Aspetto i telefoni…
@@ -332,6 +322,22 @@ function Lobby({ snapshot, myId, isHost, tv, error, onExit, reconnecting }: {
         }}
         onClose={() => setPicking(false)}
       />
+      <CharacterPickerModal
+        visible={editingBot !== null}
+        title={editingBot === null ? '' : `Computer: ${snapshot.botNames[editingBot] ?? ''}`}
+        value={editingBot === null ? null : avatars[players.length + editingBot]}
+        taken={avatars.filter((_, j) => editingBot === null || j !== players.length + editingBot)}
+        header={
+          editingBot !== null ? (
+            <LevelPicker value={snapshot.botLevels?.[editingBot] ?? 'normale'} onChange={(level) => send('setBot', { index: editingBot, level })} />
+          ) : null
+        }
+        onPick={(avatar) => {
+          const name = BOT_CHARACTERS.find((c) => c.id === avatar)?.name;
+          if (editingBot !== null && name) send('setBot', { index: editingBot, name });
+        }}
+        onClose={() => setEditingBot(null)}
+      />
       <Confirm visible={leaving} title="Uscire dalla stanza?" message="Potrai rientrare con lo stesso codice." confirmLabel="Esci" onCancel={() => setLeaving(false)} onConfirm={onExit} />
     </Screen>
   );
@@ -339,12 +345,38 @@ function Lobby({ snapshot, myId, isHost, tv, error, onExit, reconnecting }: {
 
 const styles = StyleSheet.create({
   joined: { backgroundColor: colors.success, borderRadius: 999, paddingHorizontal: 14, paddingVertical: 8 },
-  playerRow: { minHeight: 40 },
+  seatGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  seatCard: { width: 96, alignItems: 'center', gap: 3, paddingVertical: 8, paddingHorizontal: 4, borderRadius: radius.m, backgroundColor: colors.surface2 },
   // Griglia di copertine: tre per riga sul telefono, di più sugli schermi larghi.
   gameChoice: { alignItems: 'center', padding: 6, borderRadius: radius.m, borderWidth: 3, borderColor: 'transparent', backgroundColor: colors.surface2, gap: 3, minHeight: MIN_TOUCH },
   gameArt: { borderRadius: radius.s, borderWidth: 2, borderColor: colors.line },
   reconnect: { position: 'absolute', top: 8, alignSelf: 'center', backgroundColor: colors.accent, borderRadius: 999, paddingHorizontal: 16, paddingVertical: 10 },
 });
+
+/** Un posto al tavolo nella stanza: icona tonda, nome e una riga (tu, capotavola, bravura del computer). */
+function SeatCard({ avatar, seat, name, note, noteColor, onPress, a11y, crown }: { avatar: string; seat: number; name: string; note: string; noteColor: string; onPress?: () => void; a11y?: string; crown?: boolean }) {
+  return (
+    <Pressable
+      disabled={!onPress}
+      accessibilityRole={onPress ? 'button' : undefined}
+      accessibilityLabel={a11y ?? name}
+      onPress={() => {
+        tap();
+        onPress?.();
+      }}
+      style={(state) => [styles.seatCard, { transform: [{ translateY: (state as { pressed: boolean }).pressed ? 2 : 0 }] }]}
+    >
+      <CharacterAvatar id={avatar} size={58} seat={seat} />
+      <T size={14} weight="900" lines={1} center>
+        {crown ? '👑 ' : ''}
+        {name}
+      </T>
+      <T size={11} weight="800" lines={1} center color={noteColor}>
+        {note}
+      </T>
+    </Pressable>
+  );
+}
 
 /** Invito come in Jackbox: il link porta dritto alla stanza col codice già scritto. */
 function InviteButtons({ url, code }: { url: string; code: string }) {
