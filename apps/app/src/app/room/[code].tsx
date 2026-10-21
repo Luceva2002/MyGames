@@ -189,7 +189,7 @@ function Lobby({ snapshot, myId, isHost, tv, error, onExit, reconnecting }: {
           <Text accessibilityLabel={`Codice stanza ${snapshot.code.split('').join(' ')}`} style={{ color: colors.accent, fontSize: codeSize, fontFamily: font.display, letterSpacing: codeSize * 0.15, textShadowColor: colors.line, textShadowOffset: { width: 0, height: 5 }, textShadowRadius: 0 }}>
             {snapshot.code}
           </Text>
-          {url && (tv || wide) && <QrCode value={url} size={Math.min(height * 0.26, 240)} />}
+          {url && (tv || wide) && <QrCode value={url} size={Math.min(height * 0.26, 240)} light />}
           {url && <InviteButtons url={url} code={snapshot.code} />}
           <T size={13} color={colors.muted} center>
             {url ? `Gli altri aprono ${url.replace(/\/\?code=.*/, '').replace(/^https?:\/\//, '')} e scrivono il codice, oppure usano il link.` : 'Dillo agli altri: lo scrivono nella home, in «Entra con un codice».'}
@@ -296,7 +296,7 @@ function Lobby({ snapshot, myId, isHost, tv, error, onExit, reconnecting }: {
       )}
       {isHost ? (
         <Button
-          label={!game ? 'Scegli un gioco' : canStart ? `Inizia ${game.meta.name}` : `Servono ${allowed.join(' o ')} giocatori (ora ${total})`}
+          label={!game ? 'Scegli un gioco' : canStart ? `Inizia ${game.meta.name}` : `Servono ${allowed.length > 2 && allowed[allowed.length - 1] - allowed[0] === allowed.length - 1 ? `da ${allowed[0]} a ${allowed[allowed.length - 1]}` : allowed.join(' o ')} giocatori (ora ${total})`}
           disabled={!canStart}
           onPress={() => send('start')}
         />
