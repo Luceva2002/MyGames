@@ -170,7 +170,7 @@ function Cue({ cx, cy, ux, uy, gap, scale, shadow }: { cx: number; cy: number; u
 
 // --- Tavolo -------------------------------------------------------------------------------------
 
-/** Sponde in legno con i diamanti e le mattonelle verdi. Non cambia mai durante il gioco. */
+/** Sponde dorate con le borchie magenta e le mattonelle turchesi, come il tavolo della casa. Non cambia mai durante il gioco. */
 const TableFrame = memo(function TableFrame({ tableW, tableH, rail }: { tableW: number; tableH: number; rail: number }) {
   const W = tableW + rail * 2;
   const H = tableH + rail * 2;
@@ -188,16 +188,16 @@ const TableFrame = memo(function TableFrame({ tableW, tableH, rail }: { tableW: 
   return (
     <Svg width={W} height={H} style={{ position: 'absolute' }}>
       <Defs>
-        <LinearGradient id="wood" x1="0" y1="0" x2="0" y2="1">
-          <Stop offset="0" stopColor="#8A5528" />
-          <Stop offset="1" stopColor="#5A3315" />
+        <LinearGradient id="rim" x1="0" y1="0" x2="0" y2="1">
+          <Stop offset="0" stopColor="#FFE066" />
+          <Stop offset="1" stopColor="#F2B705" />
         </LinearGradient>
       </Defs>
-      <Rect x={1.5} y={1.5} width={W - 3} height={H - 3} rx={rail * 0.8} fill="url(#wood)" stroke={colors.line} strokeWidth={3} />
+      <Rect x={1.5} y={1.5} width={W - 3} height={H - 3} rx={rail * 0.8} fill="url(#rim)" stroke={colors.line} strokeWidth={3} />
       <Rect x={5} y={5} width={W - 10} height={H - 10} rx={rail * 0.65} fill="none" stroke="#FFFFFF" strokeOpacity={0.14} strokeWidth={1.5} />
-      <Rect x={rail - cush} y={rail - cush} width={tableW + cush * 2} height={tableH + cush * 2} fill="#08573C" stroke={colors.line} strokeWidth={2} />
+      <Rect x={rail - cush} y={rail - cush} width={tableW + cush * 2} height={tableH + cush * 2} fill="#0B4F55" stroke={colors.line} strokeWidth={2} />
       {diamonds.map((d, i) => (
-        <Path key={i} d={`M${d.x} ${d.y - 3}L${d.x + 2.2} ${d.y}L${d.x} ${d.y + 3}L${d.x - 2.2} ${d.y}Z`} fill="#F6EBD0" />
+        <Circle key={i} cx={d.x} cy={d.y} r={Math.max(3, rail * 0.17)} fill="#FF2E88" stroke={colors.line} strokeWidth={1.5} />
       ))}
     </Svg>
   );
@@ -226,7 +226,7 @@ const TableMarks = memo(function TableMarks({ tableW, tableH, rail, scale }: { t
       <Circle cx={rail + 1.5 * scale} cy={rail + 0.5 * scale} r={2} fill="#FFFFFF" opacity={0.3} />
       {POCKETS.map((p, i) => (
         <G key={i}>
-          <Circle cx={rail + p.x * scale} cy={rail + p.y * scale} r={p.r * scale + 2} fill="#2B1608" stroke={colors.line} strokeWidth={2} />
+          <Circle cx={rail + p.x * scale} cy={rail + p.y * scale} r={p.r * scale + 2} fill="#12052B" stroke={colors.line} strokeWidth={2} />
           <Circle cx={rail + p.x * scale} cy={rail + p.y * scale} r={p.r * scale} fill="url(#hole)" />
         </G>
       ))}
@@ -487,8 +487,8 @@ export function BiliardoBoard({ view, me, names, myTurn, onMove }: BoardProps<Bi
           ]}
         >
           <TableFrame tableW={tableW} tableH={tableH} rail={rail} />
-          {/* Panno del tavolo: texture generata con Higgsfield. */}
-          <Image source={TABLES.felt} style={{ position: 'absolute', left: rail, top: rail, width: tableW, height: tableH }} resizeMode="cover" />
+          {/* Il panno è il velluto turchese a rombi del tavolo della casa. */}
+          <Image source={TABLES.teal} style={{ position: 'absolute', left: rail, top: rail, width: tableW, height: tableH }} resizeMode="cover" />
           <TableMarks tableW={tableW} tableH={tableH} rail={rail} scale={scale} />
           <Svg width={tableW + M * 2} height={tableH + M * 2} style={{ position: 'absolute', left: rail - M, top: rail - M }}>
             <Defs>
