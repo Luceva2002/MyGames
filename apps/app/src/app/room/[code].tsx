@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { Image, Pressable, StyleSheet, Text, useWindowDimensions, View, Platform, Share } from 'react-native';
-import { router } from 'expo-router';
-import { useKeepAwake } from 'expo-keep-awake';
-import { assignAvatars, canControl, GAMES, getGame, playerCounts, type RoomSnapshot } from '@giochi/engine';
+import { router, useLocalSearchParams } from 'expo-router';
+import { useStayAwake } from '../../ui/keepAwake';
+import { assignAvatars, canControl, CODE_LENGTH, GAMES, getGame, normalizeCode, playerCounts, type RoomSnapshot } from '@giochi/engine';
 import { GameFrame } from '../../games/GameFrame';
-import { clearOnlineError, joinUrl, leaveRoom, send, sendMove, useOnline } from '../../session/online';
+import { clearOnlineError, joinUrl, leaveRoom, rejoin, send, sendMove, useOnline } from '../../session/online';
 import { loadNames, saveNames } from '../../session/names';
 import { GAME_ART } from '../../ui/art';
 import { BotFigure } from '../../ui/avatars';
@@ -19,7 +19,8 @@ import { TvContext } from '../../ui/settings';
 import { colors, font, MIN_TOUCH, radius } from '../../ui/theme';
 
 export default function RoomScreen() {
-  useKeepAwake();
+  useStayAwake();
+  const winW = useWindowDimensions().width;
   const online = useOnline();
   const { snapshot, seatView, room } = online;
 
@@ -34,6 +35,25 @@ export default function RoomScreen() {
     router.replace('/');
   };
 
+  // Ricaricando la pagina della stanza si rientra da soli, col codice dell'indirizzo.
+  const { code: codeParam } = useLocalSearchParams<{ code?: string }>();
+  const tried = useRef(false);
+  useEffect(() => {
+    const c = normalizeCode(codeParam ?? '');
+    if (room || tried.current || c.length !== CODE_LENGTH) return;
+    tried.current = true;
+    rejoin(c);
+  }, [room, codeParam]);
+
+  if (!room && online.status === 'connecting') {
+    return (
+      <Screen>
+        <T size={20} weight="800">
+          ⏳ Entro nella stanza…
+        </T>
+      </Screen>
+    );
+  }
   if (!room || online.status === 'closed') {
     return (
       <Screen>
@@ -88,11 +108,14 @@ export default function RoomScreen() {
           onRestart={isHost ? () => send('restart') : undefined}
           tv={tv}
           headerRight={
+            // Sul telefono la barra è stretta: niente codice e solo l'icona per cambiare gioco.
             <Row gap={8}>
-              <T size={14} weight="900" color={colors.muted}>
-                {snapshot.code}
-              </T>
-              {isHost && <Button small kind="ghost" color={colors.muted} label="Cambia gioco" onPress={() => send('toLobby')} />}
+              {winW > 600 && (
+                <T size={14} weight="900" color={colors.muted}>
+                  {snapshot.code}
+                </T>
+              )}
+              {isHost && <Button small kind="ghost" color={colors.muted} label={winW > 600 ? 'Cambia gioco' : '⇄'} a11y="Cambia gioco" onPress={() => send('toLobby')} />}
             </Row>
           }
           overlay={reconnecting}
@@ -139,6 +162,10 @@ function Lobby({ snapshot, myId, isHost, tv, error, onExit, reconnecting }: {
   const avatars = assignAvatars([...players.map((m) => ({ name: m.name, bot: false, avatar: m.avatar })), ...snapshot.botNames.map((name) => ({ name, bot: true }))]);
   // Codice della stanza almeno all'8% dell'altezza della TV (V-PTY-1).
   const codeSize = Math.max(56, Math.round(height * (tv ? 0.12 : 0.07)));
+  // Copertine dei giochi in griglia: 3 per riga sul telefono, fino a 6 sugli schermi larghi.
+  const inner = Math.min(width, 1100) - 32 - 2 * (16 + 3);
+  const cols = inner > 900 ? 6 : inner > 600 ? 5 : inner > 420 ? 4 : 3;
+  const tileW = Math.floor((inner - (cols - 1) * 8) / cols);
 
   return (
     <Screen>
@@ -154,7 +181,7 @@ function Lobby({ snapshot, myId, isHost, tv, error, onExit, reconnecting }: {
       </Row>
 
       <View style={{ flexDirection: wide ? 'row' : 'column', gap: 16 }}>
-        <Panel style={{ flex: 1, alignItems: 'center' }}>
+        <Panel style={[wide && { flex: 1 }, { alignItems: 'center' }]}>
           <T size={14} weight="800" color={colors.muted}>
             CODICE STANZA
           </T>
@@ -168,7 +195,7 @@ function Lobby({ snapshot, myId, isHost, tv, error, onExit, reconnecting }: {
           </T>
         </Panel>
 
-        <Panel style={{ flex: 1 }}>
+        <Panel style={wide ? { flex: 1 } : undefined}>
           <T size={18} weight="900">
             Al tavolo · {players.length + snapshot.bots}
           </T>
@@ -232,7 +259,7 @@ function Lobby({ snapshot, myId, isHost, tv, error, onExit, reconnecting }: {
           {isHost ? 'Scegli il gioco' : game ? `Si gioca a ${game.meta.name}` : `${leader?.name ?? 'Il capotavola'} sta scegliendo il gioco…`}
         </T>
         {isHost ? (
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
             {GAMES.map((g) => {
               const fits = total === 0 || playerCounts(g.meta).includes(total) || total < g.meta.minPlayers;
               const active = g.meta.id === snapshot.gameId;
@@ -246,18 +273,16 @@ function Lobby({ snapshot, myId, isHost, tv, error, onExit, reconnecting }: {
                     tap();
                     send('setGame', { gameId: g.meta.id });
                   }}
-                  style={(state) => [styles.gameChoice, { opacity: fits ? 1 : 0.45 }, active && { borderColor: colors.accent }, focusRing((state as { focused?: boolean }).focused ?? false)]}
+                  style={(state) => [styles.gameChoice, { width: tileW, opacity: fits ? 1 : 0.45 }, active && { borderColor: colors.accent }, focusRing((state as { focused?: boolean }).focused ?? false)]}
                 >
-                  {GAME_ART[g.meta.id] && <Image source={GAME_ART[g.meta.id]} style={styles.gameArt} />}
-                  <View style={{ flex: 1, gap: 2 }}>
-                    <T weight="900" size={16} lines={2}>
-                      {active ? '✓ ' : ''}
-                      {g.meta.name}
-                    </T>
-                    <T size={12} weight="800" color={colors.accent} lines={1}>
-                      👤 {g.meta.minPlayers === g.meta.maxPlayers ? g.meta.minPlayers : `${g.meta.minPlayers}–${g.meta.maxPlayers}`}
-                    </T>
-                  </View>
+                  {GAME_ART[g.meta.id] && <Image source={GAME_ART[g.meta.id]} style={[styles.gameArt, { width: tileW - 18, height: tileW - 18 }]} />}
+                  <T weight="900" size={13} lines={1} center>
+                    {active ? '✓ ' : ''}
+                    {g.meta.name}
+                  </T>
+                  <T size={11} weight="800" color={colors.accent} lines={1} center>
+                    👤 {g.meta.minPlayers === g.meta.maxPlayers ? g.meta.minPlayers : `${g.meta.minPlayers}–${g.meta.maxPlayers}`}
+                  </T>
                 </Pressable>
               );
             })}
@@ -315,8 +340,9 @@ function Lobby({ snapshot, myId, isHost, tv, error, onExit, reconnecting }: {
 const styles = StyleSheet.create({
   joined: { backgroundColor: colors.success, borderRadius: 999, paddingHorizontal: 14, paddingVertical: 8 },
   playerRow: { minHeight: 40 },
-  gameChoice: { width: '47%', minWidth: 150, flexGrow: 1, flexDirection: 'row', alignItems: 'center', padding: 8, borderRadius: radius.m, borderWidth: 3, borderColor: 'transparent', backgroundColor: colors.surface2, gap: 10, minHeight: MIN_TOUCH },
-  gameArt: { width: 52, height: 52, borderRadius: radius.s, borderWidth: 2, borderColor: colors.line },
+  // Griglia di copertine: tre per riga sul telefono, di più sugli schermi larghi.
+  gameChoice: { alignItems: 'center', padding: 6, borderRadius: radius.m, borderWidth: 3, borderColor: 'transparent', backgroundColor: colors.surface2, gap: 3, minHeight: MIN_TOUCH },
+  gameArt: { borderRadius: radius.s, borderWidth: 2, borderColor: colors.line },
   reconnect: { position: 'absolute', top: 8, alignSelf: 'center', backgroundColor: colors.accent, borderRadius: 999, paddingHorizontal: 16, paddingVertical: 10 },
 });
 

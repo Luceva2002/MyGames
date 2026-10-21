@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from 'react';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useKeepAwake } from 'expo-keep-awake';
+import { useStayAwake } from '../../ui/keepAwake';
 import { GameFrame, HandoffCurtain } from '../../games/GameFrame';
 import { getPendingMatch, useLocalMatch, type MatchConfig } from '../../session/local';
 import { Screen } from '../../ui/kit';
@@ -23,7 +23,7 @@ export default function PlayLocal() {
 }
 
 function LocalMatch({ config }: { config: MatchConfig }) {
-  useKeepAwake();
+  useStayAwake();
   const m = useLocalMatch(config);
   useEffect(() => {
     if (!m.error) return;

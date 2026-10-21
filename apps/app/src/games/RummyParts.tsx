@@ -51,7 +51,7 @@ export function MultiHand({ cards, selected, onToggle, width: baseWidth, highlig
   if (nRows === 2 && mode === 'seme') {
     const breaks = sorted.flatMap((c, i) => (i > 0 && c.suit !== sorted[i - 1].suit ? [i] : []));
     const best = breaks.sort((a, b) => Math.max(a, sorted.length - a) - Math.max(b, sorted.length - b))[0];
-    if (best !== undefined && Math.max(best, sorted.length - best) <= per + 2) cut = best;
+    if (best !== undefined && Math.max(best, sorted.length - best) <= per + 1) cut = best;
   }
   const rows = nRows === 1 ? [sorted] : [sorted.slice(0, cut), sorted.slice(cut)];
   const width = Math.round(Math.min(cap, ...rows.map((row) => fit(row.length, suitBreaks(row)))));

@@ -56,8 +56,40 @@ function set(patch: Partial<OnlineState>) {
   listeners.forEach((l) => l(current));
 }
 
+/** Il gettone per rientrare nella stessa stanza col proprio posto se si ricarica la pagina. */
+const TOKEN_KEY = 'tavolata.rejoin';
+function saveToken(room: Room | null) {
+  try {
+    if (typeof sessionStorage === 'undefined') return;
+    if (room) sessionStorage.setItem(TOKEN_KEY, JSON.stringify({ code: room.roomId, token: room.reconnectionToken }));
+    else sessionStorage.removeItem(TOKEN_KEY);
+  } catch {
+    // Archivio del browser non disponibile: si rientra come nuovo giocatore.
+  }
+}
+
+/**
+ * Rientra nella stanza `code`: prima col proprio posto (dopo una ricarica della pagina), altrimenti
+ * come nuovo giocatore col nome salvato.
+ */
+export async function rejoin(code: string): Promise<string | null> {
+  try {
+    const saved = typeof sessionStorage !== 'undefined' ? JSON.parse(sessionStorage.getItem(TOKEN_KEY) ?? 'null') : null;
+    if (saved?.code === code && saved.token) {
+      set({ status: 'connecting', error: null });
+      const room = await new Client(serverUrl()).reconnect(saved.token);
+      attach(room);
+      return room.roomId;
+    }
+  } catch {
+    // Posto scaduto: si entra di nuovo.
+  }
+  return quickJoin(code);
+}
+
 function attach(room: Room) {
   set({ room, status: 'connected', error: null, snapshot: null, seatView: null });
+  saveToken(room);
   room.onMessage('room', (snapshot: RoomSnapshot) => {
     set({ snapshot, ...(snapshot.phase === 'lobby' ? { seatView: null } : {}) });
   });
@@ -68,6 +100,7 @@ function attach(room: Room) {
   room.onLeave(() => {
     if (current.room === room) set({ status: 'closed' });
   });
+  room.onReconnect(() => saveToken(room));
 }
 
 function friendly(e: unknown): string {
@@ -135,6 +168,7 @@ export function sendMove(move: unknown) {
 
 export async function leaveRoom() {
   const room = current.room;
+  saveToken(null);
   set({ room: null, snapshot: null, seatView: null, status: 'idle', error: null });
   await room?.leave().catch(() => {});
 }

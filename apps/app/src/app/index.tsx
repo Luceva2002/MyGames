@@ -5,6 +5,7 @@ import { assignAvatars, catalog, CODE_LENGTH, normalizeCode, playerCounts, type 
 import { createRoom, joinUrl, quickJoin, quickRoom, useOnline } from '../session/online';
 import { canPassAndPlay } from '../session/local';
 import { CharacterAvatar } from '../ui/avatars';
+import { PopIn } from '../ui/motion';
 import { QrCode } from '../ui/QrCode';
 import { GAME_ART, HERO } from '../ui/art';
 import { Chip, focusRing, Row, Screen, T, tap } from '../ui/kit';
@@ -128,6 +129,7 @@ function QuickStart({ entry, onClose, wideScreen }: { entry: CatalogEntry | null
     <Modal visible={!!e} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable style={styles.sheetScrim} onPress={onClose} accessibilityLabel="Chiudi">
         {e && (
+          <PopIn style={{ width: '100%', alignItems: 'center' }}>
           <Pressable style={styles.sheet} onPress={() => {}} accessibilityViewIsModal>
             <Row gap={12}>
               {art ? <Image source={art} style={styles.sheetArt} accessibilityIgnoresInvertColors /> : null}
@@ -143,16 +145,16 @@ function QuickStart({ entry, onClose, wideScreen }: { entry: CatalogEntry | null
             <T size={14} weight="900" color={colors.muted}>
               COME GIOCATE?
             </T>
-            {!e.meta.humansOnly && <QuickOption icon="🤖" title={multi ? 'Contro il computer' : 'Gioca'} text={multi ? 'Parti subito, qui su questo dispositivo' : 'Parti subito'} primary onPress={go(() => startVsComputer(e))} />}
+            {!e.meta.humansOnly && <QuickOption icon="🤖" title={multi ? 'Contro il computer' : 'Gioca'} text="Parti subito, qui" primary onPress={go(() => startVsComputer(e))} />}
             {multi && (
               <QuickOption
                 icon="📱"
-                title={online.status === 'connecting' ? 'Creo la stanza…' : 'Con amici, ognuno col suo telefono'}
-                text="Crei la stanza e mandi il link o il QR"
+                title={online.status === 'connecting' ? 'Creo la stanza…' : 'Con amici'}
+                text="Ognuno col suo telefono, con link o QR"
                 onPress={go(() => startRoom(e, false))}
               />
             )}
-            {multi && wideScreen && <QuickOption icon="📺" title="Questo schermo fa da tavolo" text="Gli altri giocano dal telefono" onPress={go(() => startRoom(e, true))} />}
+            {multi && wideScreen && <QuickOption icon="📺" title="Questo schermo è il tavolo" text="Gli altri giocano dal telefono" onPress={go(() => startRoom(e, true))} />}
             {multi && canPassAndPlay(e.meta) && <QuickOption icon="🫶" title="Tutti su questo dispositivo" text="Vi passate il telefono a turno" onPress={go(() => router.push({ pathname: '/game/[id]', params: { id: e.meta.id } }))} />}
             <Pressable accessibilityRole="button" onPress={go(() => router.push({ pathname: '/game/[id]', params: { id: e.meta.id } }))} style={{ alignSelf: 'center', padding: 8 }}>
               <T size={14} weight="800" color={colors.accent}>
@@ -160,6 +162,7 @@ function QuickStart({ entry, onClose, wideScreen }: { entry: CatalogEntry | null
               </T>
             </Pressable>
           </Pressable>
+          </PopIn>
         )}
       </Pressable>
     </Modal>
@@ -210,35 +213,34 @@ function JoinBar({ initialCode }: { initialCode: string }) {
   return (
     <View style={[styles.bigAction, styles.joinBar]}>
       <T size={30}>📱</T>
-      <View style={{ flex: 1, gap: 6 }}>
+      <View style={{ flex: 1, minWidth: 0 }}>
         <T size={20} weight="900" color={colors.onAccent}>
-          {busy ? 'Entro nella stanza…' : 'Entra con un codice'}
+          {busy ? 'Entro…' : 'Entra'}
         </T>
-        <Row gap={8}>
-          <TextInput
-            value={code}
-            onChangeText={(t) => {
-              const c = normalizeCode(t);
-              setCode(c);
-              if (c.length === CODE_LENGTH) go(c);
-            }}
-            placeholder="ABCD"
-            placeholderTextColor="#12052B55"
-            autoCapitalize="characters"
-            autoCorrect={false}
-            maxLength={CODE_LENGTH}
-            accessibilityLabel="Codice della stanza"
-            onSubmitEditing={() => go(code)}
-            style={styles.codeInput}
-          />
-          {busy && <ActivityIndicator color={colors.onAccent} />}
-        </Row>
-        {online.error && !busy ? (
-          <T size={13} weight="800" color="#B00030">
-            {online.error}
-          </T>
-        ) : null}
+        <T size={14} weight="800" color={colors.onAccent} lines={2}>
+          {online.error && !busy ? online.error : 'Hai un codice?'}
+        </T>
       </View>
+      {busy ? (
+        <ActivityIndicator color={colors.onAccent} />
+      ) : (
+        <TextInput
+          value={code}
+          onChangeText={(t) => {
+            const c = normalizeCode(t);
+            setCode(c);
+            if (c.length === CODE_LENGTH) go(c);
+          }}
+          placeholder="ABCD"
+          placeholderTextColor="#12052B55"
+          autoCapitalize="characters"
+          autoCorrect={false}
+          maxLength={CODE_LENGTH}
+          accessibilityLabel="Codice della stanza"
+          onSubmitEditing={() => go(code)}
+          style={styles.codeInput}
+        />
+      )}
     </View>
   );
 }
@@ -333,7 +335,7 @@ export default function Home() {
           primary
           icon="📺"
           title="Crea una stanza"
-          text="Questo schermo fa da tavolo"
+          text={width > 760 ? 'Questo schermo fa da tavolo' : 'Gli amici entrano col codice'}
           onPress={async () => {
             const code = await quickRoom(undefined, width > 760);
             if (code) router.push({ pathname: '/room/[code]', params: { code } });
@@ -368,12 +370,12 @@ const styles = StyleSheet.create({
   wordmark: { textShadowColor: colors.line, textShadowOffset: { width: 0, height: 5 }, textShadowRadius: 0 },
   gear: { width: MIN_TOUCH, height: MIN_TOUCH, borderRadius: MIN_TOUCH / 2, backgroundColor: colors.scrim, alignItems: 'center', justifyContent: 'center' },
   tile: { backgroundColor: colors.surface, borderRadius: radius.l, overflow: 'hidden', borderWidth: 3, borderColor: colors.line, marginBottom: 6 },
-  sheetScrim: { flex: 1, backgroundColor: colors.scrim, justifyContent: 'flex-end', alignItems: 'center' },
-  sheet: { width: '100%', maxWidth: 520, gap: 10, padding: 18, paddingBottom: 26, borderTopLeftRadius: 28, borderTopRightRadius: 28, backgroundColor: colors.surface, borderWidth: 3, borderColor: colors.line },
+  sheetScrim: { flex: 1, backgroundColor: colors.scrim, justifyContent: 'center', alignItems: 'center', padding: 16 },
+  sheet: { width: '100%', maxWidth: 460, gap: 10, padding: 18, borderRadius: 28, backgroundColor: colors.surface, borderWidth: 3, borderColor: colors.line, boxShadow: `0px 8px 0px ${colors.line}` },
   sheetArt: { width: 64, height: 64, borderRadius: 16, borderWidth: 3, borderColor: colors.line },
   quickOption: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 64, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 18, borderWidth: 3, borderColor: colors.line, backgroundColor: colors.surface2, boxShadow: `0px 4px 0px ${colors.line}` },
   joinBar: { backgroundColor: '#FFFFFF', boxShadow: `0px 6px 0px ${colors.line}` },
-  codeInput: { flex: 1, maxWidth: 200, minHeight: 46, paddingHorizontal: 12, borderRadius: 12, borderWidth: 3, borderColor: colors.line, backgroundColor: '#F4F0FF', color: colors.onAccent, fontSize: 26, fontWeight: '900', letterSpacing: 8 },
+  codeInput: { width: 116, minHeight: 46, paddingHorizontal: 10, borderRadius: 12, borderWidth: 3, borderColor: colors.line, backgroundColor: '#F4F0FF', color: colors.onAccent, fontSize: 22, fontWeight: '900', letterSpacing: 5, textAlign: 'center' },
   players: { position: 'absolute', bottom: 8, left: 8, backgroundColor: colors.scrim, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 },
   bigAction: { flexGrow: 1, flexBasis: 300, minHeight: 84, flexDirection: 'row', alignItems: 'center', gap: 14, padding: 18, borderRadius: radius.l, borderWidth: 3, borderColor: colors.line, boxShadow: `0px 6px 0px ${colors.line}`, marginBottom: 6 },
 });
