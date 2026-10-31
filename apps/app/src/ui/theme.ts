@@ -1,5 +1,5 @@
 /**
- * Token del design system, stile "Carnevale semplice" (design-proposte/SPEC-carnevale-semplice.md).
+ * Token del design system, stile "Carnevale semplice" (docs/SPEC-carnevale-semplice.md).
  * Contrasti sul fondo `bg` #2A0E5C: text 15:1, muted 10:1, dim 6:1, accent 13:1 (V-CON-1).
  * Sul giallo il testo è sempre `onAccent`, mai bianco.
  */

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useWindowDimensions, View } from 'react-native';
 import Svg, { Circle, G, Line, Path, Rect, Text as SvgText } from 'react-native-svg';
-import { DART_RINGS, DART_SECTORS, type DartHit, type FreccetteMove, type FreccetteState } from '@giochi/engine';
+import { DART_RINGS, DART_SECTORS, type FreccetteMove, type FreccetteState } from '@giochi/engine';
 import { Banner, type BoardProps } from './common';
 import { Row, SeatDot, T } from '../ui/kit';
 import { useReducedMotion } from '../ui/settings';

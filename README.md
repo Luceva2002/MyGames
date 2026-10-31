@@ -30,7 +30,7 @@ Tutti i giochi si possono fare anche contro il computer.
 
 ## Design
 
-Stile "Carnevale semplice" (specifica in `design-proposte/SPEC-carnevale-semplice.md`): viola, giallo e magenta,
+Stile "Carnevale semplice" (specifica in `docs/SPEC-carnevale-semplice.md`): viola, giallo e magenta,
 font Bagel Fat One e Nunito, contorni spessi con ombre piene, carte alla Balatro col bollino del valore,
 velluto viola per i giochi di carte e computer-maschere della commedia dell'arte a figura intera (`assets/bots`).
 

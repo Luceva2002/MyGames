@@ -8,7 +8,6 @@ web-build/
 .env*
 
 # immagini intermedie di Higgsfield (gli originali restano sul Mac)
-design-proposte/raw*/
 
 # file generati da Expo e dagli strumenti
 expo-env.d.ts

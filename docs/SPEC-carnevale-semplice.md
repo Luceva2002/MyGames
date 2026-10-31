@@ -3,7 +3,7 @@
 Scelto da Luca il 17/10/2026. Proposta visiva completa: https://claude.ai/artifact/PR4Yv6o4gfQwZBmvif9TVp
 Il nome dell'app resta **Tavolata** per ora: "Matto" è proposto ma non deciso, quindi non rinominare nulla.
 
-Tutte le immagini pronte da copiare sono in `design-proposte/pronti/`, con gli stessi nomi di file che usa l'app.
+Le immagini usate dall'app sono in `apps/app/assets/`.
 
 ## 1. Token (apps/app/src/ui/theme.ts)
 

@@ -1,8 +1,8 @@
 import type { ImageSourcePropType } from 'react-native';
 
 /**
- * Figure delle carte coi personaggi del Carnevale, generate con Higgsfield (originali in
- * design-proposte/raw7). Le numerali sono disegnate in codice (suits.tsx); bollino e seme
+ * Figure delle carte coi personaggi del Carnevale, generate con Higgsfield.
+ * Le numerali sono disegnate in codice (suits.tsx); bollino e seme
  * negli angoli li aggiunge sempre il codice. Anche i dorsi sono generati con Higgsfield.
  */
 export const CARD_FACES: Record<string, ImageSourcePropType> = {

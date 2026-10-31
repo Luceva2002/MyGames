@@ -9,7 +9,7 @@ import Animated, { Easing, FadeIn, runOnJS, useAnimatedStyle, useSharedValue, wi
 import { TableBg } from '../ui/tables';
 import { colors, MIN_TOUCH, radius, seatColor } from '../ui/theme';
 
-/** Carte dei ruoli in stile tarocchi semplici, nei colori dell'app (Higgsfield, originali in design-proposte/raw7/lupus). */
+/** Carte dei ruoli in stile tarocchi semplici, nei colori dell'app (Higgsfield). */
 const CARD: Record<RoleId | 'retro', ImageSourcePropType> = {
   lupo: require('../../assets/lupus/lupo.jpg'),
   villico: require('../../assets/lupus/villico.jpg'),

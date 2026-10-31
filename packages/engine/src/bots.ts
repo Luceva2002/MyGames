@@ -9,7 +9,7 @@ export interface BotCharacter {
   level: 'facile' | 'medio' | 'difficile' | 'imprevedibile';
 }
 
-/** Le 16 maschere: gli 8 protagonisti scelti da Luca (SPEC §9) e le altre delle figure. Fanno da computer e da avatar. */
+/** Le 10 maschere scelte da Luca. Fanno da computer e da avatar. */
 export const BOT_CHARACTERS: BotCharacter[] = [
   { id: 'pulcinella', name: 'Pulcinella', trait: 'Pigro ma fortunato', level: 'facile' },
   { id: 'colombina', name: 'Colombina', trait: 'Calcola tutto', level: 'medio' },
@@ -19,15 +19,8 @@ export const BOT_CHARACTERS: BotCharacter[] = [
   { id: 'pantalone', name: 'Pantalone', trait: 'Avaro, non spreca mai una carta buona', level: 'difficile' },
   { id: 'medico', name: 'Medico', trait: 'Silenzioso, aspetta il momento giusto', level: 'medio' },
   { id: 'forzuto', name: 'Forzuto', trait: 'Tutto istinto, gioca forte', level: 'facile' },
-  // Le altre maschere del Carnevale, disegnate per le figure delle carte.
-  { id: 'balanzone', name: 'Balanzone', trait: 'Dottore saccente, ragiona a voce alta', level: 'medio' },
-  { id: 'brighella', name: 'Brighella', trait: 'Furbo, ti tende trappole', level: 'difficile' },
   { id: 'capitano', name: 'Capitano', trait: 'Spaccone, attacca sempre', level: 'imprevedibile' },
-  { id: 'gianduja', name: 'Gianduja', trait: 'Bonario, gioca sicuro', level: 'facile' },
-  { id: 'meneghino', name: 'Meneghino', trait: 'Paziente e preciso', level: 'medio' },
   { id: 'rosaura', name: 'Rosaura', trait: 'Elegante, aspetta la carta perfetta', level: 'difficile' },
-  { id: 'stenterello', name: 'Stenterello', trait: 'Chiacchierone, si distrae', level: 'facile' },
-  { id: 'tartaglia', name: 'Tartaglia', trait: 'Timido ma sorprendente', level: 'imprevedibile' },
 ];
 
 /** Ritrova una maschera dal suo id (per l'avatar scelto da chi gioca). */
