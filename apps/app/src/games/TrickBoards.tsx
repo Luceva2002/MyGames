@@ -5,7 +5,7 @@ import { Banner, MyCorner, EventSticker, Felt, Hand, othersOf, Slot, TableTop, t
 import { CardsSummaryTable, teamLabel } from './summary';
 import { DeckPile, PlayingCard } from '../ui/cards';
 import { DropZone, type DragPayload } from '../ui/drag';
-import { FlyIn } from '../ui/motion';
+import { Anchor, FlyIn, handAnchor, HOLD_MS, TRAVEL_MS } from '../ui/motion';
 import { sfx } from '../ui/sound';
 import { Button, Row, SeatDot, T } from '../ui/kit';
 import { TableBg } from '../ui/tables';
@@ -42,7 +42,7 @@ function TrickTable({ players, plays, names, width, winner, me, turn }: { player
           {Array.from({ length: players }, (_, seat) => {
             const k = (seat - base + players) % players;
             const play = plays.find((p) => p.seat === seat);
-            const glow = winner === seat ? colors.accent : winner === undefined && turn === seat && !play ? seatColor(seat) : undefined;
+            const glow = winner === undefined && turn === seat && !play ? seatColor(seat) : undefined;
             return (
               <Slot
                 key={seat}
@@ -59,8 +59,14 @@ function TrickTable({ players, plays, names, width, winner, me, turn }: { player
                 }
               >
                 {play && (
-                  // La carta arriva dal lato di chi la gioca: dall'alto, da destra o da sinistra.
-                  <FlyIn key={play.card.id} from={winner !== undefined ? 'none' : seat === me ? 'below' : seatSpot(k, players) === 'top' ? 'above' : 'none'} fromX={winner !== undefined ? 0 : seatSpot(k, players) === 'left' ? -180 : seatSpot(k, players) === 'right' ? 180 : 0} leave={winner === undefined ? undefined : winner === me ? 'down' : 'up'} sound={winner === undefined ? 'card' : undefined}>
+                  // La carta viaggia dalla mano coperta di chi la gioca fino al suo posto.
+                  <FlyIn
+                    key={play.card.id}
+                    from={winner !== undefined ? 'none' : seat === me ? 'below' : 'none'}
+                    fromAnchor={winner === undefined && seat !== me ? handAnchor(seat) : undefined}
+                    leave={winner === undefined ? undefined : winner === me ? 'down' : 'up'}
+                    sound={winner === undefined ? 'card' : undefined}
+                  >
                     <View style={{ opacity: winner !== undefined && winner !== seat ? 0.55 : 1 }}>
                       <PlayingCard card={play.card} width={cw - 6} selected={winner === seat} />
                     </View>
@@ -103,14 +109,23 @@ const dragFromHand = (c: Card): DragPayload => ({ kind: 'hand', ids: [c.id] });
 function TrickArea({ view, names, width, me }: { view: { players: number; turn: Seat; trick: { seat: Seat; card: Card }[]; lastTrick: { plays: { seat: Seat; card: Card }[]; winner: Seat } | null }; names: string[]; width: number; me: Seat | null }) {
   const last = view.trick.length === 0 ? view.lastTrick : null;
   const lastKey = last ? `${last.winner}-${last.plays[0]?.card.id}` : null;
+  // Chi vince la presa si mostra solo quando l'ultima carta è arrivata sul tavolo.
+  const [shownKey, setShownKey] = useState(lastKey);
   useEffect(() => {
-    if (last && last.winner === me) sfx('capture');
+    if (!last) return;
+    const closer = last.plays[last.plays.length - 1]?.seat;
+    const t = setTimeout(() => {
+      setShownKey(lastKey);
+      if (last.winner === me) sfx('capture');
+    }, closer === me ? 250 : HOLD_MS + TRAVEL_MS + 150);
+    return () => clearTimeout(t);
   }, [lastKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  const winner = last && shownKey === lastKey ? last.winner : undefined;
   return (
     <>
-      <TrickTable players={view.players} turn={view.turn} plays={last ? last.plays : view.trick} names={names} width={width} winner={last?.winner} me={me} />
-      <T size={14} color="#ffffffcc" style={{ opacity: last ? 1 : 0 }}>
-        {last ? `Ha preso ${names[last.winner]}` : ' '}
+      <TrickTable players={view.players} turn={view.turn} plays={last ? last.plays : view.trick} names={names} width={width} winner={winner} me={me} />
+      <T size={14} color="#ffffffcc" style={{ opacity: winner !== undefined ? 1 : 0 }}>
+        {last && winner !== undefined ? `Ha preso ${names[last.winner]}` : ' '}
       </T>
     </>
   );
@@ -132,9 +147,9 @@ export function BriscolaBoard({ view, me, names, myTurn, onMove }: BoardProps<Br
         <TableTop seats={othersOf(view.players, me).map(binfo)} />
         <Row style={{ alignItems: 'flex-start', zIndex: 10, ...deckSpot.style }} gap={10}>
           <Slot width={me === null ? 74 : deckSpot.w} label={`MAZZO · ${Math.max(0, view.deckCount - 1)}`} ratio={1.85}>
-            {view.deckCount > 1 ? <DeckPile count={view.deckCount - 1} width={me === null ? 68 : deckSpot.w - 6} /> : null}
+            <Anchor id="deck">{view.deckCount > 1 ? <DeckPile count={view.deckCount - 1} width={me === null ? 68 : deckSpot.w - 6} /> : null}</Anchor>
           </Slot>
-          <Slot width={me === null ? 74 : deckSpot.w} label="BRISCOLA" ratio={1.85} glow={colors.accent}>
+          <Slot width={me === null ? 74 : deckSpot.w} label="BRISCOLA" ratio={1.85}>
             {view.deckCount > 0 ? <PlayingCard card={view.trump} width={me === null ? 68 : deckSpot.w - 6} /> : null}
           </Slot>
         </Row>
@@ -187,7 +202,9 @@ export function TresetteBoard({ view, me, names, myTurn, onMove }: BoardProps<Tr
         {view.deckCount > 0 && (
           <View style={{ zIndex: 10, ...deckSpot.style }}>
             <Slot width={me === null ? 74 : deckSpot.w} label={`MAZZO · ${view.deckCount}`} ratio={1.85}>
-              <DeckPile count={view.deckCount} width={me === null ? 68 : deckSpot.w - 6} />
+              <Anchor id="deck">
+                <DeckPile count={view.deckCount} width={me === null ? 68 : deckSpot.w - 6} />
+              </Anchor>
             </Slot>
           </View>
         )}

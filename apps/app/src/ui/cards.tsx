@@ -1,5 +1,4 @@
-import { createContext, memo, useContext, useEffect, useState, type ReactNode } from 'react';
-import Animated, { cancelAnimation, useAnimatedStyle, useSharedValue, withDelay, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
+import { createContext, memo, useContext, useState, type ReactNode } from 'react';
 import { Image, Modal, Pressable, StyleSheet, Text, useWindowDimensions, View, type StyleProp, type ViewStyle } from 'react-native';
 import { CARD_BACKS, CARD_FACES } from './deckArt';
 import { BigIndex, CardCorners, NumeralFace } from './suits';
@@ -7,7 +6,6 @@ import Svg, { Circle, G, Path, Rect, Text as SvgText } from 'react-native-svg';
 import { cardName, type Card } from '@giochi/engine';
 import { tapAllowed } from './drag';
 import { focusRing, tap } from './kit';
-import { useReducedMotion } from './settings';
 import { colors, font } from './theme';
 
 /** Proporzioni reali dei mazzi: piacentine più strette, francesi più larghe. */
@@ -26,23 +24,6 @@ function FigureFace({ card, w, h }: { card: Card; w: number; h: number }) {
       <CardCorners card={card} w={w} />
     </>
   );
-}
-
-/** Dondolio leggero delle carte a riposo sul tavolo (±1.2°, 3 s), spento con il movimento ridotto. */
-function Sway({ id, enabled, children }: { id: string; enabled: boolean; children: React.ReactNode }) {
-  const t = useSharedValue(0);
-  useEffect(() => {
-    if (!enabled) {
-      t.value = 0;
-      return;
-    }
-    let h = 0;
-    for (const ch of id) h = (h * 31 + ch.charCodeAt(0)) % 1000;
-    t.value = withDelay((h % 30) * 100, withRepeat(withSequence(withTiming(1, { duration: 1500 }), withTiming(-1, { duration: 1500 })), -1, true));
-    return () => cancelAnimation(t);
-  }, [enabled, id, t]);
-  const style = useAnimatedStyle(() => ({ transform: [{ rotate: `${t.value * 1.2}deg` }] }));
-  return <Animated.View style={style}>{children}</Animated.View>;
 }
 
 /** I quattro colori di UNO nella palette di Tavolata (carta nera per i jolly). */
@@ -160,7 +141,7 @@ export function CardZoomLayer({ children }: { children: ReactNode }) {
         <Pressable style={styles.zoomScrim} onPress={() => setCard(null)} accessibilityLabel="Chiudi la carta">
           {card && (
             <>
-              <PlayingCard card={card} width={w} sway={false} zoomable={false} />
+              <PlayingCard card={card} width={w} zoomable={false} />
               <Text style={styles.zoomLabel}>{cardName(card)}</Text>
             </>
           )}
@@ -170,7 +151,7 @@ export function CardZoomLayer({ children }: { children: ReactNode }) {
   );
 }
 
-export const PlayingCard = memo(function PlayingCard({ card, width, selected, dimmed, onPress, style, chosenColor, sway, zoomable, compact }: {
+export const PlayingCard = memo(function PlayingCard({ card, width, selected, dimmed, onPress, style, chosenColor, zoomable, compact }: {
   card: Card;
   /** Carta stretta e sovrapposta: valore e seme grandi in alto, leggibili anche dalla sola cima. */
   compact?: boolean;
@@ -185,10 +166,7 @@ export const PlayingCard = memo(function PlayingCard({ card, width, selected, di
   onPress?: () => void;
   style?: StyleProp<ViewStyle>;
   chosenColor?: string;
-  /** Dondola a riposo: solo se chiesto (di default le carte stanno ferme, meno movimento sul tavolo). */
-  sway?: boolean;
 }) {
-  const reduced = useReducedMotion();
   const zoomCtx = useContext(CardZoom);
   const blocked = useContext(NoCardZoom);
   // Tocco per ingrandire solo se il tocco non serve ad altro; tenendo premuto si ingrandisce sempre.
@@ -199,24 +177,22 @@ export const PlayingCard = memo(function PlayingCard({ card, width, selected, di
   // Numerali disegnati in codice; figure e Jolly sono immagini coi personaggi.
   const numeral = (card.deck === 'it' && card.rank <= 7) || (card.deck === 'fr' && card.suit !== 'j' && card.rank <= 10);
   const face = (
-    <Sway id={card.id} enabled={(sway ?? false) && !reduced}>
-      <View style={[{ width, height }, dimmed && { opacity: 0.62 }, style]}>
-        <View
-          accessibilityLabel={cardName(card)}
-          style={[
-            styles.card,
-            { width, height, borderRadius: radius },
-            card.deck === 'uno' && { backgroundColor: 'transparent' },
-            selected && styles.selected,
-          ]}
-        >
-          {numeral && <NumeralFace card={card} w={width} h={height} />}
-          {!numeral && card.deck !== 'uno' && <FigureFace card={card} w={width} h={height} />}
-          {card.deck === 'uno' && <UnoFace card={card} w={width} h={height} chosenColor={chosenColor} />}
-          {compact && card.deck !== 'uno' && card.suit !== 'j' && <BigIndex card={card} w={width} />}
-        </View>
+    <View style={[{ width, height }, dimmed && { opacity: 0.62 }, style]}>
+      <View
+        accessibilityLabel={cardName(card)}
+        style={[
+          styles.card,
+          { width, height, borderRadius: radius },
+          card.deck === 'uno' && { backgroundColor: 'transparent' },
+          selected && styles.selected,
+        ]}
+      >
+        {numeral && <NumeralFace card={card} w={width} h={height} />}
+        {!numeral && card.deck !== 'uno' && <FigureFace card={card} w={width} h={height} />}
+        {card.deck === 'uno' && <UnoFace card={card} w={width} h={height} chosenColor={chosenColor} />}
+        {compact && card.deck !== 'uno' && card.suit !== 'j' && <BigIndex card={card} w={width} />}
       </View>
-    </Sway>
+    </View>
   );
   if (!onPress && zoom) {
     return (
@@ -264,7 +240,7 @@ export function CardGhost({ cards, width }: { cards: Card[]; width: number }) {
     <View style={{ flexDirection: 'row' }}>
       {cards.map((c, i) => (
         <View key={c.id} style={{ marginLeft: i ? -width * 0.6 : 0, transform: [{ rotate: `${(i - (cards.length - 1) / 2) * 5}deg` }] }}>
-          <PlayingCard card={c} width={width} sway={false} zoomable={false} />
+          <PlayingCard card={c} width={width} zoomable={false} />
         </View>
       ))}
     </View>
@@ -309,7 +285,8 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     boxShadow: `0px 5px 0px ${colors.line}, 0px 8px 14px rgba(0,0,0,0.35)`,
   },
-  selected: { borderColor: colors.accent, borderWidth: 4 },
+  // La carta scelta o prendibile: solo il contorno cambia colore, senza ingrossarsi.
+  selected: { borderColor: colors.accent },
   center: { alignItems: 'center', justifyContent: 'center' },
   corner: { position: 'absolute', fontWeight: '900', color: '#2B2D42' },
   figure: { backgroundColor: '#F7EBD0', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#D9C08A' },

@@ -26,6 +26,8 @@ import {
 } from '@giochi/engine';
 
 const BOT_DELAY_MS = 1300;
+/** Pausa minima fra due mosse del computer: sui telefoni la carta deve fare in tempo a viaggiare fino al tavolo. */
+const MIN_BOT_PAUSE_MS = 1400;
 const RECONNECT_SECONDS = 120;
 
 const usedCodes = new Set<string>();
@@ -237,7 +239,7 @@ export class TableRoom extends Room {
           return;
         }
         this.afterChange();
-      }, game.pause?.(this.state_) ?? BOT_DELAY_MS);
+      }, Math.max(MIN_BOT_PAUSE_MS, game.pause?.(this.state_) ?? BOT_DELAY_MS));
     }
   }
 

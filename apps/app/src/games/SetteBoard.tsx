@@ -1,22 +1,34 @@
+import { useEffect, useRef } from 'react';
 import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import type { Card, Seat, SetteMove, SetteView } from '@giochi/engine';
-import { EventSticker, othersOf, type BoardProps } from './common';
+import { EventSticker, MENU_GAP, othersOf, type BoardProps } from './common';
 import { CardBack, PlayingCard } from '../ui/cards';
 import { SeatAvatar } from '../ui/avatars';
 import { Button, Row, T, tap } from '../ui/kit';
-import { FlyIn, Pulse } from '../ui/motion';
+import { Anchor, FlyIn, Pulse } from '../ui/motion';
 import { TableBg } from '../ui/tables';
 import { colors, seatColor } from '../ui/theme';
 
 const fmt = (v: number) => (v % 1 ? `${Math.floor(v) || ''}½` : String(v));
 
-/** Le carte di un posto: coperte quelle segrete, lanciate sul tavolo quando arrivano. */
-function HandRow({ cards, width, mine }: { cards: (Card | null)[]; width: number; mine?: boolean }) {
+/** Le carte di un posto: coperte quelle segrete; quelle pescate viaggiano dal mazzo, una alla volta. */
+function HandRow({ cards, width, mine, overlap }: { cards: (Card | null)[]; width: number; mine?: boolean; overlap?: number }) {
+  const seen = useRef<Set<string> | null>(null);
+  const keys = cards.map((c, i) => c?.id ?? `back${i}`);
+  const fresh = seen.current ? keys.filter((k) => !seen.current!.has(k)) : [];
+  useEffect(() => void (seen.current = new Set(keys)));
   return (
     <Row gap={0} style={{ minHeight: width * 1.8 }}>
       {cards.map((c, i) => (
-        <FlyIn key={c?.id ?? `back${i}`} from={mine ? 'above' : 'above'} sound="deal" style={{ marginLeft: i ? -width * (mine ? (cards.length > 3 ? 0.6 : 0.3) : 0.45) : 0 }}>
-          {c ? <PlayingCard card={c} width={width} sway={false} zoomable={mine} /> : <CardBack width={width} />}
+        <FlyIn
+          key={keys[i]}
+          from="none"
+          fromAnchor={fresh.includes(keys[i]) ? 'deck' : undefined}
+          delay={Math.max(0, fresh.indexOf(keys[i])) * 220}
+          sound="deal"
+          style={{ marginLeft: i ? (overlap ?? -width * (mine ? (cards.length > 3 ? 0.6 : 0.3) : 0.45)) : 0 }}
+        >
+          {c ? <PlayingCard card={c} width={width} zoomable={mine} /> : <CardBack width={width} />}
         </FlyIn>
       ))}
     </Row>
@@ -57,10 +69,11 @@ function SeatBox({ view, seat, name, compact }: { view: SetteView; seat: Seat; n
     // Sul telefono: una riga sola con icona, fiche e puntata, carte piccole e totale.
     return (
       <Pulse active={active} style={{ width: '48.5%' }}>
-        <View style={[styles.seat, styles.seatCompact, active && { borderColor: seatColor(seat), boxShadow: `0px 0px 10px ${seatColor(seat)}` }]}>
+        <View style={[styles.seat, styles.seatCompact]}>
           <SeatAvatar seat={seat} name={name} size={28} />
           <View style={{ flex: 1, minWidth: 0 }}>
-            <T size={11} weight="800" lines={1}>
+            <T size={11} weight="800" lines={1} color={active ? seatColor(seat) : colors.text}>
+              {active ? '▶ ' : ''}
               {name}
               {banker ? ' 🏦' : ''}
             </T>
@@ -72,24 +85,19 @@ function SeatBox({ view, seat, name, compact }: { view: SetteView; seat: Seat; n
               {delta !== 0 ? `${delta > 0 ? '+' : ''}${delta} 🪙` : total !== null ? (view.status[seat] === 'bust' ? `sballato ${fmt(total)}` : `${fmt(total)}${view.status[seat] === 'stood' && view.phase === 'play' ? ' · sta' : ''}`) : ' '}
             </T>
           </View>
-          <Row gap={0}>
-            {view.hands[seat].map((c, i) => (
-              <View key={c?.id ?? `b${i}`} style={{ marginLeft: i ? -14 : 0 }}>
-                {c ? <PlayingCard card={c} width={22} sway={false} /> : <CardBack width={22} />}
-              </View>
-            ))}
-          </Row>
+          <HandRow cards={view.hands[seat]} width={22} overlap={-14} />
         </View>
       </Pulse>
     );
   }
   return (
     <Pulse active={active}>
-      <View style={[styles.seat, active && { borderColor: seatColor(seat), boxShadow: `0px 0px 14px ${seatColor(seat)}` }]}>
+      <View style={styles.seat}>
         <Row gap={6}>
           <SeatAvatar seat={seat} name={name} size={34} />
           <View style={{ flexShrink: 1 }}>
-            <T size={13} weight="800" lines={1}>
+            <T size={13} weight="800" lines={1} color={active ? seatColor(seat) : colors.text}>
+              {active ? '▶ ' : ''}
               {name}
               {banker ? ' 🏦' : ''}
             </T>
@@ -140,7 +148,7 @@ export function SetteBoard({ view, me, names, myTurn, onMove }: BoardProps<Sette
   return (
     <TableBg table="teal">
       <View style={{ flex: 1, padding: 8, gap: 8 }}>
-        <Row style={{ justifyContent: 'space-between', paddingHorizontal: 18 }}>
+        <Row style={{ justifyContent: 'space-between', paddingLeft: MENU_GAP + 18, paddingRight: 18 }}>
           <T size={13} weight="800" color="#ffffffcc">
             Mano {view.round + 1} di {view.totalRounds}
           </T>
@@ -154,11 +162,11 @@ export function SetteBoard({ view, me, names, myTurn, onMove }: BoardProps<Sette
           ))}
         </View>
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-          <View>
+          <Anchor id="deck">
             <CardBack width={narrow ? 44 : 52} style={{ position: 'absolute', left: 4, top: 4 }} />
             <CardBack width={narrow ? 44 : 52} style={{ position: 'absolute', left: 2, top: 2 }} />
             <CardBack width={narrow ? 44 : 52} />
-          </View>
+          </Anchor>
           <T size={14} weight="800" color="#ffffffcc" center>
             {hint}
           </T>
@@ -213,7 +221,7 @@ export function SetteBoard({ view, me, names, myTurn, onMove }: BoardProps<Sette
 }
 
 const styles = StyleSheet.create({
-  seat: { padding: 8, gap: 6, borderRadius: 16, backgroundColor: '#12052BB3', borderWidth: 2.5, borderColor: '#FFFFFF22', minWidth: 150 },
+  seat: { padding: 8, gap: 6, borderRadius: 16, backgroundColor: 'rgba(18,5,43,0.55)', minWidth: 150 },
   seatCompact: { flexDirection: 'row', alignItems: 'center', gap: 6, padding: 5, minWidth: 0, borderRadius: 12 },
   meter: { height: 10, borderRadius: 999, backgroundColor: '#12052B88', borderWidth: 2, borderColor: colors.line, overflow: 'hidden' },
   chip: { width: 58, height: 58, borderRadius: 29, backgroundColor: colors.accent, borderWidth: 4, borderColor: colors.line, borderStyle: 'dashed', alignItems: 'center', justifyContent: 'center', boxShadow: `0px 4px 0px ${colors.line}` },

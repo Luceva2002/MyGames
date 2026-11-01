@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { BURRACO_RULES, checkMeld, teamOf, type BurracoMove, type BurracoView, type Card , type Seat } from '@giochi/engine';
-import { Banner, MyCorner, othersOf, Slot, TableTop, useCardWidth, type BoardProps, type SeatInfo } from './common';
+import { Banner, MyCorner, othersOf, PileTop, Slot, TableTop, useCardWidth, type BoardProps, type SeatInfo } from './common';
 import { CardsSummaryTable, teamLabel } from './summary';
 import { CardTable, MeldRow, MultiHand } from './RummyParts';
 import { CardBack, DeckPile, PlayingCard, NoCardZoom } from '../ui/cards';
 import { Draggable, DropZone, type DragPayload } from '../ui/drag';
 import { Button, Row, T, tap } from '../ui/kit';
+import { Anchor } from '../ui/motion';
 import { TableBg } from '../ui/tables';
 import { colors } from '../ui/theme';
 
@@ -70,14 +71,16 @@ export function BurracoBoard({ view, me, names, myTurn, onMove }: BoardProps<Bur
             >
               <Draggable payload={drawing ? { kind: 'stock', ids: [] } : null} ghost={<CardBack width={pileW} deck="fr" />}>
                 <Slot width={pileW + 6} ratio={1.45} label={drawing ? 'PESCA' : `MAZZO · ${view.stockCount}`} glow={drawing ? colors.accent : undefined}>
-                  <DeckPile count={view.stockCount} width={pileW} deck="fr" />
+                  <Anchor id="deck">
+                    <DeckPile count={view.stockCount} width={pileW} deck="fr" />
+                  </Anchor>
                 </Slot>
               </Draggable>
             </Pressable>
             <DropZone id="discard" radius={8} inset={4} accepts={(p) => playing && p.kind === 'hand' && p.ids.length === 1} onDrop={(p) => onMove({ type: 'discard', card: p.ids[0] })}>
               <Draggable
                 payload={drawing && view.discard.length ? { kind: 'discard', ids: view.discard.map((c) => c.id) } : null}
-                ghost={<View style={{ flexDirection: 'row' }}>{view.discard.slice(-4).map((c, i) => <View key={c.id} style={{ marginLeft: i ? -pileW * 0.6 : 0 }}><PlayingCard card={c} width={pileW} sway={false} /></View>)}</View>}
+                ghost={<View style={{ flexDirection: 'row' }}>{view.discard.slice(-4).map((c, i) => <View key={c.id} style={{ marginLeft: i ? -pileW * 0.6 : 0 }}><PlayingCard card={c} width={pileW} /></View>)}</View>}
               >
                 <Pressable
                   disabled={!myTurn || view.phase !== 'draw' || !view.discard.length}
@@ -89,7 +92,9 @@ export function BurracoBoard({ view, me, names, myTurn, onMove }: BoardProps<Bur
                   <Slot width={pileW + 6} ratio={1.45} label={view.discard.length > 1 ? `SCARTI · ${view.discard.length}` : 'SCARTI'} glow={drawing && view.discard.length ? colors.accent3 : undefined}>
                     {view.discard.length ? (
                       <NoCardZoom.Provider value={drawing}>
-                        <PlayingCard card={view.discard[view.discard.length - 1]} width={pileW} sway={false} />
+                        <PileTop id={view.discard[view.discard.length - 1].id} from={(view.turn + view.players - 1) % view.players} me={me}>
+                          <PlayingCard card={view.discard[view.discard.length - 1]} width={pileW} />
+                        </PileTop>
                       </NoCardZoom.Provider>
                     ) : null}
                   </Slot>

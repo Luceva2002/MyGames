@@ -88,14 +88,15 @@ export function YahtzeeBoard({ view, me, names, myTurn, onMove }: BoardProps<Yah
     <TableBg table="teal">
       <ScrollView style={{ flex: 1 }} contentContainerStyle={side ? { flexDirection: 'row', alignItems: 'center', gap: 16, padding: 12, flexGrow: 1 } : { flexGrow: 1 }}>
       <View style={side ? { flex: 1, justifyContent: 'center' } : undefined}>
-      {/* I giocatori in fila col totale: chi tira pulsa. */}
+      {/* I giocatori in fila col totale: chi tira ha la freccia e il nome colorato. */}
       <Row gap={8} wrap style={{ justifyContent: 'center', paddingTop: 8 }}>
         {players.map((p) => (
           <Pulse key={p} active={p === view.turn}>
-            <View style={[styles.player, p === view.turn && { borderColor: seatColors[p % seatColors.length] }]}>
+            <View style={styles.player}>
               <SeatAvatar seat={p} name={names[p]} size={30} />
               <View>
-                <T size={12} weight="800" lines={1}>
+                <T size={12} weight="800" lines={1} color={p === view.turn ? seatColors[p % seatColors.length] : colors.text}>
+                  {p === view.turn ? '▶ ' : ''}
                   {p === me ? 'Tu' : names[p]}
                 </T>
                 <T size={18} weight="800" color={colors.accent}>
@@ -334,7 +335,7 @@ const styles = StyleSheet.create({
   scrim: { flex: 1, backgroundColor: colors.scrim, alignItems: 'center', justifyContent: 'center', padding: 16 },
   compareCard: { width: '100%', maxWidth: 560, gap: 10, padding: 18, borderRadius: 24, backgroundColor: colors.surface, borderWidth: 3, borderColor: colors.line },
   compareRow: { borderTopWidth: 1, borderColor: colors.line, minHeight: 32, alignItems: 'center' },
-  player: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 4, paddingLeft: 4, paddingRight: 10, borderRadius: 999, backgroundColor: '#12052BB3', borderWidth: 2.5, borderColor: '#FFFFFF22' },
+  player: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 4, paddingLeft: 4, paddingRight: 10, borderRadius: 999, backgroundColor: 'rgba(18,5,43,0.55)' },
   holdTag: { paddingHorizontal: 6, paddingVertical: 1, borderRadius: 6, backgroundColor: colors.accent, borderWidth: 1.5, borderColor: colors.line },
   rolls: { paddingHorizontal: 10, paddingVertical: 8, borderRadius: 999, backgroundColor: '#12052BB3' },
   rollDot: { width: 14, height: 14, borderRadius: 7, borderWidth: 2, borderColor: colors.line, backgroundColor: '#FFFFFF33' },

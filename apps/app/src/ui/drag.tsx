@@ -1,16 +1,15 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, { cancelAnimation, useAnimatedStyle, useSharedValue, withRepeat, withSequence, withSpring, withTiming } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { getSettings, useReducedMotion } from './settings';
 import { sfx } from './sound';
-import { colors } from './theme';
 
 /**
  * Trascinamento delle carte, con mouse e dita (alla Balatro): la carta presa segue il dito
- * inclinandosi con la velocità, le zone che la accettano si illuminano, quella sotto il dito
- * si gonfia. Lasciata fuori da una zona torna a posto con una molla. Il tocco resta valido.
+ * inclinandosi con la velocità, le zone che la accettano si schiariscono appena, quella sotto il
+ * dito prende un contorno. Lasciata fuori da una zona torna a posto con una molla. Il tocco resta valido.
  */
 
 export interface DragPayload {
@@ -318,30 +317,18 @@ export function DropZone({ id, accepts, onDrop, children, style, radius = 18, in
   );
 }
 
+/** Dove si può lasciare la carta: un velo chiaro appena accennato, un contorno sottile sotto il dito. */
 function ZoneGlow({ over, radius, inset }: { over: boolean; radius: number; inset: number }) {
-  const reduced = useReducedMotion();
-  const pulse = useSharedValue(0.55);
-  useEffect(() => {
-    if (reduced) return;
-    pulse.value = withRepeat(withSequence(withTiming(1, { duration: 450 }), withTiming(0.55, { duration: 450 })), -1, true);
-    return () => cancelAnimation(pulse);
-  }, [pulse, reduced]);
-  const anim = useAnimatedStyle(() => ({ opacity: over ? 1 : pulse.value }));
   return (
-    <Animated.View
+    <View
       pointerEvents="none"
-      style={[
-        styles.glow,
-        { top: -inset, left: -inset, right: -inset, bottom: -inset, borderRadius: radius },
-        over ? styles.glowOver : null,
-        anim,
-      ]}
+      style={[styles.glow, { top: -inset, left: -inset, right: -inset, bottom: -inset, borderRadius: radius }, over ? styles.glowOver : null]}
     />
   );
 }
 
 const styles = StyleSheet.create({
   ghost: { position: 'absolute', left: 0, top: 0, zIndex: 1000, filter: 'drop-shadow(0px 18px 14px rgba(0,0,0,0.45))' } as ViewStyle,
-  glow: { position: 'absolute', borderWidth: 3, borderStyle: 'dashed', borderColor: colors.accent, backgroundColor: '#FFE14D14' },
-  glowOver: { borderStyle: 'solid', borderWidth: 4, backgroundColor: '#FFE14D33', boxShadow: `0px 0px 22px ${colors.accent}` },
+  glow: { position: 'absolute', backgroundColor: 'rgba(255,255,255,0.05)' },
+  glowOver: { borderWidth: 2, borderColor: 'rgba(255,255,255,0.6)', backgroundColor: 'rgba(255,255,255,0.1)' },
 });

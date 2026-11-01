@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { useWindowDimensions, View } from 'react-native';
-import { captureOptions, teamOf, type ScopaMove, type ScopaView, type Seat } from '@giochi/engine';
+import { captureOptions, teamOf, type Card, type ScopaMove, type ScopaView, type Seat } from '@giochi/engine';
 import { Banner, MyCorner, EventSticker, Felt, Hand, othersOf, Slot, TableTop, type SeatInfo, useCardWidth, type BoardProps } from './common';
 import { CardsSummaryTable, teamLabel } from './summary';
 import { DeckPile, PlayingCard } from '../ui/cards';
 import { DropZone, type DragPayload } from '../ui/drag';
-import { FlyIn } from '../ui/motion';
+import { Anchor, FlyIn, handAnchor, HOLD_MS, TRAVEL_MS } from '../ui/motion';
 import { sfx } from '../ui/sound';
 import { Button, T } from '../ui/kit';
 import { TableBg } from '../ui/tables';
@@ -33,6 +33,25 @@ export function ScopaBoard({ view, me, names, myTurn, onMove }: BoardProps<Scopa
     if (view.lastPlay?.scopa) sfx('scopa');
     else if (view.lastPlay?.taken.length) sfx('capture');
   }, [playKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Una presa resta in tavola un momento: la carta giocata arriva accanto a quelle che prende, si
+  // vede cosa si porta via, poi tutte insieme vanno verso chi ha preso.
+  const before = useRef(view.table);
+  const held = useRef<{ key: string | null; cards: Card[] }>({ key: null, cards: [] });
+  if (playKey !== held.current.key) {
+    held.current = { key: playKey, cards: view.lastPlay?.taken.length ? [...before.current, view.lastPlay.card] : [] };
+  }
+  const [released, setReleased] = useState<string | null>(null);
+  useEffect(() => {
+    before.current = view.table;
+  }, [view.table]);
+  useEffect(() => {
+    if (!held.current.cards.length) return;
+    const t = setTimeout(() => setReleased(playKey), view.lastPlay?.seat === me ? 700 : HOLD_MS + TRAVEL_MS + 650);
+    return () => clearTimeout(t);
+  }, [playKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  const holding = held.current.cards.length > 0 && released !== playKey;
+  const shown = holding ? held.current.cards : view.table;
+  const taken = new Set(holding ? view.lastPlay?.taken.map((c) => c.id) : []);
   const dropCard = (cardId: string, target?: string) => {
     const c = view.hand.find((x) => x.id === cardId);
     if (!c) return false;
@@ -91,18 +110,28 @@ export function ScopaBoard({ view, me, names, myTurn, onMove }: BoardProps<Scopa
         <View style={{ flex: 1, alignSelf: 'stretch', alignItems: 'center', justifyContent: 'center', gap: 10, paddingLeft: narrow && me !== null ? 66 : 0 }}>
         <View style={{ position: 'absolute', left: 0, top: '50%', marginTop: -70, zIndex: 10 }}>
           <Slot width={me === null ? 74 : 60} label={`MAZZO · ${view.deckCount}`} ratio={1.85}>
-            {view.deckCount > 0 ? <DeckPile count={view.deckCount} width={me === null ? 68 : 54} /> : null}
+            <Anchor id="deck">{view.deckCount > 0 ? <DeckPile count={view.deckCount} width={me === null ? 68 : 54} /> : null}</Anchor>
           </Slot>
         </View>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8, maxWidth: 6 * (tableWidth + 8) }}>
-          {view.table.map((c, i) => (
-            <FlyIn key={c.id} from={!dealt.current || view.lastPlay?.seat !== me ? 'above' : 'below'} delay={dealt.current ? 0 : 300 + i * 90} leave={view.turn === me ? 'down' : 'up'} sound={dealt.current ? 'card' : 'deal'}>
-              <DropZone id={`t-${c.id}`} radius={10} inset={4} accepts={(p) => myTurn && canTake(p, c.id)} onDrop={(p) => dropCard(p.ids[0], c.id)}>
-                <PlayingCard card={c} width={tableWidth} selected={highlighted.has(c.id)} dimmed={!!card && options.length > 0 && !highlighted.has(c.id)} />
-              </DropZone>
-            </FlyIn>
-          ))}
-          {view.table.length === 0 && <T color="#ffffff99">Tavolo vuoto</T>}
+          {shown.map((c, i) => {
+            const mover = view.lastPlay?.card.id === c.id ? view.lastPlay.seat : null;
+            return (
+              <FlyIn
+                key={c.id}
+                from={!dealt.current ? 'above' : mover === me ? 'below' : 'none'}
+                fromAnchor={!dealt.current ? 'deck' : mover !== null && mover !== me ? handAnchor(mover) : undefined}
+                delay={dealt.current ? 0 : 300 + i * 120}
+                leave={view.lastPlay?.seat === me ? 'down' : 'up'}
+                sound={dealt.current ? 'card' : 'deal'}
+              >
+                <DropZone id={`t-${c.id}`} radius={10} inset={4} accepts={(p) => !holding && myTurn && canTake(p, c.id)} onDrop={(p) => dropCard(p.ids[0], c.id)}>
+                  <PlayingCard card={c} width={tableWidth} selected={highlighted.has(c.id) || taken.has(c.id)} dimmed={!!card && options.length > 0 && !highlighted.has(c.id)} />
+                </DropZone>
+              </FlyIn>
+            );
+          })}
+          {shown.length === 0 && <T color="#ffffff99">Tavolo vuoto</T>}
         </View>
         </View>
       </Felt>

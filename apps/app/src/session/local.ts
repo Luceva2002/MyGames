@@ -32,6 +32,11 @@ export const setPendingMatch = (c: MatchConfig) => (pending = c);
 export const getPendingMatch = () => pending;
 
 const BOT_DELAY = 1300;
+/**
+ * Pausa minima fra una mossa del computer e la successiva: la carta ha il tempo di partire dalla
+ * sua mano, arrivare sul tavolo (circa 0,75 s) e restare ferma un attimo prima della mossa dopo.
+ */
+const MIN_BOT_PAUSE = 1400;
 
 /**
  * Partita su un solo dispositivo: le regole girano qui, i computer muovono da soli
@@ -75,7 +80,7 @@ export function useLocalMatch(config: MatchConfig) {
       const next = applyMove(game, current, bot, move);
       tell(current, next, bot, move);
       setState(next);
-    }, game.pause?.(state) ?? BOT_DELAY);
+    }, Math.max(MIN_BOT_PAUSE, game.pause?.(state) ?? BOT_DELAY));
     return () => clearTimeout(timer);
   }, [state]); // eslint-disable-line react-hooks/exhaustive-deps
 

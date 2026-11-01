@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { ActivityIndicator, Image, Modal, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { ActivityIndicator, Image, Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import type { GameMeta, GameResult, LastAction, Seat } from '@giochi/engine';
 import { BOARDS } from './registry';
 import { GAME_ART } from '../ui/art';
@@ -7,15 +7,16 @@ import { BotFigure, SeatAvatar, SeatAvatars } from '../ui/avatars';
 import { botByName } from '@giochi/engine';
 import { Button, Confirm, focusRing, PlayerTag, Row, T, tap } from '../ui/kit';
 import { DragProvider } from '../ui/drag';
-import { CardZoomLayer, PlayingCard } from '../ui/cards';
-import { PopIn } from '../ui/motion';
+import { CardZoomLayer } from '../ui/cards';
+import { AnchorProvider, PopIn } from '../ui/motion';
 import { sfx } from '../ui/sound';
-import { TvContext } from '../ui/settings';
+import { setSettings, TvContext, useSettings } from '../ui/settings';
 import { colors, MIN_TOUCH, radius, seatColor } from '../ui/theme';
 
 /**
- * Guscio comune a ogni partita (P-SHELL-3): barra in alto con uscita confermata, nome del gioco
- * e di chi è il turno; area di gioco; regole, errori, attesa di rete e risultati.
+ * Guscio comune a ogni partita (P-SHELL-3): il tavolo a tutta altezza, un bottoncino di menu
+ * nell'angolo (uscita confermata, regole, suoni), la striscia con l'ultima mossa degli altri;
+ * regole, errori, attesa di rete e risultati.
  */
 export function GameFrame({ meta, view, me, names, avatars, myTurn, active, onMove, result, error, onExit, onRestart, overlay, headerRight, tv, pending, lastAction }: {
   meta: GameMeta;
@@ -70,31 +71,22 @@ export function GameFrame({ meta, view, me, names, avatars, myTurn, active, onMo
   return (
     <TvContext.Provider value={!!tv}>
     <SeatAvatars.Provider value={avatars ?? []}>
+      <AnchorProvider>
       <View style={[{ flex: 1 }, tv && styles.tvSafe]}>
-        <Row style={styles.header} gap={10}>
-          <IconButton label="Esci dalla partita" glyph="✕" onPress={() => setLeaving(true)} />
-          <T size={18} weight="900" lines={1} style={{ flexShrink: 1 }}>
-            {meta.name}
-          </T>
-          <View style={{ flex: 1 }} />
-          {!result && !tv && <TurnPill active={active} names={names} me={me} myTurn={myTurn} />}
-          {headerRight}
-          <IconButton label="Come si gioca" glyph="?" onPress={() => setRules(true)} />
-        </Row>
         {tv && !result && active.length > 0 && (
           <View style={{ alignItems: 'center', paddingVertical: 8 }}>
             <TurnPill active={active} names={names} me={me} myTurn={myTurn} />
           </View>
         )}
-        <ActionStrip action={lastAction ?? null} me={me} names={names} />
         <View style={{ flex: 1 }} pointerEvents={pending ? 'none' : 'auto'}>
           <CardZoomLayer>
           <DragProvider>
             {Board ? <Board view={view} me={me} names={names} myTurn={myTurn && !pending} onMove={onMove} /> : <T>Interfaccia non disponibile.</T>}
           </DragProvider>
           </CardZoomLayer>
-          <ActionToast action={lastAction ?? null} me={me} names={names} />
+          <ActionStrip action={lastAction ?? null} me={me} names={names} />
         </View>
+        <GameMenu name={meta.name} headerRight={headerRight} onExit={() => setLeaving(true)} onRules={() => setRules(true)} />
         {pending && (
           <View style={styles.pending} accessibilityLiveRegion="polite">
             <ActivityIndicator color={colors.onAccent} />
@@ -206,39 +198,92 @@ export function GameFrame({ meta, view, me, names, avatars, myTurn, active, onMo
           }}
         />
       </View>
+      </AnchorProvider>
     </SeatAvatars.Provider>
     </TvContext.Provider>
   );
 }
 
-function IconButton({ label, glyph, onPress }: { label: string; glyph: string; onPress: () => void }) {
+/**
+ * Il menu della partita: un bottoncino tondo nell'angolo in alto a sinistra che apre un piccolo
+ * riquadro con Esci, Regole e Suoni. Così il tavolo usa tutta l'altezza dello schermo.
+ */
+function GameMenu({ name, headerRight, onExit, onRules }: { name: string; headerRight?: ReactNode; onExit: () => void; onRules: () => void }) {
+  const [open, setOpen] = useState(false);
+  const settings = useSettings();
+  const pick = (f: () => void) => () => {
+    tap();
+    setOpen(false);
+    f();
+  };
+  return (
+    <>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Menu della partita"
+        hitSlop={(MIN_TOUCH - 34) / 2}
+        onPress={() => {
+          tap();
+          setOpen(true);
+        }}
+        style={(state) => [styles.menuButton, state.pressed && { backgroundColor: 'rgba(18,5,43,0.85)' }, focusRing((state as { focused?: boolean }).focused ?? false)]}
+      >
+        <T size={15} weight="900" color="#ffffffdd">
+          ☰
+        </T>
+      </Pressable>
+      <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
+        <Pressable style={styles.menuScrim} onPress={() => setOpen(false)} accessibilityLabel="Chiudi il menu">
+          <Pressable style={styles.menu} accessibilityViewIsModal onPress={() => {}}>
+            <T size={14} weight="900" color={colors.muted} lines={1} style={{ paddingHorizontal: 10, paddingBottom: 4 }}>
+              {name}
+            </T>
+            <MenuItem glyph="?" label="Regole" onPress={pick(onRules)} />
+            <MenuItem
+              glyph={settings.sound ? '🔊' : '🔇'}
+              label={settings.sound ? 'Suoni: sì' : 'Suoni: no'}
+              onPress={() => {
+                tap();
+                setSettings({ ...settings, sound: !settings.sound });
+              }}
+            />
+            {headerRight ? <View style={{ paddingHorizontal: 6, paddingVertical: 4 }}>{headerRight}</View> : null}
+            <MenuItem glyph="✕" label="Esci dalla partita" onPress={pick(onExit)} />
+          </Pressable>
+        </Pressable>
+      </Modal>
+    </>
+  );
+}
+
+function MenuItem({ glyph, label, onPress }: { glyph: string; label: string; onPress: () => void }) {
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={label}
-      onPress={() => {
-        tap();
-        onPress();
-      }}
-      style={(state) => [styles.iconButton, state.pressed && { backgroundColor: colors.surface2 }, focusRing((state as { focused?: boolean }).focused ?? false)]}
+      onPress={onPress}
+      style={(state) => [styles.menuItem, (state.pressed || (state as { hovered?: boolean }).hovered) && { backgroundColor: colors.surface2 }, focusRing((state as { focused?: boolean }).focused ?? false)]}
     >
-      <T size={18} weight="900" color={colors.text}>
-        {glyph}
+      <View style={{ width: 24, alignItems: 'center' }}>
+        <T size={16} weight="900">
+          {glyph}
+        </T>
+      </View>
+      <T size={15} weight="800">
+        {label}
       </T>
     </Pressable>
   );
 }
 
-/** Di chi è il turno, leggibile in un secondo da telefono e TV (V-ST-1). */
+/** Di chi è il turno, in grande sullo schermo condiviso (V-ST-1); sul telefono lo dice il mio angolo. */
 function TurnPill({ active, names, me, myTurn }: { active: Seat[]; names: string[]; me: Seat | null; myTurn: boolean }) {
-  // Sul telefono basta l'icona di chi gioca, così il nome del gioco nella barra resta leggibile.
-  const narrow = useWindowDimensions().width < 480;
   if (!active.length) return null;
   if (myTurn) {
     return (
       <View style={[styles.pill, { backgroundColor: colors.accent }]} accessibilityLiveRegion="polite">
         <T size={15} weight="900" color={colors.onAccent}>
-          {narrow ? '▶ Tu' : '▶ Tocca a te'}
+          ▶ Tocca a te
         </T>
       </View>
     );
@@ -256,77 +301,34 @@ function TurnPill({ active, names, me, myTurn }: { active: Seat[]; names: string
   return (
     <View style={[styles.pill, { borderColor: seatColor(others[0] ?? 0) }]} accessibilityLiveRegion="polite">
       <T size={14} color={colors.muted} weight="700">
-        {narrow ? '⏳' : 'Tocca a'}
+        Tocca a
       </T>
       {others.map((s) => (
-        narrow ? <SeatAvatar key={s} seat={s} name={names[s]} size={30} /> : <PlayerTag key={s} seat={s} name={names[s]} size={15} />
+        <PlayerTag key={s} seat={s} name={names[s]} size={15} />
       ))}
     </View>
   );
 }
 
 /**
- * Cosa ha appena fatto un avversario, in una riga sola sotto la barra: icona, nome e mossa
- * ("Pulcinella gioca 7 di denari e prende 2 carte"). Le mie mosse non si ripetono.
+ * Cosa ha appena fatto un avversario, in una riga sola appoggiata sul bordo alto del tavolo: icona,
+ * nome e mossa ("Pulcinella gioca 7 di denari e prende 2 carte"). Le mie mosse non si ripetono.
  */
 function ActionStrip({ action, me, names }: { action: LastAction | null; me: Seat | null; names: string[] }) {
-  if (!action || action.seat === me) return <View style={styles.stripSpace} />;
+  if (!action || action.seat === me) return null;
   const text = action.text.replace(/%v(\d+)/g, (_, n) => (Number(n) === me ? 'te' : names[Number(n)] ?? ''));
   return (
-    <PopIn key={action.n} style={styles.stripWrap}>
-      <View style={[styles.strip, { borderColor: seatColor(action.seat) }]} accessibilityLiveRegion="polite" accessibilityLabel={`${names[action.seat]} ${text}`}>
-        <SeatAvatar seat={action.seat} name={names[action.seat]} size={22} />
-        <T size={13} weight="800" lines={1} style={{ flexShrink: 1 }}>
+    <PopIn key={action.n} style={styles.stripWrap} pointerEvents="none">
+      <View style={styles.strip} accessibilityLiveRegion="polite" accessibilityLabel={`${names[action.seat]} ${text}`}>
+        <SeatAvatar seat={action.seat} name={names[action.seat]} size={18} />
+        <T size={12} weight="800" lines={1} style={{ flexShrink: 1 }}>
           {names[action.seat]}{' '}
-          <T size={13} weight="700" color={colors.muted}>
+          <T size={12} weight="700" color="#ffffffcc">
             {text}
           </T>
         </T>
       </View>
     </PopIn>
-  );
-}
-
-/**
- * La mossa di un avversario in grande al centro del tavolo per un attimo: chi è, cosa fa e le carte
- * che ha giocato o preso. Poi resta scritta nella striscia sotto la barra.
- */
-function ActionToast({ action, me, names }: { action: LastAction | null; me: Seat | null; names: string[] }) {
-  const [shown, setShown] = useState<LastAction | null>(null);
-  useEffect(() => {
-    if (!action || action.seat === me) return;
-    setShown(action);
-    const t = setTimeout(() => setShown(null), 1500);
-    return () => clearTimeout(t);
-  }, [action?.n]); // eslint-disable-line react-hooks/exhaustive-deps
-  if (!shown) return null;
-  const text = shown.text.replace(/%v(\d+)/g, (_, n) => (Number(n) === me ? 'te' : names[Number(n)] ?? ''));
-  const cards = shown.cards ?? [];
-  return (
-    <View pointerEvents="none" style={styles.moveWrap}>
-      <PopIn key={shown.n}>
-        <View style={[styles.move, { borderColor: seatColor(shown.seat) }]}>
-          <Row gap={8} style={{ alignItems: 'center' }}>
-            <SeatAvatar seat={shown.seat} name={names[shown.seat]} size={34} />
-            <T size={15} weight="900" style={{ flexShrink: 1 }}>
-              {names[shown.seat]}
-              <T size={14} weight="700" color={colors.muted}>
-                {` ${text}`}
-              </T>
-            </T>
-          </Row>
-          {cards.length > 0 && (
-            <Row gap={6} style={{ justifyContent: 'center' }}>
-              {cards.map((c, i) => (
-                <View key={c.id} style={i === 0 && cards.length > 1 ? { marginRight: 8 } : undefined}>
-                  <PlayingCard card={c} width={cards.length > 4 ? 36 : 46} sway={false} zoomable={false} />
-                </View>
-              ))}
-            </Row>
-          )}
-        </View>
-      </PopIn>
-    </View>
   );
 }
 
@@ -350,14 +352,15 @@ export function HandoffCurtain({ seat, name, onReady }: { seat: Seat; name: stri
 }
 
 const styles = StyleSheet.create({
-  moveWrap: { position: 'absolute', left: 0, right: 0, top: '20%', alignItems: 'center', paddingHorizontal: 16, zIndex: 30 },
-  move: { maxWidth: 380, gap: 8, paddingVertical: 8, paddingHorizontal: 12, borderRadius: 20, backgroundColor: colors.surface, borderWidth: 3, boxShadow: `0px 6px 0px ${colors.line}` },
-  stripSpace: { height: 0 },
-  stripWrap: { alignItems: 'center', paddingHorizontal: 10, paddingTop: 4 },
-  strip: { flexDirection: 'row', alignItems: 'center', gap: 6, maxWidth: '100%', paddingVertical: 3, paddingLeft: 3, paddingRight: 12, borderRadius: 999, backgroundColor: colors.surface, borderWidth: 2 },
+  // La striscia delle mosse sta sul bordo alto del tavolo, fra il bottone del menu e l'angolo opposto.
+  stripWrap: { position: 'absolute', top: 2, left: 52, right: 52, alignItems: 'center', zIndex: 30 },
+  strip: { flexDirection: 'row', alignItems: 'center', gap: 5, maxWidth: '100%', paddingVertical: 2, paddingLeft: 2, paddingRight: 10, borderRadius: 999, backgroundColor: 'rgba(18,5,43,0.78)' },
   tvSafe: { paddingHorizontal: '5%', paddingVertical: '2.5%' },
-  header: { paddingHorizontal: 12, paddingVertical: 8, borderBottomWidth: 3, borderColor: colors.line, minHeight: MIN_TOUCH + 16, backgroundColor: colors.brand },
-  iconButton: { width: MIN_TOUCH, height: MIN_TOUCH, borderRadius: MIN_TOUCH / 2, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: colors.line },
+  // Il bottone del menu: piccolo e tondo, sull'angolo del tavolo. L'area di tocco resta di 44 punti.
+  menuButton: { position: 'absolute', top: 6, left: 6, width: 34, height: 34, borderRadius: 17, backgroundColor: 'rgba(18,5,43,0.7)', alignItems: 'center', justifyContent: 'center', zIndex: 60 },
+  menuScrim: { flex: 1, backgroundColor: 'rgba(10,3,25,0.35)' },
+  menu: { position: 'absolute', top: 44, left: 8, minWidth: 220, padding: 8, gap: 2, borderRadius: 18, backgroundColor: colors.surface, borderWidth: 2, borderColor: colors.line, boxShadow: '0px 10px 30px rgba(0,0,0,0.45)' },
+  menuItem: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: MIN_TOUCH, paddingHorizontal: 10, borderRadius: 12 },
   pill: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999, backgroundColor: colors.surface, borderWidth: 3, borderColor: colors.line, flexShrink: 0, boxShadow: `0px 4px 0px ${colors.line}` },
   pending: { position: 'absolute', bottom: 24, alignSelf: 'center', flexDirection: 'row', gap: 8, alignItems: 'center', backgroundColor: colors.accent, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 999 },
   toast: { position: 'absolute', top: 80, alignSelf: 'center', backgroundColor: colors.danger, paddingHorizontal: 18, paddingVertical: 12, borderRadius: 999, maxWidth: '90%' },

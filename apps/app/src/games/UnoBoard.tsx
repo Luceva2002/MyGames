@@ -4,7 +4,7 @@ import { UNO_COLORS as COLORS, type Card, type Seat, type UnoMove, type UnoView 
 import { MyCorner, EventSticker, Felt, Hand, othersOf, TableTop, type SeatInfo, useCardWidth, type BoardProps } from './common';
 import { CardBack, DeckPile, PlayingCard, UNO_COLORS } from '../ui/cards';
 import { Draggable, DropZone } from '../ui/drag';
-import { FlyIn } from '../ui/motion';
+import { Anchor, FlyIn, handAnchor } from '../ui/motion';
 import { Button, Row, T, tap } from '../ui/kit';
 import { TableBg } from '../ui/tables';
 import { colors } from '../ui/theme';
@@ -43,7 +43,9 @@ export function UnoBoard({ view, me, names, myTurn, onMove }: BoardProps<UnoView
             style={{ alignItems: 'center', gap: 6 }}
           >
             <Draggable payload={myTurn && !view.drawn ? { kind: 'stock', ids: [] } : null} ghost={<CardBack width={big ? 110 : 76} deck="uno" />}>
-              <DeckPile count={view.deckCount} width={big ? 110 : 76} deck="uno" />
+              <Anchor id="deck">
+                <DeckPile count={view.deckCount} width={big ? 110 : 76} deck="uno" />
+              </Anchor>
             </Draggable>
             {myTurn && !view.drawn && (
               <T size={13} weight="800" color={colors.accent}>
@@ -53,7 +55,7 @@ export function UnoBoard({ view, me, names, myTurn, onMove }: BoardProps<UnoView
           </Pressable>
           <View style={{ alignItems: 'center', gap: 6 }}>
           <View style={{ padding: 8, borderRadius: 18, borderWidth: 5, borderColor: UNO_COLORS[view.color] }}>
-            <FlyIn key={view.top.id} from={view.last?.seat === me ? 'below' : 'above'} sound="card">
+            <FlyIn key={view.top.id} from={view.last?.seat === me ? 'below' : 'none'} fromAnchor={view.last && view.last.seat !== me ? handAnchor(view.last.seat) : undefined} sound="card">
               <PlayingCard card={view.top} width={big ? 120 : 86} chosenColor={view.top.suit === 'w' ? view.color : undefined} />
             </FlyIn>
           </View>

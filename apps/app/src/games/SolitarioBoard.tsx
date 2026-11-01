@@ -207,7 +207,7 @@ function StackGhost({ cards, width, offset }: { cards: Card[]; width: number; of
     <View>
       {cards.map((c, i) => (
         <View key={c.id} style={{ marginTop: i ? -width * CARD_RATIO + offset : 0 }}>
-          <PlayingCard card={c} width={width} sway={false} />
+          <PlayingCard card={c} width={width} />
         </View>
       ))}
     </View>

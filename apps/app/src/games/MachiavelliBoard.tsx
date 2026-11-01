@@ -6,6 +6,7 @@ import { CardTable, MeldRow, MultiHand } from './RummyParts';
 import { DeckPile } from '../ui/cards';
 import { DropZone, type DragPayload } from '../ui/drag';
 import { Button, Row, T, tap } from '../ui/kit';
+import { Anchor } from '../ui/motion';
 import { TableBg } from '../ui/tables';
 import { colors } from '../ui/theme';
 
@@ -81,7 +82,9 @@ export function MachiavelliBoard({ view, me, names, myTurn, onMove }: BoardProps
             accessibilityLabel="Mazzo: tocca per pescare una carta e passare"
           >
             <Slot width={pileW + 6} ratio={1.45} label={canDraw ? 'PESCA' : `MAZZO · ${view.stockCount}`} glow={canDraw ? colors.accent : undefined}>
-              <DeckPile count={view.stockCount} width={pileW} deck="fr" />
+              <Anchor id="deck">
+                    <DeckPile count={view.stockCount} width={pileW} deck="fr" />
+                  </Anchor>
             </Slot>
           </Pressable>
         }

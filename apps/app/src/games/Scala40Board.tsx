@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { checkMeld, meldPoints40, SCALA40_RULES, type Card, type Scala40Move, type Scala40View , type Seat } from '@giochi/engine';
-import { Banner, MyCorner, othersOf, Slot, TableTop, useCardWidth, type BoardProps, type SeatInfo } from './common';
+import { Banner, MyCorner, othersOf, PileTop, Slot, TableTop, useCardWidth, type BoardProps, type SeatInfo } from './common';
 import { CardsSummaryTable } from './summary';
 import { CardTable, MeldRow, MultiHand, TableArea } from './RummyParts';
 import { CardBack, DeckPile, PlayingCard, NoCardZoom } from '../ui/cards';
 import { Draggable, DropZone, type DragPayload } from '../ui/drag';
 import { Button, Row, T, tap } from '../ui/kit';
+import { Anchor } from '../ui/motion';
 import { TableBg } from '../ui/tables';
 import { colors, seatColors } from '../ui/theme';
 
@@ -83,7 +84,9 @@ export function Scala40Board({ view, me, names, myTurn, onMove }: BoardProps<Sca
             >
               <Draggable payload={drawing ? { kind: 'stock', ids: [] } : null} ghost={<CardBack width={pileW} deck="fr" />}>
                 <Slot width={pileW + 6} ratio={1.45} label={drawing ? 'PESCA' : `MAZZO · ${view.stockCount}`} glow={drawing ? colors.accent : undefined}>
-                  <DeckPile count={view.stockCount} width={pileW} deck="fr" />
+                  <Anchor id="deck">
+                    <DeckPile count={view.stockCount} width={pileW} deck="fr" />
+                  </Anchor>
                 </Slot>
               </Draggable>
             </Pressable>
@@ -99,8 +102,10 @@ export function Scala40Board({ view, me, names, myTurn, onMove }: BoardProps<Sca
                   {view.discardTop ? (
                     // Quando tocca a me pescare, il tocco prende lo scarto; altrimenti la carta si ingrandisce.
                     <NoCardZoom.Provider value={drawing}>
-                      <Draggable payload={drawing ? { kind: 'discard', ids: [view.discardTop.id] } : null} ghost={<PlayingCard card={view.discardTop} width={pileW} sway={false} />}>
-                        <PlayingCard card={view.discardTop} width={pileW} sway={false} />
+                      <Draggable payload={drawing ? { kind: 'discard', ids: [view.discardTop.id] } : null} ghost={<PlayingCard card={view.discardTop} width={pileW} />}>
+                        <PileTop id={view.discardTop.id} from={(view.turn + view.players - 1) % view.players} me={me}>
+                          <PlayingCard card={view.discardTop} width={pileW} />
+                        </PileTop>
                       </Draggable>
                     </NoCardZoom.Provider>
                   ) : null}
