@@ -259,7 +259,7 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
   scroll: { padding: 16, paddingBottom: 48, gap: 16, width: '100%', maxWidth: 1100, alignSelf: 'center' },
   // Margine di sicurezza del 5% sui televisori (V-SAFE-1).
-  tvInset: { paddingHorizontal: '5%', paddingVertical: '3%', maxWidth: undefined },
+  tvInset: { paddingHorizontal: '5%', paddingVertical: '3%', maxWidth: '100%' },
   button: { minHeight: MIN_TOUCH + 8, paddingVertical: 14, paddingHorizontal: 22, borderRadius: radius.l, borderWidth: OUTLINE, alignItems: 'center', justifyContent: 'center', marginBottom: 6 },
   buttonSmall: { minHeight: MIN_TOUCH, paddingVertical: 10, paddingHorizontal: 16 },
   round: { width: MIN_TOUCH, height: MIN_TOUCH, flexShrink: 0, borderRadius: MIN_TOUCH / 2, borderWidth: OUTLINE, borderColor: colors.line, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },

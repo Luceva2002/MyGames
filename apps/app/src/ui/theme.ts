@@ -9,7 +9,7 @@ export const colors = {
   surface2: '#4A22A0',
   brand: '#6B2BD9',
   /** Il viola dell'illustrazione della copertina: dietro al QR e alle maschere. */
-  cover: '#5B22D6',
+  cover: '#591ED2',
   line: '#12052B',
   text: '#FFFFFF',
   muted: '#D9CCF5',

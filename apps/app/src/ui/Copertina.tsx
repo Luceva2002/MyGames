@@ -22,24 +22,33 @@ export function Copertina({ width, height, top, code, url, count, avatars, notic
   /** Al posto del QR quando la stanza non è ancora pronta. */
   notice?: string;
 }) {
-  const qr = Math.round(Math.min(260, height * 0.56));
+  // Il QR lascia posto a quello che sta sopra e ai margini del riquadro.
+  const qr = Math.round(Math.min(height * 0.56, height - 170));
+  const codeSize = Math.round(Math.max(48, height * 0.17));
   const inside = height - OUTLINE * 2;
+  // Le maschere stanno nel 64% destro dell'illustrazione: hanno una colonna tutta loro, così il
+  // riquadro del QR non le copre mai.
+  const masksWidth = Math.round(Math.min(width * 0.46, inside * 1.42));
+  const artWidth = Math.round(masksWidth / 0.64);
+  const artHeight = Math.round((artWidth * 720) / 1600);
   return (
     <View style={[styles.cover, { height }]}>
-      <Image source={HERO} style={{ position: 'absolute', right: Math.round(width * 0.05), top: 0, height: inside, width: Math.round((inside * 1600) / 720) }} accessibilityIgnoresInvertColors />
-      <View style={{ flex: 1, padding: 16, justifyContent: 'space-between', gap: 8 }}>
+      <View style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: masksWidth, overflow: 'hidden', justifyContent: 'center' }}>
+        <Image source={HERO} style={{ position: 'absolute', right: 0, top: Math.round((inside - artHeight) / 2), width: artWidth, height: artHeight }} accessibilityIgnoresInvertColors />
+      </View>
+      <View style={{ flex: 1, padding: 16, marginRight: masksWidth, justifyContent: 'space-between', gap: 8 }}>
         {top}
         {code ? (
           <View style={styles.pill}>
             {url ? <QrCode value={url} size={qr} /> : null}
-            <View style={{ gap: 6, flexShrink: 1 }}>
+            <View style={{ gap: 6, flex: 1, minWidth: 0 }}>
               <T size={16} weight="800" color={colors.muted}>
                 Inquadra o scrivi il codice
               </T>
-              <Text accessibilityLabel={`Codice stanza ${code.split('').join(' ')}`} style={styles.code}>
+              <Text accessibilityLabel={`Codice stanza ${code.split('').join(' ')}`} numberOfLines={1} style={[styles.code, { fontSize: codeSize, lineHeight: Math.round(codeSize * 1.1) }]}>
                 {code}
               </Text>
-              <T size={26} weight="900" style={{ lineHeight: 30 }}>
+              <T size={26} weight="900">
                 {count ?? 0} al tavolo
               </T>
               <View style={{ flexDirection: 'row' }}>
@@ -65,6 +74,6 @@ export function Copertina({ width, height, top, code, url, count, avatars, notic
 
 const styles = StyleSheet.create({
   cover: { borderRadius: 30, borderWidth: OUTLINE, borderColor: colors.line, overflow: 'hidden', backgroundColor: colors.cover, boxShadow: `0px 7px 0px ${colors.line}`, marginBottom: 7 },
-  pill: { flexDirection: 'row', alignItems: 'center', gap: 22, alignSelf: 'flex-start', padding: 14, paddingRight: 26, borderRadius: 24, backgroundColor: colors.line },
-  code: { color: colors.accent, fontFamily: font.display, fontSize: 60, lineHeight: 66, letterSpacing: 4 },
+  pill: { flexDirection: 'row', alignItems: 'center', gap: 18, alignSelf: 'stretch', padding: 14, paddingRight: 18, borderRadius: 24, backgroundColor: colors.line },
+  code: { color: colors.accent, fontFamily: font.display, letterSpacing: 4 },
 });

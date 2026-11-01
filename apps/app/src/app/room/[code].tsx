@@ -317,9 +317,9 @@ function Lobby({ snapshot, myId, isHost, tv, error, onExit, reconnecting }: {
       onRemoveBot={canBots && snapshot.bots > 0 ? () => send('setBots', { count: snapshot.bots - 1 }) : undefined}
     />
   );
-  const gameRow = <GameRow game={game} text={isHost ? (game ? 'Cambia gioco' : 'Scegli il gioco') : `${leader?.name ?? 'Il capotavola'} sta scegliendo il gioco…`} onPress={isHost ? () => setChoosing(true) : undefined} />;
+  const gameRow = <GameRow fill={big} game={game} text={isHost ? (game ? 'Cambia gioco' : 'Scegli il gioco') : `${leader?.name ?? 'Il capotavola'} sta scegliendo il gioco…`} onPress={isHost ? () => setChoosing(true) : undefined} />;
   const start = isHost ? (
-    <StartButton game={game} total={total} allowed={allowed} canStart={canStart} onChoose={() => setChoosing(true)} />
+    <StartButton fill={big} game={game} total={total} allowed={allowed} canStart={canStart} onChoose={() => setChoosing(true)} />
   ) : (
     <T center color={colors.muted} size={16}>
       La partita parte quando {leader?.name ?? 'il capotavola'} è pronto.
@@ -327,16 +327,16 @@ function Lobby({ snapshot, myId, isHost, tv, error, onExit, reconnecting }: {
   );
 
   if (big) {
-    const coverWidth = Math.min(width, 1100) - 32;
+    // Sulla TV si usa tutto lo schermo, dentro il margine di sicurezza del 5%.
+    const coverWidth = tv ? Math.round(width * 0.9) : Math.min(width, 1100) - 32;
     return (
       <Screen>
         <Copertina
           width={coverWidth}
-          height={Math.max(300, Math.min(380, Math.round(height * 0.46)))}
+          height={Math.max(360, Math.round(height * 0.5))}
           code={snapshot.code}
           url={url}
           count={total}
-          avatars={avatars}
           top={
             <Row gap={10}>
               <RoundButton icon="back" label="Esci dalla stanza" onPress={() => setLeaving(true)} />
@@ -346,9 +346,10 @@ function Lobby({ snapshot, myId, isHost, tv, error, onExit, reconnecting }: {
             </Row>
           }
         />
-        <View style={{ flexDirection: 'row', gap: 20, alignItems: 'stretch' }}>
-          <View style={{ flex: 2 }}>{seats}</View>
-          <View style={{ flex: 1, gap: 14, justifyContent: 'space-between' }}>
+        {/* Due colonne uguali e alla stessa altezza: a sinistra chi c'è, a destra cosa si gioca e il via. */}
+        <View style={{ flexDirection: 'row', gap: 16, alignItems: 'stretch' }}>
+          <View style={{ flex: 1 }}>{seats}</View>
+          <View style={{ flex: 1, gap: 12 }}>
             {gameRow}
             {start}
           </View>
@@ -407,7 +408,7 @@ function needed(meta: GameMeta, total: number) {
 }
 
 /** Il gioco scelto, in cima alla stanza: chi comanda lo cambia con un tocco. */
-function GameRow({ game, text, onPress }: { game?: { meta: GameMeta }; text: string; onPress?: () => void }) {
+function GameRow({ game, text, onPress, fill }: { game?: { meta: GameMeta }; text: string; onPress?: () => void; fill?: boolean }) {
   const art = game ? GAME_ART[game.meta.id] : null;
   return (
     <Pressable
@@ -418,7 +419,7 @@ function GameRow({ game, text, onPress }: { game?: { meta: GameMeta }; text: str
         tap();
         onPress?.();
       }}
-      style={(state) => [styles.gameRow, { transform: [{ translateY: (state as { pressed: boolean }).pressed ? 3 : 0 }] }, focusRing((state as { focused?: boolean }).focused ?? false)]}
+      style={(state) => [styles.gameRow, fill && styles.fill, { transform: [{ translateY: (state as { pressed: boolean }).pressed ? 3 : 0 }] }, focusRing((state as { focused?: boolean }).focused ?? false)]}
     >
       {art ? <Image source={art} style={styles.gameArt} accessibilityIgnoresInvertColors /> : null}
       <View style={{ flex: 1, minWidth: 0 }}>
@@ -434,12 +435,14 @@ function GameRow({ game, text, onPress }: { game?: { meta: GameMeta }; text: str
 }
 
 /** Il bottone del via: quando manca qualcosa dice cosa, così non serve spiegare altro. */
-function StartButton({ game, total, allowed, canStart, onChoose }: { game?: { meta: GameMeta }; total: number; allowed: number[]; canStart: boolean; onChoose: () => void }) {
-  if (!game) return <Button label="Scegli il gioco" onPress={onChoose} />;
+function StartButton({ game, total, allowed, canStart, onChoose, fill }: { game?: { meta: GameMeta }; total: number; allowed: number[]; canStart: boolean; onChoose: () => void; fill?: boolean }) {
+  const size = fill ? styles.fill : undefined;
+  if (!game) return <Button label="Scegli il gioco" style={size} onPress={onChoose} />;
   if (canStart)
     return (
       <Button
         label="Si gioca!"
+        style={size}
         onPress={() => {
           setSettings({ ...getSettings(), lastGame: game.meta.id });
           send('start');
@@ -449,9 +452,9 @@ function StartButton({ game, total, allowed, canStart, onChoose }: { game?: { me
   const next = allowed.find((n) => n > total);
   const missing = next === undefined ? null : next - total;
   return (
-    <View style={styles.waiting} accessibilityLiveRegion="polite">
+    <View style={[styles.waiting, size]} accessibilityLiveRegion="polite">
       <T size={22} weight="900" center>
-        {missing === null ? `Troppi: massimo ${allowed[allowed.length - 1]}` : `Serve${missing === 1 ? '' : 'no'} ancora ${missing} giocator${missing === 1 ? 'e' : 'i'}`}
+        {missing === null ? `Troppi: massimo ${allowed[allowed.length - 1]}` : `${missing === 1 ? 'Serve' : 'Servono'} ancora ${missing} giocator${missing === 1 ? 'e' : 'i'}`}
       </T>
     </View>
   );
@@ -488,15 +491,18 @@ function TableSeats({ big, total, maxPlayers, players, botNames, botLevels, avat
   onAddBot?: () => void;
   onRemoveBot?: () => void;
 }) {
-  const size = big ? 84 : 66;
+  const { height } = useWindowDimensions();
+  const size = big ? Math.max(84, Math.round(height * 0.12)) : 66;
   const row = 4;
   const tiles = (onAddBot ? 1 : 0) + (onRemoveBot ? 1 : 0);
   const free = Math.max(0, Math.min((maxPlayers ?? row) - total, row - total - tiles));
   return (
-    <View style={styles.seats}>
-      <T size={22} weight="900" color={colors.accent}>
-        {total} al tavolo
-      </T>
+    <View style={[styles.seats, big && styles.seatsBig]}>
+      {!big && (
+        <T size={22} weight="900" color={colors.accent}>
+          {total} al tavolo
+        </T>
+      )}
       <View style={styles.seatGrid}>
         {players.map((m, i) => (
           <PopIn key={m.id}>
@@ -563,6 +569,8 @@ function EmptySeat({ size, label, sign, a11y, onPress }: { size: number; label: 
 
 const styles = StyleSheet.create({
   seats: { backgroundColor: colors.surface, borderRadius: radius.l, borderWidth: 3, borderColor: colors.line, boxShadow: `0px 6px 0px ${colors.line}`, marginBottom: 6, paddingHorizontal: 14, paddingTop: 12, paddingBottom: 14, gap: 10 },
+  seatsBig: { flex: 1, justifyContent: 'center' },
+  fill: { flex: 1, marginBottom: 6 },
   seatGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, justifyContent: 'space-between' },
   seatCard: { alignItems: 'center', gap: 3 },
   invite: { alignItems: 'center', gap: 10, paddingHorizontal: 14, paddingTop: 12, paddingBottom: 14, borderRadius: radius.l, borderWidth: 3, borderColor: colors.line, backgroundColor: colors.cover, boxShadow: `0px 6px 0px ${colors.line}`, marginBottom: 6 },
