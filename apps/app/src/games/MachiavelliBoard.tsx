@@ -69,7 +69,7 @@ export function MachiavelliBoard({ view, me, names, myTurn, onMove }: BoardProps
     <TableBg table="teal">
       <CardTable
         me={me === null ? null : info(me)}
-        top={<TableTop corner={false} seats={othersOf(view.players, me).map(info)} />}
+        top={<TableTop seats={othersOf(view.players, me).map(info)} />}
         count={1}
         piles={(pileW) =>
           <Pressable

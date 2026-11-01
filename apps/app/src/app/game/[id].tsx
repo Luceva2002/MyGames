@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Image, Pressable, StyleSheet, TextInput, useWindowDimensions, View } from 'react-native';
+import { Image, Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { GAME_ART } from '../../ui/art';
 import { getSettings, setSettings } from '../../ui/settings';
 import { router, useLocalSearchParams } from 'expo-router';
 import { assignAvatars, BOT_CHARACTERS, catalog, pickBots, playerCounts } from '@giochi/engine';
 import { CharacterAvatar } from '../../ui/avatars';
 import { CharacterPickerModal } from '../../ui/CharacterPicker';
+import { useIsTable } from '../../ui/device';
 import { LevelPicker } from '../../ui/LevelPicker';
 import { canPassAndPlay, setPendingMatch, type SeatConfig } from '../../session/local';
 import { quickRoom, useOnline } from '../../session/online';
@@ -23,7 +24,7 @@ export default function GameDetail() {
   const [masks, setMasks] = useState(() => pickBots(10, Math.random, [getSettings().avatar]).map((b) => b.name));
   const [picking, setPicking] = useState<number | null>(null);
   const online = useOnline();
-  const { width } = useWindowDimensions();
+  const isTable = useIsTable();
 
   useEffect(() => {
     loadNames().then((saved) => {
@@ -201,7 +202,7 @@ export default function GameDetail() {
           </View>
           {!canPassAndPlay(meta) && meta.maxPlayers >= 2 && (
             <T size={13} color={colors.muted}>
-              Qui ognuno ha carte o ruoli segreti: su questo dispositivo giochi contro il computer. Per giocare tra persone usa «Gioca con amici»: ognuno entra col suo telefono, anche solo dal browser.
+              Qui ognuno ha carte o ruoli segreti: su questo dispositivo giochi contro il computer. Per giocare tra persone usa «Multiplayer»: ognuno entra col suo telefono, anche solo dal browser.
             </T>
           )}
         </Panel>
@@ -210,14 +211,14 @@ export default function GameDetail() {
       {ready && (
         <View style={{ gap: 12 }}>
           {active.some((x) => x.bot) && <LevelPicker />}
-          <Button label="Gioca su questo dispositivo" icon="▶" onPress={startLocal} />
+          <Button label="Offline" icon="▶" onPress={startLocal} />
           <Button
-            label={online.status === 'connecting' ? 'Creo la stanza…' : 'Gioca con amici'}
-            icon="📱"
+            label={online.status === 'connecting' ? 'Creo la stanza…' : 'Multiplayer'}
+            icon={isTable ? '📺' : '📱'}
             kind="ghost"
             color={colors.text}
             onPress={async () => {
-              const code = await quickRoom(meta.id, width > 760);
+              const code = await quickRoom(meta.id, isTable);
               if (code) router.push({ pathname: '/room/[code]', params: { code } });
             }}
           />
@@ -253,11 +254,9 @@ const styles = StyleSheet.create({
   hero: { borderRadius: radius.l, padding: 16, flexDirection: 'row', alignItems: 'center', gap: 16, flexWrap: 'wrap', backgroundColor: colors.brand, borderWidth: 3, borderColor: colors.line, boxShadow: `0px 6px 0px ${colors.line}`, marginBottom: 6 },
   heroArt: { width: 140, height: 140, borderRadius: radius.m, borderWidth: 3, borderColor: colors.line },
   badge: { backgroundColor: '#0007', borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 },
-  count: { width: 56, height: 56, borderRadius: 28, borderWidth: 2, borderColor: colors.line, alignItems: 'center', justifyContent: 'center' },
   seatGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   seatCard: { width: '47%', maxWidth: 170, flexGrow: 1, alignItems: 'center', gap: 8, padding: 12, borderRadius: radius.m, backgroundColor: colors.surface2, borderWidth: 3, borderColor: colors.line },
   remove: { position: 'absolute', top: -8, right: -8, width: 30, height: 30, borderRadius: 15, backgroundColor: colors.accent2, borderWidth: 2, borderColor: colors.line, alignItems: 'center', justifyContent: 'center' },
   addTile: { alignSelf: 'stretch', minHeight: 64, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', borderRadius: radius.m, borderWidth: 3, borderStyle: 'dashed', borderColor: colors.dim },
   input: { alignSelf: 'stretch', textAlign: 'center', minHeight: 44, backgroundColor: colors.surface2, color: colors.text, borderRadius: radius.s, paddingHorizontal: 12, paddingVertical: 12, fontSize: 16, fontWeight: '600' },
-  toggle: { minHeight: 48, justifyContent: 'center', paddingHorizontal: 12, paddingVertical: 10, borderRadius: radius.s, borderWidth: 1.5, borderColor: colors.line },
 });

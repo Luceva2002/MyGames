@@ -11,7 +11,6 @@ import {
   canControl,
   getGame,
   narrate,
-  narrateCards,
   newSeed,
   pickBots,
   playerCounts,
@@ -26,7 +25,7 @@ import {
 } from '@giochi/engine';
 
 const BOT_DELAY_MS = 1300;
-/** Pausa minima fra due mosse del computer: sui telefoni la carta deve fare in tempo a viaggiare fino al tavolo. */
+/** Pausa minima fra due mosse del computer nei giochi di carte: la carta deve fare in tempo a viaggiare fino al tavolo. */
 const MIN_BOT_PAUSE_MS = 1400;
 const RECONNECT_SECONDS = 120;
 
@@ -206,7 +205,7 @@ export class TableRoom extends Room {
   private lastAction: LastAction | null = null;
   private tell(before: unknown, seat: number, move: unknown) {
     const text = this.game ? narrate(this.game.meta.id, before, this.state_, seat, move) : null;
-    if (text && this.game) this.lastAction = { seat, text, n: (this.lastAction?.n ?? 0) + 1, cards: narrateCards(this.game.meta.id, before, move) };
+    if (text && this.game) this.lastAction = { seat, text, n: (this.lastAction?.n ?? 0) + 1 };
   }
 
   private afterChange() {
@@ -239,7 +238,7 @@ export class TableRoom extends Room {
           return;
         }
         this.afterChange();
-      }, Math.max(MIN_BOT_PAUSE_MS, game.pause?.(this.state_) ?? BOT_DELAY_MS));
+      }, Math.max(game.meta.category === 'carte' ? MIN_BOT_PAUSE_MS : 0, game.pause?.(this.state_) ?? BOT_DELAY_MS));
     }
   }
 

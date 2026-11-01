@@ -11,25 +11,6 @@ export interface LastAction {
   text: string;
   /** Cambia a ogni mossa, anche se il testo è uguale. */
   n: number;
-  /** Le carte scoperte coinvolte (giocata, prese, calate, scartata), da mostrare in grande. */
-  cards?: Card[];
-}
-
-/** Le carte che tutti vedono in questa mossa, nell'ordine: prima quella giocata, poi le prese. */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function narrateCards(gameId: string, before: any, move: any): Card[] {
-  const ids: string[] = [];
-  if (gameId === 'scopa' && move.type === 'play') ids.push(move.card, ...(move.take ?? []));
-  else if ((gameId === 'briscola' || gameId === 'tresette') && move.card) ids.push(move.card);
-  else if (gameId === 'uno' && move.type === 'play') ids.push(move.card);
-  else if ((gameId === 'scala40' || gameId === 'burraco') && (move.type === 'meld' || move.type === 'attach')) ids.push(...move.cards);
-  else if ((gameId === 'scala40' || gameId === 'burraco') && move.type === 'discard') ids.push(move.card);
-  else if ((gameId === 'scala40' || gameId === 'burraco') && move.type === 'draw' && move.source === 'discard') {
-    const pile = before.discard;
-    const top = Array.isArray(pile) ? pile[pile.length - 1] : null;
-    if (top?.id) ids.push(top.id);
-  }
-  return ids.map((id) => findCard(before, id)).filter((c): c is Card => !!c).slice(0, 8);
 }
 
 /** Cerca una carta per id in tutto lo stato (mani, tavolo, mazzo…). */

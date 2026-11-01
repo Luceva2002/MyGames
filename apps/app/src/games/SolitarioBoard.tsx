@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { Pressable, ScrollView, useWindowDimensions, View } from 'react-native';
 import type { Card, SolitarioFrom, SolitarioMove, SolitarioTo, SolitarioView } from '@giochi/engine';
-import type { BoardProps } from './common';
+import { MENU_GAP, type BoardProps } from './common';
 import { CARD_RATIO, CardBack, CardGhost, DeckPile, NoCardZoom, PlayingCard } from '../ui/cards';
 import { Draggable, DropZone, type DragPayload } from '../ui/drag';
 import { Button, Row, T, tap } from '../ui/kit';
@@ -97,7 +97,7 @@ export function SolitarioBoard({ view, myTurn, onMove }: BoardProps<SolitarioVie
     <TableBg table="teal">
       {/* Nel solitario ogni tocco sposta le carte: niente lente. */}
       <NoCardZoom.Provider value>
-      <Row style={{ padding: 4, paddingTop: 8, justifyContent: 'center' }} gap={compact ? 4 : 6}>
+      <Row style={{ padding: 4, paddingTop: 8, paddingRight: MENU_GAP + 8, justifyContent: 'center' }} gap={compact ? 4 : 6}>
         <Pressable
           onPress={() => {
             tap();

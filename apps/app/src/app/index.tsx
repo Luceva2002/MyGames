@@ -1,16 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Image, Modal, Pressable, StyleSheet, TextInput, useWindowDimensions, View } from 'react-native';
+import { ActivityIndicator, Image, Pressable, StyleSheet, TextInput, useWindowDimensions, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { assignAvatars, catalog, CODE_LENGTH, normalizeCode, playerCounts, type Category, type CatalogEntry } from '@giochi/engine';
 import { createRoom, joinUrl, quickJoin, quickRoom, useOnline } from '../session/online';
-import { canPassAndPlay } from '../session/local';
 import { CharacterAvatar } from '../ui/avatars';
-import { PopIn } from '../ui/motion';
-import { LevelPicker } from '../ui/LevelPicker';
 import { useIsTable } from '../ui/device';
 import { QrCode } from '../ui/QrCode';
 import { GAME_ART, HERO } from '../ui/art';
-import { Chip, focusRing, Row, Screen, T, tap } from '../ui/kit';
+import { Chip, focusRing, Row, Screen, Sheet, SheetOption, T, tap } from '../ui/kit';
 import { CATEGORY_COLORS, colors, MIN_TOUCH, radius } from '../ui/theme';
 
 const CATEGORIES: { id: Category | 'all'; label: string }[] = [
@@ -117,10 +114,9 @@ async function startRoom(e: CatalogEntry, screen: boolean) {
 }
 
 /**
- * La scelta rapida di come giocare, sopra la home: due tocchi in tutto e si è al tavolo.
- * Online decide il dispositivo, senza domande: dal computer (o tablet, TV) lo schermo diventa il
- * tavolo e gli amici giocano dal telefono; dal telefono ognuno siede al tavolo col suo telefono.
- * Senza internet si gioca sempre: contro il computer o passandosi il dispositivo.
+ * Come si gioca, sopra la home: Offline o Multiplayer, un tocco e si è al tavolo.
+ * Il multiplayer decide dal dispositivo, senza domande: dal computer (o tablet, TV) lo schermo è il
+ * tavolo e gli amici giocano dal telefono; dal telefono ognuno gioca dal suo.
  */
 function QuickStart({ entry, onClose, isTable }: { entry: CatalogEntry | null; onClose: () => void; isTable: boolean }) {
   const online = useOnline();
@@ -128,86 +124,50 @@ function QuickStart({ entry, onClose, isTable }: { entry: CatalogEntry | null; o
   const art = e ? GAME_ART[e.meta.id] : null;
   const multi = !!e && e.meta.maxPlayers >= 2;
   const go = (fn: () => void) => () => {
-    tap();
     onClose();
     fn();
   };
+  const details = () => router.push({ pathname: '/game/[id]', params: { id: e!.meta.id } });
   const roomBusy = online.waking ? 'Sveglio le stanze…' : online.status === 'connecting' ? 'Creo la stanza…' : null;
   return (
-    <Modal visible={!!e} transparent animationType="fade" onRequestClose={onClose}>
-      <Pressable style={styles.sheetScrim} onPress={onClose} accessibilityLabel="Chiudi">
-        {e && (
-          <PopIn style={{ width: '100%', alignItems: 'center' }}>
-          <Pressable style={styles.sheet} onPress={() => {}} accessibilityViewIsModal>
-            <Row gap={12}>
-              {art ? <Image source={art} style={styles.sheetArt} accessibilityIgnoresInvertColors /> : null}
-              <View style={{ flex: 1, gap: 2 }}>
-                <T size={24} weight="900">
-                  {e.meta.name}
-                </T>
-                <T size={13} color={colors.muted} lines={2}>
-                  {e.meta.tagline}
-                </T>
-              </View>
-            </Row>
-            {multi && (
-              <>
-                <T size={14} weight="900" color={colors.muted}>
-                  CON GLI AMICI · ONLINE
-                </T>
-                <QuickOption
-                  icon={isTable ? '📺' : '📱'}
-                  title={roomBusy ?? (isTable ? 'Questo schermo è il tavolo' : 'Ognuno col suo telefono')}
-                  text={isTable ? 'Gli amici inquadrano il QR e giocano dal telefono' : 'Tutti al tavolo dal proprio telefono, senza schermo comune'}
-                  primary
-                  onPress={go(() => startRoom(e, isTable))}
-                />
-              </>
-            )}
-            {(!e.meta.humansOnly || (multi && canPassAndPlay(e.meta))) && (
-              <T size={14} weight="900" color={colors.muted}>
-                {multi ? 'SENZA INTERNET' : 'GIOCA'}
+    <Sheet visible={!!e} onClose={onClose}>
+      {e && (
+        <>
+          <Row gap={12}>
+            {art ? <Image source={art} style={styles.sheetArt} accessibilityIgnoresInvertColors /> : null}
+            <View style={{ flex: 1, gap: 2 }}>
+              <T size={24} weight="900">
+                {e.meta.name}
               </T>
-            )}
-            {!e.meta.humansOnly && <QuickOption icon="🤖" title={multi ? 'Contro il computer' : 'Gioca'} text="Parti subito, qui" primary={!multi} onPress={go(() => startVsComputer(e))} />}
-            {!e.meta.humansOnly && multi && <LevelPicker />}
-            {multi && canPassAndPlay(e.meta) && (
-              <QuickOption icon="🫶" title="Tutti su questo dispositivo" text={isTable ? 'Giocate a turno su questo schermo' : 'Vi passate il telefono a turno'} onPress={go(() => router.push({ pathname: '/game/[id]', params: { id: e.meta.id } }))} />
-            )}
-            <Pressable accessibilityRole="button" onPress={go(() => router.push({ pathname: '/game/[id]', params: { id: e.meta.id } }))} style={{ alignSelf: 'center', padding: 8 }}>
-              <T size={14} weight="800" color={colors.accent}>
-                Regole e più opzioni ›
+              <T size={13} color={colors.muted} lines={2}>
+                {e.meta.tagline}
               </T>
-            </Pressable>
+            </View>
+          </Row>
+          <SheetOption
+            icon="🤖"
+            title={multi ? 'Offline' : 'Gioca'}
+            text={e.meta.humansOnly ? 'Vi passate il telefono a turno' : multi ? 'Contro il computer, subito' : 'Parti subito, qui'}
+            primary={!multi}
+            onPress={go(() => (e.meta.humansOnly ? details() : startVsComputer(e)))}
+          />
+          {multi && (
+            <SheetOption
+              icon={isTable ? '📺' : '📱'}
+              title={roomBusy ?? 'Multiplayer'}
+              text={isTable ? 'Questo schermo è il tavolo: gli amici giocano dal telefono' : 'Ognuno gioca dal suo telefono, senza schermo comune'}
+              primary
+              onPress={go(() => startRoom(e, isTable))}
+            />
+          )}
+          <Pressable accessibilityRole="button" onPress={go(details)} style={{ alignSelf: 'center', padding: 8 }}>
+            <T size={14} weight="800" color={colors.accent}>
+              Regole, giocatori e bravura ›
+            </T>
           </Pressable>
-          </PopIn>
-        )}
-      </Pressable>
-    </Modal>
-  );
-}
-
-function QuickOption({ icon, title, text, primary, onPress }: { icon: string; title: string; text: string; primary?: boolean; onPress: () => void }) {
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={`${title}. ${text}`}
-      onPress={onPress}
-      style={(state) => [styles.quickOption, primary && { backgroundColor: colors.accent }, { transform: [{ translateY: (state as { pressed: boolean }).pressed ? 3 : 0 }] }, focusRing((state as { focused?: boolean }).focused ?? false)]}
-    >
-      <T size={26}>{icon}</T>
-      <View style={{ flex: 1 }}>
-        <T size={17} weight="900" color={primary ? colors.onAccent : colors.text}>
-          {title}
-        </T>
-        <T size={13} weight="700" color={primary ? colors.onAccent : colors.muted}>
-          {text}
-        </T>
-      </View>
-      <T size={20} weight="900" color={primary ? colors.onAccent : colors.accent}>
-        ›
-      </T>
-    </Pressable>
+        </>
+      )}
+    </Sheet>
   );
 }
 
@@ -389,10 +349,7 @@ const styles = StyleSheet.create({
   wordmark: { textShadowColor: colors.line, textShadowOffset: { width: 0, height: 5 }, textShadowRadius: 0 },
   gear: { width: MIN_TOUCH, height: MIN_TOUCH, borderRadius: MIN_TOUCH / 2, backgroundColor: colors.scrim, alignItems: 'center', justifyContent: 'center' },
   tile: { backgroundColor: colors.surface, borderRadius: radius.l, overflow: 'hidden', borderWidth: 3, borderColor: colors.line, marginBottom: 6 },
-  sheetScrim: { flex: 1, backgroundColor: colors.scrim, justifyContent: 'center', alignItems: 'center', padding: 16 },
-  sheet: { width: '100%', maxWidth: 460, gap: 10, padding: 18, borderRadius: 28, backgroundColor: colors.surface, borderWidth: 3, borderColor: colors.line, boxShadow: `0px 8px 0px ${colors.line}` },
   sheetArt: { width: 64, height: 64, borderRadius: 16, borderWidth: 3, borderColor: colors.line },
-  quickOption: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 64, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 18, borderWidth: 3, borderColor: colors.line, backgroundColor: colors.surface2, boxShadow: `0px 4px 0px ${colors.line}` },
   joinBar: { backgroundColor: '#FFFFFF', boxShadow: `0px 6px 0px ${colors.line}` },
   codeInput: { width: 116, minHeight: 46, paddingHorizontal: 10, borderRadius: 12, borderWidth: 3, borderColor: colors.line, backgroundColor: '#F4F0FF', color: colors.onAccent, fontSize: 22, fontWeight: '900', letterSpacing: 5, textAlign: 'center' },
   players: { position: 'absolute', bottom: 8, left: 8, backgroundColor: colors.scrim, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 },

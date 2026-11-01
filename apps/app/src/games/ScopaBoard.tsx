@@ -140,13 +140,14 @@ export function ScopaBoard({ view, me, names, myTurn, onMove }: BoardProps<Scopa
         eventKey={last ? `${last.seat}-${last.card.id}` : null}
         text={last?.scopa ? '+1 scopa!' : last && [last.card, ...last.taken].some((c) => c.suit === 'd' && c.rank === 7) && last.taken.length ? 'Settebello!' : null}
       />
+      <MyCorner info={me === null ? null : info(me)} />
       {me !== null && (
         <>
           <Hand
             cards={view.hand}
             width={handWidth}
             selected={selected}
-            onPress={myTurn ? (c) => setSelected(c.id === selected ? null : c.id) : undefined}
+            onPress={myTurn ? (c) => (c.id === selected ? setSelected(null) : dropCard(c.id)) : undefined}
             drag={myTurn ? (c) => ({ kind: 'hand', ids: [c.id] }) : undefined}
             onLift={(c, lifted) => {
               if (lifted) setSelected(c.id);
@@ -155,8 +156,8 @@ export function ScopaBoard({ view, me, names, myTurn, onMove }: BoardProps<Scopa
             }}
           />
           <View style={{ minHeight: 44, padding: 4, gap: 8, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center' }}>
-            {card && options.length === 0 && <Button small label="Cala la carta" onPress={() => onMove({ type: 'play', card: card.id })} />}
             {card &&
+              options.length > 1 &&
               options.map((opt) => (
                 <Button
                   key={opt.map((c) => c.id).join()}
@@ -165,11 +166,10 @@ export function ScopaBoard({ view, me, names, myTurn, onMove }: BoardProps<Scopa
                   onPress={() => onMove({ type: 'play', card: card.id, take: opt.map((c) => c.id) })}
                 />
               ))}
-            {!card && myTurn && <T color={colors.muted}>Trascina una carta sul tavolo, o toccala</T>}
+            {!card && myTurn && <T color={colors.muted}>Tocca una carta per giocarla</T>}
           </View>
         </>
       )}
-      <MyCorner info={me === null ? null : info(me)} />
     </TableBg>
   );
 }

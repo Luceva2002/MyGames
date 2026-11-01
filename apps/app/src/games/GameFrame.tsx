@@ -5,7 +5,7 @@ import { BOARDS } from './registry';
 import { GAME_ART } from '../ui/art';
 import { BotFigure, SeatAvatar, SeatAvatars } from '../ui/avatars';
 import { botByName } from '@giochi/engine';
-import { Button, Confirm, focusRing, PlayerTag, Row, T, tap } from '../ui/kit';
+import { Button, Confirm, focusRing, PlayerTag, Row, Sheet, SheetOption, T, tap } from '../ui/kit';
 import { DragProvider } from '../ui/drag';
 import { CardZoomLayer } from '../ui/cards';
 import { AnchorProvider, PopIn } from '../ui/motion';
@@ -14,11 +14,11 @@ import { setSettings, TvContext, useSettings } from '../ui/settings';
 import { colors, MIN_TOUCH, radius, seatColor } from '../ui/theme';
 
 /**
- * Guscio comune a ogni partita (P-SHELL-3): il tavolo a tutta altezza, un bottoncino di menu
- * nell'angolo (uscita confermata, regole, suoni), la striscia con l'ultima mossa degli altri;
+ * Guscio comune a ogni partita (P-SHELL-3): il tavolo a tutta altezza, il bottone del menu in alto
+ * a destra (regole, suoni, rivincita, uscita confermata), la striscia con l'ultima mossa degli altri;
  * regole, errori, attesa di rete e risultati.
  */
-export function GameFrame({ meta, view, me, names, avatars, myTurn, active, onMove, result, error, onExit, onRestart, overlay, headerRight, tv, pending, lastAction }: {
+export function GameFrame({ meta, view, me, names, avatars, myTurn, active, onMove, result, error, onExit, onRestart, onChangeGame, overlay, roomCode, tv, pending, lastAction }: {
   meta: GameMeta;
   view: unknown;
   me: Seat | null;
@@ -35,8 +35,11 @@ export function GameFrame({ meta, view, me, names, avatars, myTurn, active, onMo
   error: string | null;
   onExit: () => void;
   onRestart?: () => void;
+  /** Solo per chi comanda la stanza: si torna alla scelta del gioco. */
+  onChangeGame?: () => void;
   overlay?: ReactNode;
-  headerRight?: ReactNode;
+  /** Il codice della stanza, se si gioca online. */
+  roomCode?: string;
   /** Schermo condiviso: testi grandi, margini TV, niente carte segrete. */
   tv?: boolean;
   /** Mossa inviata al server e non ancora confermata (V-FB-2). */
@@ -45,6 +48,7 @@ export function GameFrame({ meta, view, me, names, avatars, myTurn, active, onMo
   const Board = BOARDS[meta.id];
   const [rules, setRules] = useState(false);
   const [leaving, setLeaving] = useState(false);
+  const [restarting, setRestarting] = useState(false);
   const [dismissed, setDismissed] = useState(false);
   // A fine partita il tavolo resta visibile qualche istante: si vede l'ultima mossa (la presa,
   // la freccetta, la biglia in buca) prima che arrivi il riepilogo con chi ha vinto.
@@ -84,9 +88,9 @@ export function GameFrame({ meta, view, me, names, avatars, myTurn, active, onMo
             {Board ? <Board view={view} me={me} names={names} myTurn={myTurn && !pending} onMove={onMove} /> : <T>Interfaccia non disponibile.</T>}
           </DragProvider>
           </CardZoomLayer>
-          <ActionStrip action={lastAction ?? null} me={me} names={names} />
+          <ActionStrip action={lastAction ?? null} me={me} names={names} low={meta.category !== 'carte'} />
         </View>
-        <GameMenu name={meta.name} headerRight={headerRight} onExit={() => setLeaving(true)} onRules={() => setRules(true)} />
+        <GameMenu meta={meta} roomCode={roomCode} onRules={() => setRules(true)} onRestart={onRestart && !result ? () => setRestarting(true) : undefined} onChangeGame={onChangeGame} onExit={() => setLeaving(true)} />
         {pending && (
           <View style={styles.pending} accessibilityLiveRegion="polite">
             <ActivityIndicator color={colors.onAccent} />
@@ -197,6 +201,19 @@ export function GameFrame({ meta, view, me, names, avatars, myTurn, active, onMo
             onExit();
           }}
         />
+        {onRestart && (
+          <Confirm
+            visible={restarting}
+            title="Vuoi ricominciare?"
+            message="La partita in corso andrà persa."
+            confirmLabel="Ricomincia"
+            onCancel={() => setRestarting(false)}
+            onConfirm={() => {
+              setRestarting(false);
+              onRestart();
+            }}
+          />
+        )}
       </View>
       </AnchorProvider>
     </SeatAvatars.Provider>
@@ -205,14 +222,14 @@ export function GameFrame({ meta, view, me, names, avatars, myTurn, active, onMo
 }
 
 /**
- * Il menu della partita: un bottoncino tondo nell'angolo in alto a sinistra che apre un piccolo
- * riquadro con Esci, Regole e Suoni. Così il tavolo usa tutta l'altezza dello schermo.
+ * Il menu della partita: un bottone tondo ben visibile in alto a destra che apre la stessa finestra
+ * della scelta «come giochiamo», con le voci grandi: regole, suoni, rivincita, uscita.
  */
-function GameMenu({ name, headerRight, onExit, onRules }: { name: string; headerRight?: ReactNode; onExit: () => void; onRules: () => void }) {
+function GameMenu({ meta, roomCode, onRules, onRestart, onChangeGame, onExit }: { meta: GameMeta; roomCode?: string; onRules: () => void; onRestart?: () => void; onChangeGame?: () => void; onExit: () => void }) {
   const [open, setOpen] = useState(false);
   const settings = useSettings();
+  const art = GAME_ART[meta.id];
   const pick = (f: () => void) => () => {
-    tap();
     setOpen(false);
     f();
   };
@@ -221,58 +238,38 @@ function GameMenu({ name, headerRight, onExit, onRules }: { name: string; header
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="Menu della partita"
-        hitSlop={(MIN_TOUCH - 34) / 2}
         onPress={() => {
           tap();
           setOpen(true);
         }}
-        style={(state) => [styles.menuButton, state.pressed && { backgroundColor: 'rgba(18,5,43,0.85)' }, focusRing((state as { focused?: boolean }).focused ?? false)]}
+        style={(state) => [styles.menuButton, { transform: [{ translateY: state.pressed ? 2 : 0 }] }, focusRing((state as { focused?: boolean }).focused ?? false)]}
       >
-        <T size={15} weight="900" color="#ffffffdd">
+        <T size={22} weight="800" color={colors.text}>
           ☰
         </T>
       </Pressable>
-      <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
-        <Pressable style={styles.menuScrim} onPress={() => setOpen(false)} accessibilityLabel="Chiudi il menu">
-          <Pressable style={styles.menu} accessibilityViewIsModal onPress={() => {}}>
-            <T size={14} weight="900" color={colors.muted} lines={1} style={{ paddingHorizontal: 10, paddingBottom: 4 }}>
-              {name}
+      <Sheet visible={open} onClose={() => setOpen(false)}>
+        <Row gap={12}>
+          {art ? <Image source={art} style={styles.menuArt} accessibilityIgnoresInvertColors /> : null}
+          <View style={{ flex: 1, gap: 2 }}>
+            <T size={24} weight="900" lines={1}>
+              {meta.name}
             </T>
-            <MenuItem glyph="?" label="Regole" onPress={pick(onRules)} />
-            <MenuItem
-              glyph={settings.sound ? '🔊' : '🔇'}
-              label={settings.sound ? 'Suoni: sì' : 'Suoni: no'}
-              onPress={() => {
-                tap();
-                setSettings({ ...settings, sound: !settings.sound });
-              }}
-            />
-            {headerRight ? <View style={{ paddingHorizontal: 6, paddingVertical: 4 }}>{headerRight}</View> : null}
-            <MenuItem glyph="✕" label="Esci dalla partita" onPress={pick(onExit)} />
-          </Pressable>
-        </Pressable>
-      </Modal>
+            {roomCode ? (
+              <T size={13} weight="800" color={colors.muted}>
+                Stanza {roomCode}
+              </T>
+            ) : null}
+          </View>
+        </Row>
+        <SheetOption icon="▶" title="Continua a giocare" primary chevron={false} onPress={() => setOpen(false)} />
+        <SheetOption icon="📖" title="Regole" onPress={pick(onRules)} />
+        <SheetOption icon={settings.sound ? '🔊' : '🔇'} title={settings.sound ? 'Suoni: sì' : 'Suoni: no'} chevron={false} onPress={() => setSettings({ ...settings, sound: !settings.sound })} />
+        {onRestart && <SheetOption icon="↻" title="Ricomincia" onPress={pick(onRestart)} />}
+        {onChangeGame && <SheetOption icon="⇄" title="Cambia gioco" onPress={pick(onChangeGame)} />}
+        <SheetOption icon="✕" title="Esci dalla partita" onPress={pick(onExit)} />
+      </Sheet>
     </>
-  );
-}
-
-function MenuItem({ glyph, label, onPress }: { glyph: string; label: string; onPress: () => void }) {
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      onPress={onPress}
-      style={(state) => [styles.menuItem, (state.pressed || (state as { hovered?: boolean }).hovered) && { backgroundColor: colors.surface2 }, focusRing((state as { focused?: boolean }).focused ?? false)]}
-    >
-      <View style={{ width: 24, alignItems: 'center' }}>
-        <T size={16} weight="900">
-          {glyph}
-        </T>
-      </View>
-      <T size={15} weight="800">
-        {label}
-      </T>
-    </Pressable>
   );
 }
 
@@ -311,14 +308,13 @@ function TurnPill({ active, names, me, myTurn }: { active: Seat[]; names: string
 }
 
 /**
- * Cosa ha appena fatto un avversario, in una riga sola appoggiata sul bordo alto del tavolo: icona,
- * nome e mossa ("Pulcinella gioca 7 di denari e prende 2 carte"). Le mie mosse non si ripetono.
+ * Cosa ha appena fatto un avversario, in una riga sola sul bordo del tavolo: icona, nome e mossa ("Pulcinella gioca 7 di denari e prende 2 carte"). Le mie mosse non si ripetono.
  */
-function ActionStrip({ action, me, names }: { action: LastAction | null; me: Seat | null; names: string[] }) {
+function ActionStrip({ action, me, names, low }: { action: LastAction | null; me: Seat | null; names: string[]; /** In basso: nei giochi senza carte in alto stanno i punteggi. */ low?: boolean }) {
   if (!action || action.seat === me) return null;
   const text = action.text.replace(/%v(\d+)/g, (_, n) => (Number(n) === me ? 'te' : names[Number(n)] ?? ''));
   return (
-    <PopIn key={action.n} style={styles.stripWrap} pointerEvents="none">
+    <PopIn key={action.n} style={[styles.stripWrap, low ? styles.stripLow : styles.stripHigh]} pointerEvents="none">
       <View style={styles.strip} accessibilityLiveRegion="polite" accessibilityLabel={`${names[action.seat]} ${text}`}>
         <SeatAvatar seat={action.seat} name={names[action.seat]} size={18} />
         <T size={12} weight="800" lines={1} style={{ flexShrink: 1 }}>
@@ -352,15 +348,14 @@ export function HandoffCurtain({ seat, name, onReady }: { seat: Seat; name: stri
 }
 
 const styles = StyleSheet.create({
-  // La striscia delle mosse sta sul bordo alto del tavolo, fra il bottone del menu e l'angolo opposto.
-  stripWrap: { position: 'absolute', top: 2, left: 52, right: 52, alignItems: 'center', zIndex: 30 },
+  // La striscia delle mosse sta sul bordo alto del tavolo, a sinistra del bottone del menu.
+  stripWrap: { position: 'absolute', left: 12, alignItems: 'center', zIndex: 30 },
+  stripHigh: { top: 2, right: MIN_TOUCH + 18 },
+  stripLow: { bottom: 4, right: 12 },
   strip: { flexDirection: 'row', alignItems: 'center', gap: 5, maxWidth: '100%', paddingVertical: 2, paddingLeft: 2, paddingRight: 10, borderRadius: 999, backgroundColor: 'rgba(18,5,43,0.78)' },
   tvSafe: { paddingHorizontal: '5%', paddingVertical: '2.5%' },
-  // Il bottone del menu: piccolo e tondo, sull'angolo del tavolo. L'area di tocco resta di 44 punti.
-  menuButton: { position: 'absolute', top: 6, left: 6, width: 34, height: 34, borderRadius: 17, backgroundColor: 'rgba(18,5,43,0.7)', alignItems: 'center', justifyContent: 'center', zIndex: 60 },
-  menuScrim: { flex: 1, backgroundColor: 'rgba(10,3,25,0.35)' },
-  menu: { position: 'absolute', top: 44, left: 8, minWidth: 220, padding: 8, gap: 2, borderRadius: 18, backgroundColor: colors.surface, borderWidth: 2, borderColor: colors.line, boxShadow: '0px 10px 30px rgba(0,0,0,0.45)' },
-  menuItem: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: MIN_TOUCH, paddingHorizontal: 10, borderRadius: 12 },
+  menuButton: { position: 'absolute', top: 6, right: 6, width: MIN_TOUCH, height: MIN_TOUCH, borderRadius: MIN_TOUCH / 2, backgroundColor: colors.surface, borderWidth: 3, borderColor: colors.line, boxShadow: `0px 3px 0px ${colors.line}`, alignItems: 'center', justifyContent: 'center', zIndex: 60 },
+  menuArt: { width: 64, height: 64, borderRadius: 16, borderWidth: 3, borderColor: colors.line },
   pill: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999, backgroundColor: colors.surface, borderWidth: 3, borderColor: colors.line, flexShrink: 0, boxShadow: `0px 4px 0px ${colors.line}` },
   pending: { position: 'absolute', bottom: 24, alignSelf: 'center', flexDirection: 'row', gap: 8, alignItems: 'center', backgroundColor: colors.accent, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 999 },
   toast: { position: 'absolute', top: 80, alignSelf: 'center', backgroundColor: colors.danger, paddingHorizontal: 18, paddingVertical: 12, borderRadius: 999, maxWidth: '90%' },

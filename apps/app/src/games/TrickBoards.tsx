@@ -88,7 +88,7 @@ function TrickTable({ players, plays, names, width, winner, me, turn }: { player
 function useDeckSpot() {
   const { width } = useWindowDimensions();
   const narrow = width < 600;
-  return { narrow, style: narrow ? { position: 'relative' as const, alignSelf: 'flex-start' as const, marginLeft: 4 } : { position: 'absolute' as const, top: 8, right: 8 }, w: narrow ? 46 : 60 };
+  return { narrow, style: narrow ? { position: 'relative' as const, alignSelf: 'flex-start' as const, marginLeft: 4 } : { position: 'absolute' as const, top: 52, right: 8 }, w: narrow ? 46 : 60 };
 }
 
 /** Il tavolo come zona dove lasciare la carta giocata. */
@@ -164,9 +164,9 @@ export function BriscolaBoard({ view, me, names, myTurn, onMove }: BoardProps<Br
       </Felt>
       </TableDrop>
       <EventSticker eventKey={view.lastTrick ? `${view.lastTrick.winner}-${view.lastTrick.plays[0].card.id}` : null} text={briscolaSticker(view, me, names)} />
+      <MyCorner info={me === null ? null : binfo(me)} />
       {me !== null && <Hand cards={view.hand} width={handWidth} onPress={myTurn ? (c) => onMove({ card: c.id }) : undefined} drag={myTurn ? dragFromHand : undefined} />}
       <View style={{ height: 12 }} />
-      <MyCorner info={me === null ? null : binfo(me)} />
     </TableBg>
   );
 }
@@ -216,9 +216,9 @@ export function TresetteBoard({ view, me, names, myTurn, onMove }: BoardProps<Tr
         )}
       </Felt>
       </TableDrop>
+      <MyCorner info={me === null ? null : tinfo(me)} />
       {me !== null && <Hand cards={view.hand} width={handWidth} playable={myTurn ? view.playable : undefined} onPress={myTurn ? (c) => onMove({ type: 'play', card: c.id }) : undefined} drag={myTurn ? dragFromHand : undefined} />}
       <View style={{ height: 12 }} />
-      <MyCorner info={me === null ? null : tinfo(me)} />
     </TableBg>
   );
 }

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { getSettings } from '../ui/settings';
-import { applyMove, assignAvatars, botMove, getGame, narrate, narrateCards, newSeed, type Game, type LastAction, type Seat } from '@giochi/engine';
+import { applyMove, assignAvatars, botMove, getGame, narrate, newSeed, type Game, type LastAction, type Seat } from '@giochi/engine';
 
 export interface SeatConfig {
   name: string;
@@ -50,7 +50,7 @@ export function useLocalMatch(config: MatchConfig) {
   const [lastAction, setLastAction] = useState<LastAction | null>(null);
   const tell = (before: unknown, after: unknown, seat: Seat, move: unknown) => {
     const text = narrate(config.gameId, before, after, seat, move);
-    if (text) setLastAction((a) => ({ seat, text, n: (a?.n ?? 0) + 1, cards: narrateCards(config.gameId, before, move) }));
+    if (text) setLastAction((a) => ({ seat, text, n: (a?.n ?? 0) + 1 }));
   };
   const humans = useMemo(() => config.seats.flatMap((s, i) => (s.bot ? [] : [i])), [config.seats]);
   const isBot = useCallback((seat: Seat) => config.seats[seat]?.bot ?? false, [config.seats]);
@@ -80,7 +80,7 @@ export function useLocalMatch(config: MatchConfig) {
       const next = applyMove(game, current, bot, move);
       tell(current, next, bot, move);
       setState(next);
-    }, Math.max(MIN_BOT_PAUSE, game.pause?.(state) ?? BOT_DELAY));
+    }, Math.max(game.meta.category === 'carte' ? MIN_BOT_PAUSE : 0, game.pause?.(state) ?? BOT_DELAY));
     return () => clearTimeout(timer);
   }, [state]); // eslint-disable-line react-hooks/exhaustive-deps
 

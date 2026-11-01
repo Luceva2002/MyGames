@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { checkMeld, meldPoints40, SCALA40_RULES, type Card, type Scala40Move, type Scala40View , type Seat } from '@giochi/engine';
 import { Banner, MyCorner, othersOf, PileTop, Slot, TableTop, useCardWidth, type BoardProps, type SeatInfo } from './common';
 import { CardsSummaryTable } from './summary';
@@ -66,12 +66,12 @@ export function Scala40Board({ view, me, names, myTurn, onMove }: BoardProps<Sca
   let banner = myTurn ? (view.phase === 'draw' ? 'Pesca dal mazzo o prendi lo scarto' : view.mustUse ? 'Usa la carta presa dagli scarti' : opened ? 'Cala, attacca o scarta' : 'Prepara l’apertura (40 punti) o scarta') : `Tocca a ${names[view.turn]}`;
   if (view.last && !myTurn) banner += ` · ${names[view.turn]} ${view.last}`;
 
-  const info = (seat: Seat): SeatInfo => ({ seat, name: names[seat] + (view.out[seat] ? ' · fuori' : view.opened[seat] ? ' · aperto' : ''), active: view.turn === seat, cards: view.out[seat] ? 0 : view.handCounts[seat], deck: 'fr', score: view.scores[seat], scoreLabel: 'punti' });
+  const info = (seat: Seat): SeatInfo => ({ seat, name: names[seat] + (view.out[seat] ? ' · fuori' : view.opened[seat] ? ' · aperto' : ''), active: view.turn === seat, cards: view.out[seat] ? 0 : view.handCounts[seat], deck: 'fr', drawFrom: view.last?.includes('scart') ? 'discard' : 'deck', score: view.scores[seat], scoreLabel: 'punti' });
   return (
     <TableBg table="teal">
       <CardTable
         me={me === null ? null : info(me)}
-        top={<TableTop corner={false} seats={othersOf(view.players, me).map(info)} />}
+        top={<TableTop seats={othersOf(view.players, me).map(info)} />}
         count={2}
         piles={(pileW) =>
           <>
@@ -99,6 +99,7 @@ export function Scala40Board({ view, me, names, myTurn, onMove }: BoardProps<Sca
             >
               <DropZone id="discard" radius={8} inset={4} accepts={(p) => playing && p.kind === 'hand' && p.ids.length === 1 && !staged.length} onDrop={(p) => onMove({ type: 'discard', card: p.ids[0] })}>
                 <Slot width={pileW + 6} ratio={1.45} label="SCARTI" glow={drawing && view.discardTop ? colors.accent3 : undefined}>
+                  <Anchor id="discard" style={StyleSheet.absoluteFill} />
                   {view.discardTop ? (
                     // Quando tocca a me pescare, il tocco prende lo scarto; altrimenti la carta si ingrandisce.
                     <NoCardZoom.Provider value={drawing}>

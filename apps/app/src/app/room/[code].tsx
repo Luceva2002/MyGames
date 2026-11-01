@@ -20,7 +20,6 @@ import { colors, font, MIN_TOUCH, radius } from '../../ui/theme';
 
 export default function RoomScreen() {
   useStayAwake();
-  const winW = useWindowDimensions().width;
   const online = useOnline();
   const { snapshot, seatView, room } = online;
 
@@ -112,17 +111,8 @@ export default function RoomScreen() {
           onExit={exit}
           onRestart={isHost ? () => send('restart') : undefined}
           tv={tv}
-          headerRight={
-            // Sul telefono la barra è stretta: niente codice e solo l'icona per cambiare gioco.
-            <Row gap={8}>
-              {winW > 600 && (
-                <T size={14} weight="900" color={colors.muted}>
-                  {snapshot.code}
-                </T>
-              )}
-              {isHost && <Button small kind="ghost" color={colors.muted} label={winW > 600 ? 'Cambia gioco' : '⇄'} a11y="Cambia gioco" onPress={() => send('toLobby')} />}
-            </Row>
-          }
+          roomCode={snapshot.code}
+          onChangeGame={isHost ? () => send('toLobby') : undefined}
           overlay={reconnecting}
         />
       </Screen>

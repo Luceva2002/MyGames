@@ -165,6 +165,51 @@ export function Row({ children, gap = 8, style, wrap }: { children: ReactNode; g
   return <View style={[{ flexDirection: 'row', alignItems: 'center', gap, flexWrap: wrap ? 'wrap' : 'nowrap' }, style]}>{children}</View>;
 }
 
+/** La finestra di scelta al centro dello schermo: la stessa per «come giochiamo» e per il menu della partita. */
+export function Sheet({ visible, onClose, children }: { visible: boolean; onClose: () => void; children: ReactNode }) {
+  return (
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+      <Pressable style={styles.scrim} onPress={onClose} accessibilityLabel="Chiudi">
+        <Pressable style={styles.sheet} onPress={() => {}} accessibilityViewIsModal>
+          {children}
+        </Pressable>
+      </Pressable>
+    </Modal>
+  );
+}
+
+/** Una scelta della finestra: icona, titolo e, se serve, una riga di spiegazione. */
+export function SheetOption({ icon, title, text, primary, chevron = true, onPress }: { icon: string; title: string; text?: string; primary?: boolean; chevron?: boolean; onPress: () => void }) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={text ? `${title}. ${text}` : title}
+      onPress={() => {
+        tap();
+        onPress();
+      }}
+      style={(state) => [styles.sheetOption, primary && { backgroundColor: colors.accent }, { transform: [{ translateY: state.pressed ? 3 : 0 }] }, focusRing((state as { focused?: boolean }).focused ?? false)]}
+    >
+      <T size={26}>{icon}</T>
+      <View style={{ flex: 1 }}>
+        <T size={17} weight="900" color={primary ? colors.onAccent : colors.text}>
+          {title}
+        </T>
+        {text ? (
+          <T size={13} weight="700" color={primary ? colors.onAccent : colors.muted}>
+            {text}
+          </T>
+        ) : null}
+      </View>
+      {chevron && (
+        <T size={20} weight="900" color={primary ? colors.onAccent : colors.accent}>
+          ›
+        </T>
+      )}
+    </Pressable>
+  );
+}
+
 /** Conferma per le azioni distruttive, come uscire dalla partita (V-IN-4). */
 export function Confirm({ visible, title, message, confirmLabel, onConfirm, onCancel }: {
   visible: boolean;
@@ -199,6 +244,8 @@ const styles = StyleSheet.create({
   buttonSmall: { minHeight: MIN_TOUCH, paddingVertical: 10, paddingHorizontal: 16 },
   chip: { minHeight: MIN_TOUCH - 4, justifyContent: 'center', paddingVertical: 8, paddingHorizontal: 16, borderRadius: 999, borderWidth: OUTLINE, borderColor: colors.line, backgroundColor: colors.surface },
   panel: { backgroundColor: colors.surface, borderRadius: radius.l, padding: 16, gap: 12, borderWidth: OUTLINE, borderColor: colors.line, boxShadow: `0px 6px 0px ${colors.line}`, marginBottom: 6 },
+  sheet: { width: '100%', maxWidth: 460, gap: 10, padding: 18, borderRadius: 28, backgroundColor: colors.surface, borderWidth: OUTLINE, borderColor: colors.line, boxShadow: `0px 8px 0px ${colors.line}` },
+  sheetOption: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 64, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 18, borderWidth: OUTLINE, borderColor: colors.line, backgroundColor: colors.surface2, boxShadow: `0px 4px 0px ${colors.line}` },
   scrim: { flex: 1, backgroundColor: colors.scrim, alignItems: 'center', justifyContent: 'center', padding: 16 },
   dialog: { backgroundColor: colors.surface, borderRadius: radius.l, padding: 24, gap: 14, width: '100%', maxWidth: 420, borderWidth: OUTLINE, borderColor: colors.line, boxShadow: `0px 8px 0px ${colors.line}` },
 });

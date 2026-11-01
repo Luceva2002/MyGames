@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { BURRACO_RULES, checkMeld, teamOf, type BurracoMove, type BurracoView, type Card , type Seat } from '@giochi/engine';
 import { Banner, MyCorner, othersOf, PileTop, Slot, TableTop, useCardWidth, type BoardProps, type SeatInfo } from './common';
 import { CardsSummaryTable, teamLabel } from './summary';
@@ -53,12 +53,12 @@ export function BurracoBoard({ view, me, names, myTurn, onMove }: BoardProps<Bur
   }
 
   const meldsOf = (team: number) => view.melds.filter((m) => m.team === team);
-  const info = (seat: Seat): SeatInfo => ({ seat, name: names[seat] + (me !== null && seat !== me && view.players === 4 && teamOf(seat, 4) === myTeam ? ' 🤝' : ''), active: view.turn === seat, cards: view.handCounts[seat], deck: 'fr', score: view.teamScores[teamOf(seat, view.players)], scoreLabel: view.pozzettoTaken[teamOf(seat, view.players)] ? 'punti · pozzetto ✓' : 'punti' });
+  const info = (seat: Seat): SeatInfo => ({ seat, name: names[seat] + (me !== null && seat !== me && view.players === 4 && teamOf(seat, 4) === myTeam ? ' 🤝' : ''), active: view.turn === seat, cards: view.handCounts[seat], deck: 'fr', drawFrom: view.last?.includes('scart') ? 'discard' : 'deck', score: view.teamScores[teamOf(seat, view.players)], scoreLabel: view.pozzettoTaken[teamOf(seat, view.players)] ? 'punti · pozzetto ✓' : 'punti' });
   return (
     <TableBg table="teal">
       <CardTable
         me={me === null ? null : info(me)}
-        top={<TableTop corner={false} seats={othersOf(view.players, me).map(info)} />}
+        top={<TableTop seats={othersOf(view.players, me).map(info)} />}
         count={2}
         piles={(pileW) =>
           <>
@@ -90,6 +90,7 @@ export function BurracoBoard({ view, me, names, myTurn, onMove }: BoardProps<Bur
                   }}
                 >
                   <Slot width={pileW + 6} ratio={1.45} label={view.discard.length > 1 ? `SCARTI · ${view.discard.length}` : 'SCARTI'} glow={drawing && view.discard.length ? colors.accent3 : undefined}>
+                    <Anchor id="discard" style={StyleSheet.absoluteFill} />
                     {view.discard.length ? (
                       <NoCardZoom.Provider value={drawing}>
                         <PileTop id={view.discard[view.discard.length - 1].id} from={(view.turn + view.players - 1) % view.players} me={me}>

@@ -71,6 +71,7 @@ export function UnoBoard({ view, me, names, myTurn, onMove }: BoardProps<UnoView
       </Felt>
       </DropZone>
       <EventSticker eventKey={view.last ? view.top.id + view.last.text : null} text={unoSticker(view)} />
+      <MyCorner info={me === null ? null : uinfo(me)} />
       {me !== null && (
         <>
           <DropZone id="hand" radius={18} accepts={(p) => myTurn && !view.drawn && p.kind === 'stock'} onDrop={() => onMove({ type: 'draw' })}>
@@ -106,7 +107,6 @@ export function UnoBoard({ view, me, names, myTurn, onMove }: BoardProps<UnoView
           <Button small kind="ghost" color={colors.text} label="Annulla" onPress={() => setWild(null)} />
         </View>
       )}
-      <MyCorner info={me === null ? null : uinfo(me)} />
     </TableBg>
   );
 }

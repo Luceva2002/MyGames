@@ -148,7 +148,7 @@ export function SetteBoard({ view, me, names, myTurn, onMove }: BoardProps<Sette
   return (
     <TableBg table="teal">
       <View style={{ flex: 1, padding: 8, gap: 8 }}>
-        <Row style={{ justifyContent: 'space-between', paddingLeft: MENU_GAP + 18, paddingRight: 18 }}>
+        <Row style={{ justifyContent: 'space-between', paddingLeft: 18, paddingRight: MENU_GAP + 18 }}>
           <T size={13} weight="800" color="#ffffffcc">
             Mano {view.round + 1} di {view.totalRounds}
           </T>

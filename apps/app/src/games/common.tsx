@@ -6,7 +6,6 @@ import { Draggable, type DragPayload } from '../ui/drag';
 import { Anchor, FlyIn, handAnchor, PopIn, Pulse } from '../ui/motion';
 import { Row, T } from '../ui/kit';
 import { SeatAvatar } from '../ui/avatars';
-import { type TableName } from '../ui/tables';
 import { useIsTv } from '../ui/settings';
 import { colors, seatColor } from '../ui/theme';
 
@@ -39,14 +38,12 @@ export function othersOf(players: number, me: Seat | null): Seat[] {
 
 /**
  * Il posto di un giocatore nella barra dei punteggi: la sua maschera, il nome, il punteggio grande
- * e, sotto, le carte in mano o altre informazioni. Chi è di turno ha il nome colorato e la freccia.
+ * e, sotto, altre informazioni. Chi è di turno ha il nome colorato e la freccia.
  */
-export function PlayerBadge({ seat, name, active, cards, deck = 'it', score, scoreLabel, isMe, children }: {
+export function PlayerBadge({ seat, name, active, score, scoreLabel, isMe, children }: {
   seat: Seat;
   name: string;
   active: boolean;
-  cards?: number;
-  deck?: 'it' | 'fr' | 'uno';
   /** Il punteggio da mostrare in grande (punti, prese, carte rimaste…). */
   score?: number | string;
   scoreLabel?: string;
@@ -57,7 +54,7 @@ export function PlayerBadge({ seat, name, active, cards, deck = 'it', score, sco
   return (
     <Pulse active={active}>
       <View
-        accessibilityLabel={`${isMe ? 'Tu' : name}${active ? ', è il suo turno' : ''}${score !== undefined ? `, ${score} ${scoreLabel ?? ''}` : ''}${cards !== undefined ? `, ${cards} carte` : ''}`}
+        accessibilityLabel={`${isMe ? 'Tu' : name}${active ? ', è il suo turno' : ''}${score !== undefined ? `, ${score} ${scoreLabel ?? ''}` : ''}`}
         style={[styles.badge, isMe && { backgroundColor: colors.surface2 }]}
       >
         <SeatAvatar seat={seat} name={name} size={44} />
@@ -68,7 +65,7 @@ export function PlayerBadge({ seat, name, active, cards, deck = 'it', score, sco
           </T>
           {score !== undefined && (
             <Row gap={4} style={{ alignItems: 'baseline' }}>
-              <T size={30} weight="900" color={colors.accent}>
+              <T size={28} weight="800" color={colors.accent}>
                 {score}
               </T>
               {scoreLabel ? (
@@ -77,14 +74,6 @@ export function PlayerBadge({ seat, name, active, cards, deck = 'it', score, sco
                 </T>
               ) : null}
             </Row>
-          )}
-          {cards !== undefined && cards > 0 && !isMe && (
-            <View style={{ flexDirection: 'row', height: 22, alignItems: 'center' }}>
-              {Array.from({ length: Math.min(cards, 8) }, (_, i) => (
-                <CardBack key={i} width={13} deck={deck} style={{ marginLeft: i ? -8 : 0, borderWidth: 0.5 }} />
-              ))}
-              <T size={12} color={colors.muted}>{`  ${cards}`}</T>
-            </View>
           )}
           {children}
         </View>
@@ -102,13 +91,15 @@ export interface SeatInfo {
   /** Carte in mano: dall'altro lato del tavolo si vedono coperte. */
   cards?: number;
   deck?: 'it' | 'fr' | 'uno';
+  /** Da dove arrivano le carte che pesca: il mazzo, o gli scarti se ha appena preso da lì. */
+  drawFrom?: 'deck' | 'discard';
 }
 
 /**
  * Le carte coperte di un avversario, a ventaglio vicino al suo posto: quante ne ha in mano si vede
  * a colpo d'occhio. È anche il punto da cui partono le carte che gioca e dove arrivano quelle che pesca.
  */
-export function OpponentHand({ seat, cards, deck = 'it', width, max = 10 }: { seat: Seat; cards: number; deck?: 'it' | 'fr' | 'uno'; width: number; max?: number }) {
+export function OpponentHand({ seat, cards, deck = 'it', width, max = 10, drawFrom = 'deck' }: { seat: Seat; cards: number; deck?: 'it' | 'fr' | 'uno'; width: number; max?: number; /** Da dove arrivano le carte che pesca. */ drawFrom?: 'deck' | 'discard' }) {
   const n = Math.min(cards, max);
   // Le carte pescate dopo la prima comparsa arrivano dal mazzo, una dopo l'altra.
   const seen = useRef(-1);
@@ -118,7 +109,7 @@ export function OpponentHand({ seat, cards, deck = 'it', width, max = 10 }: { se
   return (
     <Anchor id={handAnchor(seat)} style={{ flexDirection: 'row', alignItems: 'center', minHeight: width * cardRatio(deck) }}>
       {Array.from({ length: n }, (_, i) => (
-        <FlyIn key={i} from="none" fromAnchor={before >= 0 && i >= before ? 'deck' : undefined} delay={before >= 0 && i >= before ? (i - before) * 220 : 0} style={{ marginLeft: i ? overlap : 0 }}>
+        <FlyIn key={i} from="none" fromAnchor={before >= 0 && i >= before ? drawFrom : undefined} delay={before >= 0 && i >= before ? (i - before) * 220 : 0} style={{ marginLeft: i ? overlap : 0 }}>
           <CardBack width={width} deck={deck} style={{ borderWidth: Math.max(1, width / 16), transform: [{ rotate: `${(i - (n - 1) / 2) * 3}deg` }] }} />
         </FlyIn>
       ))}
@@ -133,9 +124,9 @@ export function OpponentHand({ seat, cards, deck = 'it', width, max = 10 }: { se
 
 /** Un avversario seduto dall'altro lato del tavolo: icona, nome e punti in una pillola, sotto le sue carte coperte. */
 export function TableSeat({ info, compact }: { info: SeatInfo; compact?: boolean }) {
-  const { seat, name, active, score, scoreLabel, cards, deck = 'it' } = info;
+  const { seat, name, active, score, scoreLabel, cards, deck = 'it', drawFrom } = info;
   const label = `${name}${score !== undefined ? `, ${score} ${scoreLabel ?? ''}` : ''}${cards !== undefined ? `, ${cards} carte` : ''}${active ? ', è il suo turno' : ''}`;
-  const hand = cards !== undefined && cards > 0 ? <OpponentHand seat={seat} cards={cards} deck={deck} width={compact ? 18 : 30} max={compact ? 7 : 10} /> : null;
+  const hand = cards !== undefined && cards > 0 ? <OpponentHand seat={seat} cards={cards} deck={deck} width={compact ? 18 : 30} max={compact ? 7 : 10} drawFrom={drawFrom} /> : null;
   if (compact) {
     // Sul telefono, con più avversari, stanno tutti su una riga: icona col punteggio, nome, carte in piccolo.
     return (
@@ -147,7 +138,7 @@ export function TableSeat({ info, compact }: { info: SeatInfo; compact?: boolean
               {active ? `▶ ${name}` : name}
             </T>
             {score !== undefined && (
-              <T size={13} weight="900" color={colors.text} lines={1}>
+              <T size={13} weight="800" color={colors.text} lines={1}>
                 {score}
               </T>
             )}
@@ -167,7 +158,7 @@ export function TableSeat({ info, compact }: { info: SeatInfo; compact?: boolean
           </T>
           {score !== undefined && (
             <Row gap={4} style={{ alignItems: 'baseline' }}>
-              <T size={16} weight="900" color={colors.text}>
+              <T size={16} weight="800" color={colors.text}>
                 {score}
               </T>
               {scoreLabel ? (
@@ -186,15 +177,14 @@ export function TableSeat({ info, compact }: { info: SeatInfo; compact?: boolean
 
 /**
  * Gli avversari in fila sul bordo lontano del tavolo. Sul telefono, se sono più d'uno, stanno su una
- * riga sola in formato compatto e lasciano libero l'angolo in alto a destra dove sta il mio posto.
- * A sinistra resta lo spazio per il bottone del menu.
+ * riga sola in formato compatto. A destra resta lo spazio per il bottone del menu.
  */
-export function TableTop({ seats, corner = true }: { seats: SeatInfo[]; /** Lascia libero l'angolo in alto a destra per il mio posto. */ corner?: boolean }) {
+export function TableTop({ seats }: { seats: SeatInfo[] }) {
   const { width } = useWindowDimensions();
   if (!seats.length) return null;
   if (width < 600 && seats.length > 1) {
     return (
-      <View style={{ flexDirection: 'row', gap: 6, alignSelf: 'stretch', paddingTop: 2, paddingLeft: MENU_GAP, paddingRight: corner ? 92 : 0 }}>
+      <View style={{ flexDirection: 'row', gap: 6, alignSelf: 'stretch', paddingTop: 2, paddingRight: MENU_GAP }}>
         {seats.map((s) => (
           <TableSeat key={s.seat} info={s} compact />
         ))}
@@ -202,7 +192,7 @@ export function TableTop({ seats, corner = true }: { seats: SeatInfo[]; /** Lasc
     );
   }
   return (
-    <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-start', gap: 14, alignSelf: 'stretch', paddingTop: 2, paddingLeft: MENU_GAP }}>
+    <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-start', gap: 14, alignSelf: 'stretch', paddingTop: 2, paddingRight: MENU_GAP }}>
       {seats.map((s) => (
         <TableSeat key={s.seat} info={s} />
       ))}
@@ -210,20 +200,20 @@ export function TableTop({ seats, corner = true }: { seats: SeatInfo[]; /** Lasc
   );
 }
 
-/** Spazio lasciato a sinistra, in alto, per il bottone tondo del menu della partita. */
-export const MENU_GAP = 30;
+/** Spazio lasciato a destra, in alto, per il bottone tondo del menu della partita. */
+export const MENU_GAP = 34;
 
 /**
- * Il mio angolo del tavolo: la mia icona e i miei punti in una pillola discreta. Quando tocca a me
- * lo dice qui, vicino alla mia mano, in piccolo.
+ * Il mio posto: icona e punti in una pillola discreta, e quando tocca a me lo dice qui. Sul computer
+ * sta nell'angolo in basso a destra; sul telefono in una riga sua, subito sopra la mano: il board lo
+ * mette prima della mano.
  */
 export function MyCorner({ info, note, style, wideOnly }: { info: SeatInfo | null; note?: string; style?: object; wideOnly?: boolean }) {
   const { width } = useWindowDimensions();
   if (!info || (wideOnly && width < 600)) return null;
-  // Sul telefono la mano occupa tutto il fondo: il mio angolo va in alto a destra, di fronte all'avversario.
   const narrow = width < 600;
   return (
-    <View pointerEvents="none" style={[{ position: 'absolute', right: narrow ? 8 : 14, zIndex: 20, alignItems: 'flex-end', gap: 4 }, narrow ? { top: 8, flexDirection: 'column-reverse' } : { bottom: 12 }, style]}>
+    <View pointerEvents="none" style={[narrow ? { alignItems: 'center', gap: 4, zIndex: 20 } : { position: 'absolute', right: 14, bottom: 12, zIndex: 20, alignItems: 'flex-end', gap: 4 }, style]}>
       {note ? (
         <View style={styles.cornerNote}>
           <T size={11} weight="800" center>
@@ -240,7 +230,7 @@ export function MyCorner({ info, note, style, wideOnly }: { info: SeatInfo | nul
             </T>
             {info.score !== undefined && (
               <Row gap={4} style={{ alignItems: 'baseline' }}>
-                <T size={narrow ? 14 : 16} weight="900" color={colors.text}>
+                <T size={narrow ? 14 : 16} weight="800" color={colors.text}>
                   {info.score}
                 </T>
                 {info.scoreLabel && !narrow ? (
@@ -263,7 +253,7 @@ export function MyChip({ info }: { info: SeatInfo }) {
     <Pulse active={info.active}>
       <View style={styles.myChip} accessibilityLabel={`Tu${info.active ? ', tocca a te' : ''}, ${info.score ?? ''} ${info.scoreLabel ?? ''}`}>
         <SeatAvatar seat={info.seat} name={info.name} size={30} />
-        <T size={15} weight="900" color={colors.text}>
+        <T size={15} weight="800" color={colors.text}>
           {info.score ?? ''}
         </T>
         {info.active && (
@@ -352,7 +342,7 @@ export function Hand({ cards, width: baseWidth, selected, playable, onPress, dra
         const isPlayable = playable ? playable.includes(c.id) : true;
         return (
           <View key={c.id} style={{ marginLeft: i ? overlap : 0, transform: [{ translateY: arc(off) }, { rotate: `${off * step}deg` }] }}>
-            <FlyIn from="below" fromAnchor="deck" delay={dealt.current ? Math.max(0, fresh.indexOf(c.id)) * 180 : 250 + i * 140} sound="deal">
+            <FlyIn from="below" fromAnchor="deck" delay={dealt.current ? Math.max(0, fresh.indexOf(c.id)) * 180 : 150 + i * 70} sound="deal">
               <Draggable
                 payload={drag && isPlayable ? drag(c) : null}
                 ghost={<CardGhost cards={[c]} width={width} />}
@@ -417,7 +407,7 @@ export function PileTop({ id, from, me, children }: { id: string | null; /** Chi
 }
 
 /** Il panno del tavolo con la cornice di legno. */
-export function Felt({ children, style, table = 'teal' }: { children: ReactNode; style?: object; table?: TableName }) {
+export function Felt({ children, style }: { children: ReactNode; style?: object }) {
   return (
     // Il tavolo vero è sotto tutta la partita (TableBg nella radice del gioco): qui c'è solo il panno.
     <View style={[styles.feltFrame, styles.felt, style]}>{children}</View>

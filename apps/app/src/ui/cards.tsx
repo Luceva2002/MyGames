@@ -287,9 +287,6 @@ const styles = StyleSheet.create({
   },
   // La carta scelta o prendibile: solo il contorno cambia colore, senza ingrossarsi.
   selected: { borderColor: colors.accent },
-  center: { alignItems: 'center', justifyContent: 'center' },
-  corner: { position: 'absolute', fontWeight: '900', color: '#2B2D42' },
-  figure: { backgroundColor: '#F7EBD0', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#D9C08A' },
   badge: {
     position: 'absolute',
     right: -6,
@@ -302,11 +299,5 @@ const styles = StyleSheet.create({
     paddingVertical: 1,
     boxShadow: `0px 3px 0px ${colors.line}`,
     zIndex: 10,
-  },
-  badgeText: {
-    color: colors.accent,
-    fontWeight: '900',
-    fontSize: 12,
-    textAlign: 'center',
   },
 });
