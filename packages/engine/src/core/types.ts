@@ -40,6 +40,10 @@ export interface GameResult {
   /** Nel punteggio vince chi ne ha meno: il riepilogo mette prima lui. */
   lowWins?: boolean;
   summary: string;
+  /** Titolo del riepilogo al posto di «Hai vinto!», per i giochi da soli a punteggio («Nuovo record!»). */
+  title?: string;
+  /** Festa grande a fine partita anche senza un vincitore fra più persone (record, puzzle risolto). */
+  celebrate?: boolean;
 }
 
 export interface SetupContext<O = unknown> {

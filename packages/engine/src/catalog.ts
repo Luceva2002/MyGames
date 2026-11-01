@@ -13,7 +13,6 @@ import { scala40 } from './games/scala40';
 import { burraco } from './games/burraco';
 import { machiavelli } from './games/machiavelli';
 import { freccette } from './games/freccette';
-import { football } from './games/football';
 import { biliardo } from './games/biliardo';
 import { lupus } from './games/lupus/lupus';
 import { mrwhite } from './games/mrwhite/mrwhite';
@@ -22,10 +21,14 @@ import { puntielinee } from './games/puntielinee';
 import { colorwars } from './games/colorwars';
 import { battaglia } from './games/battaglia';
 import { ballo } from './games/ballo';
+import { coriandoli, frutta, razzo, serpentina } from './games/arcade/arcade';
+import { raddoppia } from './games/raddoppia';
+import { sudoku } from './games/sudoku';
+import { memory } from './games/memory';
 
 /** Giochi giocabili, nell'ordine in cui compaiono nel catalogo. */
 // Ordine della home: tipi di gioco alternati, così le carte non stanno tutte all'inizio.
-export const GAMES: Game[] = [scopa, mrwhite, battaglia, uno, freccette, scacchi, briscola, yahtzee, mosaico, lupus, burraco, colorwars, dama, ballo, setteemezzo, biliardo, puntielinee, scala40, tris, tresette, football, machiavelli, solitario];
+export const GAMES: Game[] = [scopa, mrwhite, coriandoli, battaglia, uno, frutta, freccette, scacchi, memory, briscola, yahtzee, serpentina, mosaico, lupus, sudoku, burraco, colorwars, razzo, dama, ballo, raddoppia, setteemezzo, biliardo, puntielinee, scala40, tris, tresette, machiavelli, solitario];
 
 export function getGame(id: string): Game | undefined {
   return GAMES.find((g) => g.meta.id === id);

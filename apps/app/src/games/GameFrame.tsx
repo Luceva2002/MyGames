@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { ActivityIndicator, Image, Modal, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { ActivityIndicator, Image, Modal, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import type { GameMeta, GameResult, LastAction, Seat } from '@giochi/engine';
 import { BOARDS } from './registry';
+import { PausedContext } from './common';
 import { GAME_ART } from '../ui/art';
 import { BotFigure, SeatAvatar, SeatAvatars } from '../ui/avatars';
 import { botByName } from '@giochi/engine';
@@ -10,11 +11,12 @@ import { DragProvider } from '../ui/drag';
 import { CardZoomLayer } from '../ui/cards';
 import { AnchorProvider, PopIn } from '../ui/motion';
 import { sfx } from '../ui/sound';
+import { Bounce, Confetti } from '../ui/Celebration';
 import { setSettings, TvContext, useIsTv, useSettings } from '../ui/settings';
 import { colors, radius, seatColor } from '../ui/theme';
 
 /** I giochi senza il tavolo col bordo dorato: lo sfondo arriva fino al bordo dello schermo. */
-const NO_RIM = new Set(['freccette', 'biliardo', 'football', 'lupus', 'mrwhite']);
+const NO_RIM = new Set(['freccette', 'biliardo', 'lupus', 'mrwhite', 'frutta', 'razzo']);
 
 /**
  * La regola dei margini in partita: bottone del menu e posti stanno 8 px dentro il panno, che inizia
@@ -66,18 +68,25 @@ export function GameFrame({ meta, view, me, names, avatars, myTurn, active, onMo
   const [leaving, setLeaving] = useState(false);
   const [restarting, setRestarting] = useState(false);
   const [dismissed, setDismissed] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  // Con menu, regole o conferme aperti i giochi d'azione si fermano.
+  const paused = menuOpen || rules || leaving || restarting;
   // A fine partita il tavolo resta visibile qualche istante: si vede l'ultima mossa (la presa,
   // la freccetta, la biglia in buca) prima che arrivi il riepilogo con chi ha vinto.
   const [settled, setSettled] = useState(false);
   // Il risultato può essere un oggetto nuovo a ogni giro: conta solo se cambia davvero.
   const resultKey = result ? JSON.stringify(result) : null;
+  // Chi vince (o fa un record, o risolve il puzzle) si gode la festa: cartello grande e coriandoli
+  // per qualche secondo, poi il riepilogo. Un tocco porta subito avanti.
+  const won = !!result && (!!result.celebrate || (!result.title && me !== null && result.winners.includes(me)));
   useEffect(() => {
     setDismissed(false);
     setSettled(false);
     if (!result) return;
-    const t = setTimeout(() => setSettled(true), 2200);
+    const t = setTimeout(() => setSettled(true), won ? 4500 : 2200);
     return () => clearTimeout(t);
   }, [resultKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  const headline = result ? (result.title ?? (me !== null && result.winners.includes(me) ? '🏆 Hai vinto!' : 'Partita finita!')) : '';
   // Un "ding" quando tocca a te (non all'apertura della partita) e la fanfara se vinci.
   const started = useRef(false);
   useEffect(() => {
@@ -85,7 +94,7 @@ export function GameFrame({ meta, view, me, names, avatars, myTurn, active, onMo
     started.current = true;
   }, [myTurn]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
-    if (result && me !== null && result.winners.includes(me)) sfx('win');
+    if (won) sfx('win');
   }, [resultKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
@@ -101,12 +110,14 @@ export function GameFrame({ meta, view, me, names, avatars, myTurn, active, onMo
         <View style={{ flex: 1 }} pointerEvents={waiting ? 'none' : 'auto'}>
           <CardZoomLayer>
           <DragProvider>
-            {Board ? <Board view={view} me={me} names={names} myTurn={myTurn && !waiting} onMove={onMove} /> : <T>Interfaccia non disponibile.</T>}
+            <PausedContext.Provider value={paused}>
+              {Board ? <Board view={view} me={me} names={names} myTurn={myTurn && !waiting} onMove={onMove} /> : <T>Interfaccia non disponibile.</T>}
+            </PausedContext.Provider>
           </DragProvider>
           </CardZoomLayer>
           <ActionStrip gameId={meta.id} action={lastAction ?? null} me={me} names={names} />
         </View>
-        <GameMenu meta={meta} roomCode={roomCode} onRules={() => setRules(true)} onRestart={onRestart && !result ? () => setRestarting(true) : undefined} onChangeGame={onChangeGame} onExit={() => setLeaving(true)} />
+        <GameMenu meta={meta} roomCode={roomCode} onOpenChange={setMenuOpen} onRules={() => setRules(true)} onRestart={onRestart && !result ? () => setRestarting(true) : undefined} onChangeGame={onChangeGame} onExit={() => setLeaving(true)} />
         {waiting && (
           <View style={styles.pending} accessibilityLiveRegion="polite">
             <ActivityIndicator color={colors.onAccent} />
@@ -123,16 +134,36 @@ export function GameFrame({ meta, view, me, names, avatars, myTurn, active, onMo
           </View>
         )}
         {overlay}
-        {result && !settled && (
+        {result && !settled && !won && (
           <View pointerEvents="none" style={styles.endWrap}>
             <PopIn>
               <View style={styles.endSticker}>
                 <T size={26} weight="900" color="#fff" center>
-                  {me !== null && result.winners.includes(me) ? '🏆 Hai vinto!' : 'Partita finita!'}
+                  {headline}
                 </T>
               </View>
             </PopIn>
           </View>
+        )}
+        {result && won && !dismissed && <Confetti onTop={!settled} />}
+        {result && !settled && won && (
+          <Pressable accessibilityRole="button" accessibilityLabel={`${headline}. Tocca per continuare`} onPress={() => setSettled(true)} style={[styles.endWrap, { backgroundColor: 'rgba(18,5,43,0.35)' }]}>
+            <Bounce big>
+              <View style={[styles.endSticker, styles.winSticker]}>
+                <T size={34} weight="900" color={colors.onAccent} center>
+                  {headline}
+                </T>
+                {result.summary ? (
+                  <T size={16} weight="800" color={colors.onAccent} center>
+                    {result.summary}
+                  </T>
+                ) : null}
+              </View>
+            </Bounce>
+            <T size={13} weight="800" color="#ffffffcc" center style={{ marginTop: 28 }}>
+              Tocca per continuare
+            </T>
+          </Pressable>
         )}
         {result && settled && dismissed && (
           <View style={styles.endBar}>
@@ -154,7 +185,9 @@ export function GameFrame({ meta, view, me, names, avatars, myTurn, active, onMo
                 GAME_ART[meta.id] && <Image source={GAME_ART[meta.id]} style={styles.resultArt} accessibilityIgnoresInvertColors />
               )}
               <T size={28} weight="900" center>
-                {result.winners.length === 0
+                {result.title
+                  ? result.title
+                  : result.winners.length === 0
                   ? '🤝 Pareggio'
                   : me !== null && result.winners.includes(me)
                     ? '🏆 Hai vinto!'
@@ -163,7 +196,7 @@ export function GameFrame({ meta, view, me, names, avatars, myTurn, active, onMo
               <T color={colors.muted} center>
                 {result.summary}
               </T>
-              {result.scores && result.scores.length === names.length && (
+              {result.scores && names.length > 1 && result.scores.length === names.length && (
                 <View style={{ gap: 8 }}>
                   {names
                     .map((n, i) => ({ n, i, s: result.scores![i] }))
@@ -241,8 +274,12 @@ export function GameFrame({ meta, view, me, names, avatars, myTurn, active, onMo
  * Il menu della partita: un bottone tondo ben visibile in alto a destra che apre la stessa finestra
  * della scelta «come giochiamo», con le voci grandi: regole, suoni, rivincita, uscita.
  */
-function GameMenu({ meta, roomCode, onRules, onRestart, onChangeGame, onExit }: { meta: GameMeta; roomCode?: string; onRules: () => void; onRestart?: () => void; onChangeGame?: () => void; onExit: () => void }) {
-  const [open, setOpen] = useState(false);
+function GameMenu({ meta, roomCode, onOpenChange, onRules, onRestart, onChangeGame, onExit }: { meta: GameMeta; roomCode?: string; onOpenChange: (open: boolean) => void; onRules: () => void; onRestart?: () => void; onChangeGame?: () => void; onExit: () => void }) {
+  const [open, setOpenState] = useState(false);
+  const setOpen = (v: boolean) => {
+    setOpenState(v);
+    onOpenChange(v);
+  };
   const inset = useTableInset(meta.id);
   const settings = useSettings();
   const art = GAME_ART[meta.id];
@@ -370,6 +407,7 @@ const styles = StyleSheet.create({
   card: { backgroundColor: colors.surface, borderRadius: radius.l, padding: 24, gap: 14, width: '100%', maxWidth: 460, borderWidth: 3, borderColor: colors.line, boxShadow: `0px 8px 0px ${colors.line}` },
   endWrap: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, alignItems: 'center', justifyContent: 'center', zIndex: 40 },
   endSticker: { backgroundColor: colors.accent2, borderWidth: 3, borderColor: colors.line, borderRadius: 18, paddingHorizontal: 22, paddingVertical: 10, transform: [{ rotate: '-5deg' }], boxShadow: `0px 6px 0px ${colors.line}` },
+  winSticker: { maxWidth: 330, backgroundColor: colors.accent, paddingHorizontal: 22, paddingVertical: 18, gap: 4, transform: [{ rotate: '-4deg' }], borderWidth: 4, boxShadow: `0px 8px 0px ${colors.line}` },
   endBar: { position: 'absolute', left: 12, right: 12, bottom: 12, zIndex: 40, flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'center', padding: 10, borderRadius: 20, backgroundColor: colors.surface, borderWidth: 3, borderColor: colors.line },
   resultArt: { width: 96, height: 96, borderRadius: 20, alignSelf: 'center' },
 });

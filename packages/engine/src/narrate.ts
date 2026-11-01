@@ -104,11 +104,6 @@ export function narrate(gameId: string, before: any, after: any, seat: Seat, mov
       const d = darts[darts.length - 1];
       return d ? `colpisce ${d.label}${after.lastTurn?.seat === seat && after.lastTurn.bust ? ' e sballa' : ''}` : 'tira';
     }
-    case 'football': {
-      const k = after.kicks?.length > (before.kicks?.length ?? 0) ? after.kicks[after.kicks.length - 1] : null;
-      if (!k) return move.dive ? 'sceglie dove tuffarsi' : 'sceglie dove tirare';
-      return k.outcome === 'gol' ? 'GOL!' : k.outcome === 'parata' ? 'parata!' : k.outcome === 'palo' ? 'palo!' : 'tiro fuori';
-    }
     case 'mosaico': {
       const n = MOSAICO_PIECES[move.piece]?.length ?? 0;
       const fermi = after.stuck.flatMap((v: boolean, p: number) => (v && !before.stuck[p] ? [`%v${p}`] : []));
@@ -125,6 +120,10 @@ export function narrate(gameId: string, before: any, after: any, seat: Seat, mov
       if (!booms) return 'aggiunge un punto';
       const prese = after.cells.filter((c: { o: Seat } | null, i: number) => c?.o === seat && before.cells[i] && before.cells[i].o !== seat).length;
       return `fa esplodere ${booms === 1 ? 'una cella' : `${booms} celle`}${prese ? ` e ne conquista ${prese}` : ''}`;
+    }
+    case 'memory': {
+      if (after.moves === before.moves) return 'gira una carta';
+      return after.match?.n === after.moves ? 'trova una coppia e rigioca' : 'sbaglia coppia';
     }
     case 'battaglia': {
       if (move.type === 'place') return 'ha schierato la flotta';

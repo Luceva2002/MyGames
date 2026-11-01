@@ -445,6 +445,10 @@ export function Banner({ text, tone = 'info' }: { text: string; tone?: 'info' | 
 }
 
 /** Due persone sullo stesso schermo: la scacchiera non ruota e nessuno è «tu». */
+/** Menu o regole aperti sopra la partita: i giochi d'azione si mettono in pausa. */
+export const PausedContext = createContext(false);
+export const usePaused = () => useContext(PausedContext);
+
 export const SharedScreenContext = createContext(false);
 export const useSharedScreen = () => useContext(SharedScreenContext);
 

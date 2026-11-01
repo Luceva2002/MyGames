@@ -1,4 +1,4 @@
-import { advanceTime, applyMove, ballo, BALLO_FESTA_MS, BALLO_KILL_MS, BALLO_LIGHTS_MS, BALLO_SKIP, type BalloState, battaglia, botMove, colorwars, hLine, mosaico, MOSAICO_IDS, MOSAICO_PIECES, mosaicoLeft, mosaicoMoves, mosaicoShape, NAVALE_FLEET, puntielinee, randomFleet, shipCells, vLine, mrwhite, sameWord, burracoKind, BURRACO_RULES, checkMeld, captureOptions, damaMoves, primieraScore, scacchi, scoreFor, setteValue, unoDeck, type Card, type ChessState } from '../src';
+import { raddoppia, sudoku, makeSudoku, memory, type RaddoppiaState, advanceTime, applyMove, ballo, BALLO_FESTA_MS, BALLO_KILL_MS, BALLO_LIGHTS_MS, BALLO_SKIP, type BalloState, battaglia, botMove, colorwars, hLine, mosaico, MOSAICO_IDS, MOSAICO_PIECES, mosaicoLeft, mosaicoMoves, mosaicoShape, NAVALE_FLEET, puntielinee, randomFleet, shipCells, vLine, mrwhite, sameWord, burracoKind, BURRACO_RULES, checkMeld, captureOptions, damaMoves, primieraScore, scacchi, scoreFor, setteValue, unoDeck, type Card, type ChessState } from '../src';
 
 const it = (suit: string, rank: number): Card => ({ id: `it-${suit}${rank}`, deck: 'it', suit, rank });
 
@@ -14,6 +14,52 @@ function chess(moves: string[]): ChessState {
 }
 
 export const checks: { name: string; fn: () => void }[] = [
+  {
+    name: 'raddoppia: 2 2 2 2 a sinistra fa 4 4, una fusione per tessera',
+    fn: () => {
+      const s: RaddoppiaState = { ...raddoppia.setup({ players: 1, seed: 3 }), tiles: [0, 1, 2, 3].map((c, i) => ({ id: i + 1, v: 2, cell: c })), nextId: 9 };
+      const n = applyMove(raddoppia, s, 0, { dir: 'left' });
+      eq(n.tiles.filter((t) => t.cell < 4).map((t) => [t.cell, t.v]).sort(), [[0, 4], [1, 4]], 'riga');
+      eq(n.score, 8, 'punti');
+    },
+  },
+  {
+    name: 'sudoku: la griglia generata ha una soluzione valida e rispetta le date',
+    fn: () => {
+      const { given, solution } = makeSudoku({ rng: 42 }, 26);
+      for (let i = 0; i < 9; i++) {
+        const row = new Set(solution.slice(i * 9, i * 9 + 9));
+        const col = new Set(Array.from({ length: 9 }, (_, r) => solution[r * 9 + i]));
+        if (row.size !== 9 || col.size !== 9) throw new Error('riga o colonna ripetuta');
+      }
+      if (given.some((v, i) => v && v !== solution[i])) throw new Error('data diversa dalla soluzione');
+      if (given.filter(Boolean).length > 34) throw new Error('troppe caselle date per il difficile');
+    },
+  },
+  {
+    name: 'sudoku: numero sbagliato non si scrive, al terzo errore finisce',
+    fn: () => {
+      let s = applyMove(sudoku, sudoku.setup({ players: 1, seed: 5 }), 0, { type: 'level', level: 'medio' });
+      const cell = s.values.indexOf(0);
+      const bad = (s.solution[cell] % 9) + 1;
+      for (let k = 0; k < 3; k++) s = applyMove(sudoku, s, 0, { type: 'fill', cell, value: bad });
+      eq([s.values[cell], s.errors, !!sudoku.result(s)], [0, 3, true], 'esito');
+    },
+  },
+  {
+    name: 'memory: coppia giusta si tiene e si rigioca, sbagliata passa la mano',
+    fn: () => {
+      let s = memory.setup({ players: 2, seed: 9 });
+      const a = 0;
+      const mate = s.cards.findIndex((f, i) => i !== a && f === s.cards[a]);
+      const other = s.cards.findIndex((f) => f !== s.cards[a]);
+      s = applyMove(memory, applyMove(memory, s, 0, { flip: a }), 0, { flip: mate });
+      eq([s.turn, s.pairs[0]], [0, 1], 'coppia');
+      const x = s.cards.findIndex((f, i) => s.taken[i] === null && i !== other && f !== s.cards[other]);
+      s = applyMove(memory, applyMove(memory, s, 0, { flip: other }), 0, { flip: x });
+      eq([s.turn, s.miss], [1, [other, x]], 'sbaglio');
+    },
+  },
   {
     name: 'scacchi: matto del barbiere al contrario (matto dell’imbecille)',
     fn: () => eq(scacchi.result(chess(['f2f3', 'e7e5', 'g2g4', 'd8h4']))?.summary, 'Scacco matto', 'esito'),

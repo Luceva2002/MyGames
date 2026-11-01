@@ -16,7 +16,6 @@ export const GAME_ART: Record<string, ImageSourcePropType> = {
   yahtzee: require('../../assets/games/yahtzee.jpg'),
   freccette: require('../../assets/games/freccette.jpg'),
   biliardo: require('../../assets/games/biliardo.jpg'),
-  football: require('../../assets/games/football.jpg'),
   tris: require('../../assets/games/tris.jpg'),
   lupus: require('../../assets/games/lupus.jpg'),
   // Mr. White: maschera bianca (volto) disegnata in codice con PIL nello stile delle altre copertine.
@@ -27,6 +26,14 @@ export const GAME_ART: Record<string, ImageSourcePropType> = {
   colorwars: require('../../assets/games/colorwars.jpg'),
   battaglia: require('../../assets/games/battaglia.jpg'),
   ballo: require('../../assets/games/ballo.jpg'),
+  // Giochi da soli e Memory: disegnate in codice con PIL, come Mosaico.
+  coriandoli: require('../../assets/games/coriandoli.jpg'),
+  serpentina: require('../../assets/games/serpentina.jpg'),
+  sudoku: require('../../assets/games/sudoku.jpg'),
+  raddoppia: require('../../assets/games/raddoppia.jpg'),
+  frutta: require('../../assets/games/frutta.jpg'),
+  razzo: require('../../assets/games/razzo.jpg'),
+  memory: require('../../assets/games/memory.jpg'),
 };
 
 export const HERO = require('../../assets/images/hero.jpg') as ImageSourcePropType;

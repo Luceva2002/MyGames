@@ -8,7 +8,6 @@ export const TABLES = {
   felt: require('../../assets/tables/felt-green.jpg'),
   wood: require('../../assets/tables/wood.jpg'),
   pub: require('../../assets/tables/pub.jpg'),
-  stadium: require('../../assets/tables/stadium.jpg'),
   billiard: require('../../assets/tables/billiard-room.jpg'),
   night: require('../../assets/tables/lupus-night.jpg'),
   day: require('../../assets/tables/lupus-day.jpg'),

@@ -57,6 +57,8 @@ function candidates(gameId: string, s: any, seat: Seat): unknown[] {
       return (s.cells as ({ o: Seat } | null)[]).flatMap((c, cell) => ((s.placed[seat] ? c?.o === seat : c === null) ? [{ cell }] : []));
     case 'battaglia':
       return s.phase === 'battle' ? Array.from({ length: 100 }, (_, cell) => ({ type: 'shot', cell })) : [];
+    case 'memory':
+      return (s.taken as unknown[]).flatMap((t, flip) => (t === null && !s.open.includes(flip) ? [{ flip }] : []));
     default:
       return [];
   }

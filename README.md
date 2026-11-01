@@ -17,12 +17,18 @@ e ognuno gioca dal proprio telefono.
 | Machiavelli | 2–5 | il tavolo si rimescola liberamente |
 | UNO | 2–10 | |
 | Solitario | 1 | Klondike |
+| Coriandoli | 1 | pezzi che cadono e righe da svuotare, con i coriandoli piccoli da tre |
+| Serpentina | 1 | la stella filante che mangia i confetti |
+| Sudoku | 1 | facile, medio o difficile, matita e tre aiuti |
+| Raddoppia | 1 | tessere che si uniscono fino a 2048 |
+| Taglia la frutta | 1 | un colpo di dito, niente petardi |
+| Il razzo di Pulcinella | 1 | tieni premuto per volare, i punti sono i metri |
+| Memory | 1–4 | dieci coppie di maschere |
 | Dama | 2 | dama italiana |
 | Scacchi | 2 | regole complete |
 | Yahtzee | 1–6 | |
 | Freccette | 1–8 | 301, mirino che ondeggia |
 | Biliardo | 2 | palla 8 con fisica vera |
-| Football Strike | 2 | rigori, tiro e parata in segreto |
 | Tris | 2 | |
 | Mosaico | 2–4 | territorio a pezzi di 1–5 quadretti, griglia 14×14, 17×17 o 20×20 |
 | Punti e linee | 2–4 | griglia da 4, 5 o 6 punti per lato |

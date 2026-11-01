@@ -12,7 +12,6 @@ import { Scala40Board } from './Scala40Board';
 import { BurracoBoard } from './BurracoBoard';
 import { MachiavelliBoard } from './MachiavelliBoard';
 import { FreccetteBoard } from './FreccetteBoard';
-import { FootballBoard } from './FootballBoard';
 import { BiliardoBoard } from './BiliardoBoard';
 import { LupusBoard } from './LupusBoard';
 import { MrWhiteBoard } from './MrWhiteBoard';
@@ -21,6 +20,13 @@ import { PuntiLineeBoard } from './PuntiLineeBoard';
 import { ColorWarsBoard } from './ColorWarsBoard';
 import { BattagliaBoard } from './BattagliaBoard';
 import { BalloBoard } from './BalloBoard';
+import { CoriandoliBoard } from './arcade/CoriandoliBoard';
+import { SerpentinaBoard } from './arcade/SerpentinaBoard';
+import { SudokuBoard } from './arcade/SudokuBoard';
+import { RaddoppiaBoard } from './arcade/RaddoppiaBoard';
+import { FruttaBoard } from './arcade/FruttaBoard';
+import { RazzoBoard } from './arcade/RazzoBoard';
+import { MemoryBoard } from './arcade/MemoryBoard';
 
 /** Interfaccia di ogni gioco giocabile: riceve la vista del giocatore e manda le mosse. */
 export const BOARDS: Record<string, ComponentType<BoardProps>> = {
@@ -38,7 +44,6 @@ export const BOARDS: Record<string, ComponentType<BoardProps>> = {
   burraco: BurracoBoard,
   machiavelli: MachiavelliBoard,
   freccette: FreccetteBoard,
-  football: FootballBoard,
   biliardo: BiliardoBoard,
   lupus: LupusBoard,
   mrwhite: MrWhiteBoard,
@@ -47,4 +52,10 @@ export const BOARDS: Record<string, ComponentType<BoardProps>> = {
   colorwars: ColorWarsBoard,
   battaglia: BattagliaBoard,
   ballo: BalloBoard,
-};
+  coriandoli: CoriandoliBoard,
+  serpentina: SerpentinaBoard,
+  sudoku: SudokuBoard,
+  raddoppia: RaddoppiaBoard,
+  frutta: FruttaBoard,
+  razzo: RazzoBoard,
+  memory: MemoryBoard,};
