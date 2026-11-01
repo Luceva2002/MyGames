@@ -26,6 +26,7 @@ export const GAME_ART: Record<string, ImageSourcePropType> = {
   puntielinee: require('../../assets/games/puntielinee.jpg'),
   colorwars: require('../../assets/games/colorwars.jpg'),
   battaglia: require('../../assets/games/battaglia.jpg'),
+  ballo: require('../../assets/games/ballo.jpg'),
 };
 
 export const HERO = require('../../assets/images/hero.jpg') as ImageSourcePropType;

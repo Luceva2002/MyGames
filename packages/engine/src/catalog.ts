@@ -21,10 +21,11 @@ import { mosaico } from './games/mosaico';
 import { puntielinee } from './games/puntielinee';
 import { colorwars } from './games/colorwars';
 import { battaglia } from './games/battaglia';
+import { ballo } from './games/ballo';
 
 /** Giochi giocabili, nell'ordine in cui compaiono nel catalogo. */
 // Ordine della home: tipi di gioco alternati, così le carte non stanno tutte all'inizio.
-export const GAMES: Game[] = [scopa, mrwhite, battaglia, uno, freccette, scacchi, briscola, yahtzee, mosaico, lupus, burraco, colorwars, dama, setteemezzo, biliardo, puntielinee, scala40, tris, tresette, football, machiavelli, solitario];
+export const GAMES: Game[] = [scopa, mrwhite, battaglia, uno, freccette, scacchi, briscola, yahtzee, mosaico, lupus, burraco, colorwars, dama, ballo, setteemezzo, biliardo, puntielinee, scala40, tris, tresette, football, machiavelli, solitario];
 
 export function getGame(id: string): Game | undefined {
   return GAMES.find((g) => g.meta.id === id);

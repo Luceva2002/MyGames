@@ -129,7 +129,7 @@ export default function GameDetail() {
         ))}
       </Panel>
 
-      {ready && (
+      {ready && !meta.onlineOnly && (
         <Panel>
           <T size={18} weight="900">
             Chi gioca
@@ -211,12 +211,12 @@ export default function GameDetail() {
       {ready && (
         <View style={{ gap: 12 }}>
           {active.some((x) => x.bot) && <LevelPicker />}
-          <Button label="Offline" icon="▶" onPress={startLocal} />
+          {!meta.onlineOnly && <Button label="Offline" icon="▶" onPress={startLocal} />}
           <Button
             label={online.status === 'connecting' ? 'Creo la stanza…' : 'Multiplayer'}
             icon={isTable ? '📺' : '📱'}
-            kind="ghost"
-            color={colors.text}
+            kind={meta.onlineOnly ? 'solid' : 'ghost'}
+            color={meta.onlineOnly ? undefined : colors.text}
             onPress={async () => {
               const code = await quickRoom(meta.id, isTable);
               if (code) router.push({ pathname: '/room/[code]', params: { code } });

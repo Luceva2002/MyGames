@@ -4,13 +4,15 @@ import { useStayAwake } from '../../ui/keepAwake';
 import { GameFrame, HandoffCurtain } from '../../games/GameFrame';
 import { getPendingMatch, useLocalMatch, type MatchConfig } from '../../session/local';
 import { Screen } from '../../ui/kit';
-import { pickBots } from '@giochi/engine';
+import { getGame, pickBots } from '@giochi/engine';
 import { getSettings } from '../../ui/settings';
 
 export default function PlayLocal() {
   // Con ?bots=N si parte subito contro il computer (comodo anche come link diretto a un gioco).
   const { id, bots } = useLocalSearchParams<{ id: string; bots?: string }>();
   const config = useMemo(() => {
+    // I giochi solo online non hanno una partita su un dispositivo: anche da link diretto si torna alla home.
+    if (getGame(id)?.meta.onlineOnly) return null;
     const pending = getPendingMatch();
     if (pending?.gameId === id && !bots) return pending;
     return bots ? { gameId: id, seats: [{ name: 'Io', bot: false, avatar: getSettings().avatar ?? undefined }, ...pickBots(Number(bots), Math.random, [getSettings().avatar]).map((b) => ({ name: b.name, bot: true }))] } : null;

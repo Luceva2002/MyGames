@@ -14,6 +14,14 @@ export function applyMove<S, M>(game: Game<S, M>, state: S, seat: Seat, move: M)
   return next;
 }
 
+/** Fa passare il tempo nei giochi che ne hanno bisogno, senza toccare lo stato originale. */
+export function advanceTime<S, M>(game: Game<S, M>, state: S, ms: number): S {
+  if (!game.advance || game.result(state)) return state;
+  const next = clone(state);
+  game.advance(next, ms);
+  return next;
+}
+
 /** Mossa del computer. Il bot lavora su una copia: può consumare numeri casuali senza toccare la partita. */
 export function botMove<S, M>(game: Game<S, M>, state: S, seat: Seat, level: BotLevel = 'difficile'): M {
   if (!game.bot) throw new Error(`${game.meta.id}: nessun computer disponibile`);
@@ -26,9 +34,15 @@ export function simulate<S, M>(game: Game<S, M>, players: number, seed: number, 
   let steps = 0;
   while (!game.result(state)) {
     if (steps++ > maxSteps) throw new Error(`${game.meta.id}: partita troppo lunga (seed ${seed})`);
+    // Nei giochi in tempo reale il tempo scorre fra una mossa e l'altra e tutti possono muovere.
+    if (game.advance) {
+      state = advanceTime(game, state, 400);
+      if (game.result(state)) break;
+    }
     const active = game.activePlayers(state);
+    if (active.length === 0 && game.advance) continue;
     if (active.length === 0) throw new Error(`${game.meta.id}: nessun giocatore attivo (seed ${seed})`);
-    const seat = active[0];
+    const seat = game.advance ? active[steps % active.length] : active[0];
     game.view(state, seat);
     state = applyMove(game, state, seat, botMove(game, state, seat));
   }

@@ -29,6 +29,7 @@ export * from './games/mosaico';
 export * from './games/puntielinee';
 export * from './games/colorwars';
 export * from './games/battaglia';
+export * from './games/ballo';
 export * from './bots';
 export * from './narrate';
 export * from './difficulty';

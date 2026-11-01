@@ -20,6 +20,7 @@ import { MosaicoBoard } from './MosaicoBoard';
 import { PuntiLineeBoard } from './PuntiLineeBoard';
 import { ColorWarsBoard } from './ColorWarsBoard';
 import { BattagliaBoard } from './BattagliaBoard';
+import { BalloBoard } from './BalloBoard';
 
 /** Interfaccia di ogni gioco giocabile: riceve la vista del giocatore e manda le mosse. */
 export const BOARDS: Record<string, ComponentType<BoardProps>> = {
@@ -45,4 +46,5 @@ export const BOARDS: Record<string, ComponentType<BoardProps>> = {
   puntielinee: PuntiLineeBoard,
   colorwars: ColorWarsBoard,
   battaglia: BattagliaBoard,
+  ballo: BalloBoard,
 };

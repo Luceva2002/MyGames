@@ -1,4 +1,4 @@
-import { applyMove, battaglia, botMove, colorwars, hLine, mosaico, MOSAICO_IDS, MOSAICO_PIECES, mosaicoLeft, mosaicoMoves, mosaicoShape, NAVALE_FLEET, puntielinee, randomFleet, shipCells, vLine, mrwhite, sameWord, burracoKind, BURRACO_RULES, checkMeld, captureOptions, damaMoves, primieraScore, scacchi, scoreFor, setteValue, unoDeck, type Card, type ChessState } from '../src';
+import { advanceTime, applyMove, ballo, BALLO_FESTA_MS, BALLO_KILL_MS, BALLO_LIGHTS_MS, BALLO_SKIP, type BalloState, battaglia, botMove, colorwars, hLine, mosaico, MOSAICO_IDS, MOSAICO_PIECES, mosaicoLeft, mosaicoMoves, mosaicoShape, NAVALE_FLEET, puntielinee, randomFleet, shipCells, vLine, mrwhite, sameWord, burracoKind, BURRACO_RULES, checkMeld, captureOptions, damaMoves, primieraScore, scacchi, scoreFor, setteValue, unoDeck, type Card, type ChessState } from '../src';
 
 const it = (suit: string, rank: number): Card => ({ id: `it-${suit}${rank}`, deck: 'it', suit, rank });
 
@@ -331,4 +331,153 @@ export const checks: { name: string; fn: () => void }[] = [
       eq([31, 51, 40, 42].includes(next.cell), true, 'spara accanto al colpo a segno');
     },
   },
+  ...balloChecks(),
 ];
+
+function balloStart(players: number, seed = 1): BalloState {
+  let s = ballo.setup({ players, seed });
+  for (let p = 0; p < players; p++) s = applyMove(ballo, s, p, { type: 'seen' });
+  return s;
+}
+const later = (s: BalloState, ms: number) => advanceTime(ballo, s, ms);
+const guestsOf = (s: BalloState) => Array.from({ length: s.players }, (_, p) => p).filter((p) => !s.traitors.includes(p));
+function refused(fn: () => unknown, msg: string) {
+  let ok = false;
+  try {
+    fn();
+  } catch {
+    ok = true;
+  }
+  if (!ok) throw new Error(msg);
+}
+function voteOut(s: BalloState, target: number): BalloState {
+  for (let p = 0; p < s.players; p++) if (!s.out[p]) s = applyMove(ballo, s, p, { type: 'ready' });
+  for (let p = 0; p < s.players; p++) if (!s.out[p]) s = applyMove(ballo, s, p, { type: 'vote', target });
+  return s;
+}
+
+function balloChecks(): { name: string; fn: () => void }[] {
+  return [
+    {
+      name: 'ballo: 1 traditore fino a 6 giocatori, 2 da 7; chi guarda non vede i ruoli altrui',
+      fn: () => {
+        eq(ballo.setup({ players: 6, seed: 2 }).traitors.length, 1, 'in sei');
+        eq(ballo.setup({ players: 7, seed: 2 }).traitors.length, 2, 'in sette');
+        const s = balloStart(7);
+        const g = guestsOf(s)[0];
+        eq(ballo.view(s, g).traitors, [], 'l’invitato non vede i traditori');
+        eq(ballo.view(s, s.traitors[0]).traitors, s.traitors, 'i traditori si conoscono');
+        eq([ballo.view(s, null).role, ballo.view(s, null).task, ballo.view(s, null).traitors], [null, null, []], 'lo schermo non vede ruoli né compiti');
+        const peek = JSON.stringify(ballo.view(s, g));
+        eq(peek.includes('rng'), false, 'niente semi nella vista');
+      },
+    },
+    {
+      name: 'ballo: i compiti degli invitati e dei fantasmi riempiono la barra, quelli del traditore no',
+      fn: () => {
+        let s = balloStart(4);
+        const [a, b] = guestsOf(s);
+        const t = s.traitors[0];
+        s = applyMove(ballo, s, t, { type: 'task', n: s.tasks[t].n });
+        eq(s.bar, 0, 'compito finto');
+        const n = s.tasks[a].n;
+        s = applyMove(ballo, s, a, { type: 'task', n });
+        s = applyMove(ballo, s, a, { type: 'task', n });
+        eq(s.bar, 1, 'il doppio invio conta una volta');
+        s = later(s, 15_000);
+        s = applyMove(ballo, s, t, { type: 'kill', target: b });
+        s = applyMove(ballo, s, b, { type: 'task', n: s.tasks[b].n });
+        eq(s.bar, 2, 'il fantasma continua a contare');
+        while (!ballo.result(s)) s = applyMove(ballo, s, a, { type: 'task', n: s.tasks[a].n });
+        eq([ballo.result(s)?.winners, s.winner], [guestsOf(s), 'invitati'], 'barra piena');
+      },
+    },
+    {
+      name: 'ballo: smascherare ha la ricarica, la vittima lo sa subito, gli altri alla riunione',
+      fn: () => {
+        let s = balloStart(5);
+        const t = s.traitors[0];
+        const [a, b, c] = guestsOf(s);
+        refused(() => applyMove(ballo, s, t, { type: 'kill', target: a }), 'appena iniziata non si può');
+        refused(() => applyMove(ballo, later(s, 15_000), a, { type: 'kill', target: b }), 'solo il traditore');
+        s = later(s, 15_000);
+        s = applyMove(ballo, s, t, { type: 'kill', target: a });
+        eq([ballo.view(s, a).out[a], ballo.view(s, b).out[a], ballo.view(s, null).out[a], ballo.view(s, t).out[a]], [true, false, false, true], 'chi lo sa');
+        eq(ballo.activePlayers(s).length, 5, 'dai presenti non si capisce chi è fuori');
+        refused(() => applyMove(ballo, s, t, { type: 'kill', target: b }), 'ricarica');
+        refused(() => applyMove(ballo, s, a, { type: 'meeting' }), 'il fantasma non chiama riunioni');
+        s = later(s, BALLO_KILL_MS);
+        s = applyMove(ballo, s, b, { type: 'meeting' });
+        eq([s.phase, s.meeting], ['discussione', { caller: b, victims: [a] }], 'riunione');
+        eq(ballo.view(s, c).out[a], true, 'ora lo sanno tutti');
+        s = voteOut(s, BALLO_SKIP);
+        eq(s.phase, 'esito', 'si passa all’esito');
+        s = later(s, 6_000);
+        eq(s.phase, 'festa', 'nuova festa');
+        refused(() => applyMove(ballo, s, b, { type: 'meeting' }), 'una riunione a testa');
+      },
+    },
+    {
+      name: 'ballo: luci spente 10 s, due invitati insieme le riaccendono, il traditore no',
+      fn: () => {
+        let s = balloStart(5);
+        const t = s.traitors[0];
+        const [a, b] = guestsOf(s);
+        refused(() => applyMove(ballo, s, a, { type: 'lights' }), 'solo il traditore');
+        s = applyMove(ballo, s, t, { type: 'lights' });
+        refused(() => applyMove(ballo, s, a, { type: 'task', n: s.tasks[a].n }), 'compiti bloccati');
+        refused(() => applyMove(ballo, s, t, { type: 'lights' }), 'una volta per festa');
+        s = applyMove(ballo, s, a, { type: 'relight' });
+        s = applyMove(ballo, s, t, { type: 'relight' });
+        eq(s.lightsUntil > 0, true, 'il tocco del traditore non conta');
+        s = later(s, 3_000);
+        s = applyMove(ballo, s, b, { type: 'relight' });
+        eq(s.lightsUntil > 0, true, 'troppo distanti');
+        s = later(s, 1_000);
+        s = applyMove(ballo, s, a, { type: 'relight' });
+        eq(s.lightsUntil, 0, 'riaccese');
+        s = applyMove(ballo, s, a, { type: 'task', n: s.tasks[a].n });
+        let d = balloStart(5);
+        d = applyMove(ballo, d, d.traitors[0], { type: 'lights' });
+        d = later(d, BALLO_LIGHTS_MS);
+        eq(d.lightsUntil, 0, 'dopo 10 s tornano da sole');
+      },
+    },
+    {
+      name: 'ballo: a fine festa riunione, il più votato esce, in parità nessuno; il traditore fuori fa vincere gli invitati',
+      fn: () => {
+        let s = balloStart(4);
+        const t = s.traitors[0];
+        const [a, b, c] = guestsOf(s);
+        s = later(s, BALLO_FESTA_MS);
+        eq([s.phase, s.meeting?.caller], ['discussione', null], 'riunione a fine festa');
+        s = later(s, 60_000);
+        eq(s.phase, 'voto', 'dopo 60 s si vota');
+        s = applyMove(ballo, s, a, { type: 'vote', target: b });
+        s = applyMove(ballo, s, b, { type: 'vote', target: a });
+        s = later(s, 30_000);
+        eq([s.phase, s.outcome?.seat], ['esito', null], 'chi non vota salta: nessuno esce');
+        s = later(s, 6_000);
+        s = applyMove(ballo, s, c, { type: 'meeting' });
+        s = voteOut(s, t);
+        eq([s.outcome?.seat, s.outcome?.traitor, ballo.result(s)], [t, true, null], 'si scopre prima dell’esito');
+        s = later(s, 6_000);
+        eq(ballo.result(s)?.winners, [a, b, c], 'vincono gli invitati');
+      },
+    },
+    {
+      name: 'ballo: i traditori vincono se sono tanti quanti gli invitati',
+      fn: () => {
+        let s = balloStart(4);
+        const t = s.traitors[0];
+        const [a, b] = guestsOf(s);
+        s = later(s, 15_000);
+        s = applyMove(ballo, s, t, { type: 'kill', target: a });
+        s = later(s, BALLO_KILL_MS);
+        eq(ballo.result(s), null, 'ancora due invitati');
+        s = applyMove(ballo, s, t, { type: 'kill', target: b });
+        eq([ballo.result(s)?.winners, ballo.view(s, null).traitors], [[t], [t]], 'vince il traditore, e si scopre');
+      },
+    },
+  ];
+}

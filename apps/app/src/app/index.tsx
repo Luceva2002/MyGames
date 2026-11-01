@@ -144,13 +144,13 @@ function QuickStart({ entry, onClose, isTable }: { entry: CatalogEntry | null; o
               </T>
             </View>
           </Row>
-          <SheetOption
+          {!e.meta.onlineOnly && <SheetOption
             icon="🤖"
             title={multi ? 'Offline' : 'Gioca'}
             text={e.meta.humansOnly ? 'Vi passate il telefono a turno' : multi ? 'Contro il computer, subito' : 'Parti subito, qui'}
             primary={!multi}
             onPress={go(() => (e.meta.humansOnly ? details() : startVsComputer(e)))}
-          />
+          />}
           {multi && (
             <SheetOption
               icon={isTable ? '📺' : '📱'}
