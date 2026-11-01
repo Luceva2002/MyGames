@@ -1,5 +1,5 @@
-import { Children, useEffect, useRef, useState, type ReactNode, createContext, useContext } from 'react';
-import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Children, createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
+import { ScrollView, StyleSheet, useWindowDimensions, View, type LayoutChangeEvent } from 'react-native';
 import type { Card, Seat } from '@giochi/engine';
 import { CARD_RATIO, CardBack, CardGhost, cardRatio, PlayingCard } from '../ui/cards';
 import { Draggable, type DragPayload } from '../ui/drag';
@@ -16,6 +16,16 @@ export interface BoardProps<V = any, M = any> {
   names: string[];
   myTurn: boolean;
   onMove: (move: M) => void;
+}
+
+/** Lo spazio che resta a una griglia: si misura così sta sempre tutta, senza tagli né scorrimento. */
+export function useFit() {
+  const [box, setBox] = useState({ w: 0, h: 0 });
+  const onLayout = (e: LayoutChangeEvent) => {
+    const { width: w, height: h } = e.nativeEvent.layout;
+    setBox((b) => (b.w === w && b.h === h ? b : { w, h }));
+  };
+  return { box, onLayout };
 }
 
 /** Larghezza delle carte in mano in base allo schermo e al numero di carte. */
@@ -464,7 +474,7 @@ const styles = StyleSheet.create({
  * Adesivo magenta inclinato al centro per gli eventi ("+1 scopa!", "Settebello"), visibile 1 s (SPEC §9).
  * `eventKey` cambia a ogni nuovo evento; null non mostra niente.
  */
-export function EventSticker({ text, eventKey }: { text: string | null; eventKey: string | null }) {
+export function EventSticker({ text, eventKey, high }: { text: string | null; eventKey: string | null; /** In alto, per non coprire la griglia dove è appena successo. */ high?: boolean }) {
   const [shown, setShown] = useState<string | null>(null);
   useEffect(() => {
     if (!text || !eventKey) return;
@@ -474,7 +484,7 @@ export function EventSticker({ text, eventKey }: { text: string | null; eventKey
   }, [eventKey]); // eslint-disable-line react-hooks/exhaustive-deps
   if (!shown) return null;
   return (
-    <View pointerEvents="none" accessibilityLiveRegion="polite" style={styles.stickerWrap}>
+    <View pointerEvents="none" accessibilityLiveRegion="polite" style={[styles.stickerWrap, high && { justifyContent: 'flex-start', paddingTop: 64 }]}>
       <PopIn key={eventKey ?? ''}>
         <View style={styles.sticker}>
           <T size={30} weight="900" color="#FFFFFF" center>

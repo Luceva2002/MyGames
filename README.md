@@ -24,9 +24,14 @@ e ognuno gioca dal proprio telefono.
 | Biliardo | 2 | palla 8 con fisica vera |
 | Football Strike | 2 | rigori, tiro e parata in segreto |
 | Tris | 2 | |
+| Mosaico | 2–4 | territorio a pezzi di 1–5 quadretti, griglia 14×14, 17×17 o 20×20 |
+| Punti e linee | 2–4 | griglia da 4, 5 o 6 punti per lato |
+| Color Wars | 2–4 | reazione a catena su griglia 5×5 |
+| Battaglia navale | 2 | flotta nascosta sul telefono di ciascuno, mai sulla TV |
+| Il Ballo Mascherato | 4–10 | in tempo reale, solo online col proprio telefono: compiti, Traditori, riunioni e voto |
 | Lupus | 4–20 | regole e carte dei ruoli dall'app Lupus in Tabula; ruolo segreto sul telefono, mai sulla TV |
 
-Tutti i giochi si possono fare anche contro il computer.
+Tutti i giochi si possono fare anche contro il computer, tranne quelli a voce e con ruoli segreti come Mr. White e Il Ballo Mascherato.
 
 ## Design
 

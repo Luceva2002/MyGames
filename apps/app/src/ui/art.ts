@@ -21,6 +21,12 @@ export const GAME_ART: Record<string, ImageSourcePropType> = {
   lupus: require('../../assets/games/lupus.jpg'),
   // Mr. White: maschera bianca (volto) disegnata in codice con PIL nello stile delle altre copertine.
   mrwhite: require('../../assets/games/mrwhite.jpg'),
+  // Disegnate in codice con PIL, come Mr. White.
+  mosaico: require('../../assets/games/mosaico.jpg'),
+  puntielinee: require('../../assets/games/puntielinee.jpg'),
+  colorwars: require('../../assets/games/colorwars.jpg'),
+  battaglia: require('../../assets/games/battaglia.jpg'),
+  ballo: require('../../assets/games/ballo.jpg'),
 };
 
 export const HERO = require('../../assets/images/hero.jpg') as ImageSourcePropType;

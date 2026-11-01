@@ -48,12 +48,17 @@ function HowToPlay({ entry, onClose, isTable }: { entry: CatalogEntry | null; on
         <>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
             {art ? <Image source={art} style={styles.sheetArt} accessibilityIgnoresInvertColors /> : null}
-            <T size={26} weight="900" style={{ flex: 1, lineHeight: 30 }}>
-              Come giochi a {m.name}?
-            </T>
+            <View style={{ flex: 1 }}>
+              <T size={24} weight="900" style={{ lineHeight: 28 }}>
+                {m.name}
+              </T>
+              <T size={16} weight="800" color={colors.muted}>
+                Come giochi?
+              </T>
+            </View>
           </View>
-          {!m.humansOnly && <SheetOption icon="🤖" title={m.maxPlayers >= 2 ? 'Contro i bot' : 'Gioca'} text="Parti subito, offline" primary onPress={go(() => startVsComputer(m))} />}
-          {m.maxPlayers >= 2 && !isTable && (
+          {!m.humansOnly && !m.onlineOnly && <SheetOption icon="🤖" title={m.maxPlayers >= 2 ? 'Contro i bot' : 'Gioca'} text="Parti subito, offline" primary onPress={go(() => startVsComputer(m))} />}
+          {m.maxPlayers >= 2 && !isTable && !m.onlineOnly && (
             <SheetOption icon="📱" title="Con gli amici, un telefono" text={m.hiddenInfo ? 'Vi passate il telefono a ogni turno' : 'Sullo stesso schermo'} onPress={go(() => (playerCounts(m).includes(2) && !m.humansOnly ? startTwo(m) : startMany(m)))} />
           )}
           {m.maxPlayers >= 2 && (
@@ -103,9 +108,12 @@ export default function Games() {
   const isTable = useIsTable();
   const size = useIconSize();
   const [picked, setPicked] = useState<CatalogEntry | null>(null);
-  const all = useMemo(() => catalog(), []);
+  const everything = useMemo(() => catalog(), []);
+  // I giochi solo online non hanno una partita su un dispositivo solo: restano in «Tutti i giochi».
+  const all = everything.filter((e) => !e.meta.onlineOnly);
   const lastGame = getSettings().lastGame;
-  const last = mode === 'bots' && lastGame ? getGame(lastGame)?.meta : undefined;
+  const lastMeta = lastGame ? getGame(lastGame)?.meta : undefined;
+  const last = mode === 'bots' && !lastMeta?.onlineOnly ? lastMeta : undefined;
 
   const start = (e: CatalogEntry) => {
     if (mode === 'bots') startVsComputer(e.meta);
@@ -176,7 +184,7 @@ export default function Games() {
           {grid(all.filter((e) => e.meta.maxPlayers > 2))}
         </>
       )}
-      {mode === 'all' && grid(all)}
+      {mode === 'all' && grid(everything)}
       <HowToPlay entry={picked} onClose={() => setPicked(null)} isTable={isTable} />
     </Screen>
   );

@@ -24,6 +24,8 @@ export interface GameMeta {
   playerCounts?: number[];
   /** Solo persone: il computer non sa giocarci (es. indizi detti a voce). */
   humansOnly?: boolean;
+  /** Solo nelle stanze online, ognuno col suo telefono: niente partita su un dispositivo solo. */
+  onlineOnly?: boolean;
 }
 
 export function playerCounts(meta: GameMeta): number[] {
@@ -35,6 +37,8 @@ export interface GameResult {
   winners: Seat[];
   /** Punteggio finale per posto, se ha senso. */
   scores?: number[];
+  /** Nel punteggio vince chi ne ha meno: il riepilogo mette prima lui. */
+  lowWins?: boolean;
   summary: string;
 }
 
@@ -62,6 +66,10 @@ export interface Game<S = any, M = any, V = any, O = any> {
   bot?(state: S, seat: Seat): M;
   /** Quanto aspettare (ms) prima che il computer muova, es. per finire un'animazione. */
   pause?(state: S): number;
+  /** Per i giochi in tempo reale: fa passare il tempo (sullo stato già clonato) e fa scadere fasi e azioni. */
+  advance?(state: S, ms: number): void;
+  /** Fra quanti ms scade la prossima cosa, così chi ospita la partita sa quando chiamare `advance`. */
+  nextEvent?(state: S): number | null;
 }
 
 export class IllegalMove extends Error {

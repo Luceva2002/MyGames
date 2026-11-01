@@ -46,6 +46,9 @@ export function GameFrame({ meta, view, me, names, avatars, myTurn, active, onMo
   pending?: boolean;
 }) {
   const Board = BOARDS[meta.id];
+  // Nei giochi in tempo reale tutti muovono insieme: niente turno da mostrare, e nessun blocco fra una mossa e l'altra.
+  const realtime = !!meta.onlineOnly;
+  const waiting = pending && !realtime;
   const [rules, setRules] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const [restarting, setRestarting] = useState(false);
@@ -77,21 +80,21 @@ export function GameFrame({ meta, view, me, names, avatars, myTurn, active, onMo
     <SeatAvatars.Provider value={avatars ?? []}>
       <AnchorProvider>
       <View style={[{ flex: 1 }, tv && styles.tvSafe]}>
-        {tv && !result && active.length > 0 && (
+        {tv && !realtime && !result && active.length > 0 && (
           <View style={{ alignItems: 'center', paddingVertical: 8 }}>
             <TurnPill active={active} names={names} me={me} myTurn={myTurn} />
           </View>
         )}
-        <View style={{ flex: 1 }} pointerEvents={pending ? 'none' : 'auto'}>
+        <View style={{ flex: 1 }} pointerEvents={waiting ? 'none' : 'auto'}>
           <CardZoomLayer>
           <DragProvider>
-            {Board ? <Board view={view} me={me} names={names} myTurn={myTurn && !pending} onMove={onMove} /> : <T>Interfaccia non disponibile.</T>}
+            {Board ? <Board view={view} me={me} names={names} myTurn={myTurn && !waiting} onMove={onMove} /> : <T>Interfaccia non disponibile.</T>}
           </DragProvider>
           </CardZoomLayer>
           <ActionStrip action={lastAction ?? null} me={me} names={names} low={meta.category !== 'carte'} />
         </View>
         <GameMenu meta={meta} roomCode={roomCode} onRules={() => setRules(true)} onRestart={onRestart && !result ? () => setRestarting(true) : undefined} onChangeGame={onChangeGame} onExit={() => setLeaving(true)} />
-        {pending && (
+        {waiting && (
           <View style={styles.pending} accessibilityLiveRegion="polite">
             <ActivityIndicator color={colors.onAccent} />
             <T size={14} weight="800" color={colors.onAccent}>
@@ -151,7 +154,7 @@ export function GameFrame({ meta, view, me, names, avatars, myTurn, active, onMo
                 <View style={{ gap: 8 }}>
                   {names
                     .map((n, i) => ({ n, i, s: result.scores![i] }))
-                    .sort((a, b) => b.s - a.s)
+                    .sort((a, b) => (result.lowWins ? a.s - b.s : b.s - a.s))
                     .map(({ n, i, s }) => (
                       <Row key={i} gap={8}>
                         <View style={{ flex: 1 }}>

@@ -1,5 +1,7 @@
 import type { Seat } from './core/types';
 import { cardName, type Card } from './cards/cards';
+import { CELL_LABEL, SHIP_NAMES } from './games/battaglia';
+import { MOSAICO_PIECES } from './games/mosaico';
 
 /**
  * Racconto di una mossa, per far capire agli altri cosa ha appena fatto chi ha giocato
@@ -106,6 +108,28 @@ export function narrate(gameId: string, before: any, after: any, seat: Seat, mov
       const k = after.kicks?.length > (before.kicks?.length ?? 0) ? after.kicks[after.kicks.length - 1] : null;
       if (!k) return move.dive ? 'sceglie dove tuffarsi' : 'sceglie dove tirare';
       return k.outcome === 'gol' ? 'GOL!' : k.outcome === 'parata' ? 'parata!' : k.outcome === 'palo' ? 'palo!' : 'tiro fuori';
+    }
+    case 'mosaico': {
+      const n = MOSAICO_PIECES[move.piece]?.length ?? 0;
+      const fermi = after.stuck.flatMap((v: boolean, p: number) => (v && !before.stuck[p] ? [`%v${p}`] : []));
+      return `mette un pezzo da ${n}${fermi.length ? ` — senza più mosse: ${fermi.join(' e ')}` : ''}`;
+    }
+    case 'puntielinee': {
+      if ('dots' in move) return `sceglie la griglia ${move.dots}×${move.dots}`;
+      const chiusi = after.boxes.filter((b: unknown) => b !== null).length - before.boxes.filter((b: unknown) => b !== null).length;
+      return chiusi ? `chiude ${chiusi === 1 ? 'un quadrato' : `${chiusi} quadrati`} e rigioca` : 'traccia una linea';
+    }
+    case 'colorwars': {
+      if (!before.placed[seat]) return 'mette la sua prima cella';
+      const booms = after.chain.frames.flatMap((f: { boom: number[] }) => f.boom).length;
+      if (!booms) return 'aggiunge un punto';
+      const prese = after.cells.filter((c: { o: Seat } | null, i: number) => c?.o === seat && before.cells[i] && before.cells[i].o !== seat).length;
+      return `fa esplodere ${booms === 1 ? 'una cella' : `${booms} celle`}${prese ? ` e ne conquista ${prese}` : ''}`;
+    }
+    case 'battaglia': {
+      if (move.type === 'place') return 'ha schierato la flotta';
+      const last = after.last;
+      return `spara in ${CELL_LABEL(move.cell)}: ${last.outcome === 'acqua' ? 'acqua' : last.outcome === 'colpito' ? 'colpito!' : `affonda ${SHIP_NAMES[last.len]}!`}`;
     }
     default:
       return null;

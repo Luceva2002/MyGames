@@ -1,5 +1,6 @@
 import { Room, type Client } from '@colyseus/core';
 import {
+  advanceTime,
   applyMove,
   assignAvatars,
   botByName,
@@ -68,6 +69,9 @@ export class TableRoom extends Room {
   private game: Game | null = null;
   private state_: unknown = null;
   private botTimer: { clear(): void } | null = null;
+  /** Giochi in tempo reale: quando il tempo è passato l'ultima volta, e la prossima scadenza. */
+  private clockAt = 0;
+  private clockTimer: { clear(): void } | null = null;
 
   onCreate(options: { gameId?: string }) {
     this.roomId = newCode();
@@ -123,6 +127,7 @@ export class TableRoom extends Room {
       // Qualcuno ha lasciato il tavolo a partita finita: con un posto vuoto non si rigioca.
       if (this.seats.some((s) => !s.bot && !s.memberId)) return this.backToLobby();
       this.state_ = this.game.setup({ players: this.seats.length, seed: newSeed() });
+      this.clockAt = Date.now();
       this.afterChange();
     });
     this.onMessage('toLobby', (client) => {
@@ -135,6 +140,7 @@ export class TableRoom extends Room {
       const seat = this.seats.findIndex((s) => s.memberId === client.sessionId);
       if (seat < 0) return this.fail(client, 'Stai guardando: non hai un posto al tavolo.');
       try {
+        this.tickClock();
         const before = this.state_;
         this.state_ = applyMove(this.game, this.state_, seat, msg.move);
         this.tell(before, seat, msg.move);
@@ -217,6 +223,7 @@ export class TableRoom extends Room {
   onDispose() {
     usedCodes.delete(this.roomId);
     this.botTimer?.clear();
+    this.clockTimer?.clear();
   }
 
   private endMatch() {
@@ -225,6 +232,7 @@ export class TableRoom extends Room {
     this.lastAction = null;
     this.seats = [];
     this.botTimer?.clear();
+    this.clockTimer?.clear();
   }
 
   /** Fine partita per un posto rimasto vuoto: la stanza riparte pulita. */
@@ -249,6 +257,7 @@ export class TableRoom extends Room {
     ];
     this.game = game;
     this.state_ = game.setup({ players: total, seed: newSeed() });
+    this.clockAt = Date.now();
     this.afterChange();
   }
 
@@ -260,13 +269,29 @@ export class TableRoom extends Room {
     if (text && this.game) this.lastAction = { seat, text, n: (this.lastAction?.n ?? 0) + 1 };
   }
 
+  /** Fa passare nei giochi in tempo reale il tempo trascorso dall'ultima volta. */
+  private tickClock() {
+    if (!this.game?.advance) return;
+    const now = Date.now();
+    this.state_ = advanceTime(this.game, this.state_, now - this.clockAt);
+    this.clockAt = now;
+  }
+
   private afterChange() {
     this.broadcastRoom();
     if (!this.game) return;
     const game = this.game;
+    this.tickClock();
     const result = game.result(this.state_);
     const active = result ? [] : game.activePlayers(this.state_);
     for (const client of this.clients) this.sendView(client);
+    this.clockTimer?.clear();
+    const wait = result ? null : game.nextEvent?.(this.state_) ?? null;
+    if (wait !== null) {
+      this.clockTimer = this.clock.setTimeout(() => {
+        if (this.game === game) this.afterChange();
+      }, wait + 20);
+    }
     this.botTimer?.clear();
     const bot = active.find((s) => this.seats[s]?.bot);
     // Se un posto umano deve muovere da solo (es. fine mano su un posto vuoto), muove il computer.
@@ -291,6 +316,7 @@ export class TableRoom extends Room {
   private sendView(client: Client) {
     if (!this.game) return;
     const game = this.game;
+    this.tickClock();
     const result = game.result(this.state_);
     const active = result ? [] : game.activePlayers(this.state_);
     const seatIndex = this.seats.findIndex((s) => s.memberId === client.sessionId);
