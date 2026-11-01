@@ -190,7 +190,9 @@ function attach(room: Room) {
   });
   room.onMessage('view', (seatView: SeatView) => set({ seatView, pending: false }));
   room.onMessage('error', ({ message }: { message: string }) => set({ error: message, pending: false }));
-  room.onDrop(() => set({ status: 'reconnecting' }));
+  room.onDrop(() => {
+    if (current.room === room) set({ status: 'reconnecting' });
+  });
   room.onReconnect(() => set({ status: 'connected' }));
   room.onLeave(() => {
     if (current.room === room) set({ status: 'closed' });
@@ -276,6 +278,8 @@ export async function leaveRoom() {
   const room = current.room;
   saveToken(null);
   set({ room: null, snapshot: null, seatView: null, status: 'idle', error: null });
+  // Il proxy di Render non fa arrivare il codice di uscita: senza questo l'SDK riproverebbe a rientrare per un minuto.
+  if (room) room.reconnection.enabled = false;
   await room?.leave().catch(() => {});
 }
 

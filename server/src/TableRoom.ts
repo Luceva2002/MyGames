@@ -168,7 +168,21 @@ export class TableRoom extends Room {
 
   async onDrop(client: Client) {
     const m = this.member(client.sessionId);
-    if (m) m.connected = false;
+    if (!m) return;
+    // Dietro il proxy di Render la caduta arriva anche 10 secondi dopo: chi ha riaperto la scheda nel frattempo è già dentro come nuovo.
+    const heir = this.members.find((x) => x !== m && x.connected && x.role === m.role && this.devices.has(x.id) && this.devices.get(x.id) === this.devices.get(m.id) && !this.seats.some((s) => s.memberId === x.id));
+    if (heir) {
+      const seat = this.seats.find((s) => s.memberId === m.id);
+      if (seat) seat.memberId = heir.id;
+      if (this.hostId === m.id) this.hostId = heir.id;
+      this.devices.delete(m.id);
+      this.members = this.members.filter((x) => x !== m);
+      this.broadcastRoom();
+      const heirClient = this.clients.find((c) => c.sessionId === heir.id);
+      if (heirClient) this.sendView(heirClient);
+      return;
+    }
+    m.connected = false;
     this.broadcastRoom();
     this.allowReconnection(client, this.game ? RECONNECT_IN_GAME_SECONDS : RECONNECT_SECONDS);
   }

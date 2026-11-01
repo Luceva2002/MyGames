@@ -8,6 +8,10 @@ import { ROOM_NAME, type RoomSnapshot, type SeatView } from '@giochi/engine';
 
 const url = process.env.SERVER_URL ?? 'ws://localhost:2567';
 const wait = (ms = 250) => new Promise((r) => setTimeout(r, ms));
+async function until(ok: () => boolean, ms = 20000) {
+  const start = Date.now();
+  while (!ok() && Date.now() - start < ms) await wait(100);
+}
 
 let failed = 0;
 function check(label: string, ok: boolean, detail?: unknown) {
@@ -25,6 +29,7 @@ function watch(room: Room): Phone {
   let snap = null as RoomSnapshot | null;
   let view = null as SeatView | null;
   const errors: string[] = [];
+  room.reconnection.enabled = false;
   room.onMessage('room', (s: RoomSnapshot) => {
     snap = s;
     if (s.phase === 'lobby') view = null;
@@ -36,7 +41,6 @@ function watch(room: Room): Phone {
 const join = async (code: string, name: string, deviceId: string) => watch(await new Client(url).joinById(code, { name, role: 'player', deviceId }));
 /** Taglia il filo come una scheda chiusa, senza dire al server che si esce. */
 const cut = (p: Phone) => {
-  p.room.reconnection.maxRetries = 0;
   p.room.connection.transport.close(3000);
 };
 
@@ -97,7 +101,8 @@ console.log('— Chi perde la connessione e rientra dallo stesso dispositivo');
   const code = a.room.roomId;
   const seatBefore = a.snap().seats.findIndex((s) => s.name === 'Bruno');
   cut(b);
-  await wait(400);
+  // Dietro il proxy di Render il server si accorge della caduta anche 10 secondi dopo.
+  await until(() => a.snap().members.find((m) => m.name === 'Bruno')?.connected === false);
   check('la partita aspetta', a.snap().phase === 'playing');
   check('gli altri vedono che manca', a.snap().members.find((m) => m.name === 'Bruno')?.connected === false, a.snap().members);
   const back = await join(code, 'Bruno', 'dev-b');
@@ -109,12 +114,27 @@ console.log('— Chi perde la connessione e rientra dallo stesso dispositivo');
   await Promise.all([a.room.leave().catch(() => {}), back.room.leave().catch(() => {})]);
 }
 
+console.log('— Chi riapre la scheda prima che il server si accorga della caduta');
+{
+  const { a, b } = await table();
+  const seat = a.snap().seats.findIndex((s) => s.name === 'Bruno');
+  const back = await join(a.room.roomId, 'Bruno', 'dev-b');
+  await wait();
+  check('all\'inizio guarda soltanto', back.view()?.me === null, back.view()?.me);
+  cut(b);
+  await until(() => back.view()?.me === seat);
+  check('prende il suo posto', back.view()?.me === seat, back.view()?.me);
+  check('nessun doppione', a.snap().members.filter((m) => m.name === 'Bruno').length === 1, a.snap().members);
+  check('la partita continua', a.snap().phase === 'playing');
+  await Promise.all([a.room.leave().catch(() => {}), back.room.leave().catch(() => {})]);
+}
+
 console.log('— Chi ricarica la pagina (gettone di rientro)');
 {
   const { a, b } = await table();
   const token = b.room.reconnectionToken;
   cut(b);
-  await wait(400);
+  await until(() => a.snap().members.find((m) => m.name === 'Bruno')?.connected === false);
   const back = watch(await new Client(url).reconnect(token));
   await wait();
   check('riceve subito il tavolo', !!back.view(), back.view());
