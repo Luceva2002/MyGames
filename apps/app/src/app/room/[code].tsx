@@ -51,6 +51,11 @@ export default function RoomScreen() {
         <T size={20} weight="800">
           ⏳ Entro nella stanza…
         </T>
+        {online.waking && (
+          <T size={15} color={colors.muted}>
+            Il server delle stanze si sta svegliando: la prima volta ci vuole fino a un minuto.
+          </T>
+        )}
       </Screen>
     );
   }

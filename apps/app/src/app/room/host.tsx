@@ -64,7 +64,7 @@ export default function HostRoom() {
         )}
       </Panel>
       {online.error && <T color={colors.danger}>{online.error}</T>}
-      <Button label={online.status === 'connecting' ? 'Creo la stanza…' : 'Crea la stanza'} disabled={online.status === 'connecting'} onPress={create} />
+      <Button label={online.waking ? 'Sveglio le stanze…' : online.status === 'connecting' ? 'Creo la stanza…' : 'Crea la stanza'} disabled={online.status === 'connecting'} onPress={create} />
     </Screen>
   );
 }

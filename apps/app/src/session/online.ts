@@ -19,6 +19,84 @@ export function serverUrl(): string {
   return `ws://${host}:${DEFAULT_PORT}`;
 }
 
+/**
+ * Il server delle stanze è sul piano gratuito di Render: dopo 15 minuti senza visite si addormenta
+ * e al risveglio serve fino a un minuto. Appena qualcuno apre il sito gli si dà un colpetto, così
+ * quando si tocca "Con amici" è già sveglio; finché la pagina resta aperta lo si tiene sveglio.
+ */
+const AWAKE_FOR = 10 * 60_000;
+const WAKE_LIMIT = 90_000;
+let awakeAt = 0;
+let waking: Promise<boolean> | null = null;
+
+export function wakeServer(): Promise<boolean> {
+  if (Date.now() - awakeAt < AWAKE_FOR) return Promise.resolve(true);
+  if (!waking) {
+    waking = (async () => {
+      const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+      const timer = setTimeout(() => ctrl?.abort(), WAKE_LIMIT);
+      try {
+        // Basta che la richiesta arrivi: la risposta non serve leggerla (no-cors).
+        await fetch(`${serverUrl().replace(/^ws/, 'http')}/`, { mode: 'no-cors', cache: 'no-store', signal: ctrl?.signal });
+        awakeAt = Date.now();
+        return true;
+      } catch {
+        return false;
+      } finally {
+        clearTimeout(timer);
+        waking = null;
+      }
+    })();
+  }
+  return waking;
+}
+
+/** Da chiamare una volta nella radice dell'app: sveglia il server e lo tiene sveglio a pagina aperta. */
+export function useWakeServer() {
+  useEffect(() => {
+    const visible = () => typeof document === 'undefined' || document.visibilityState !== 'hidden';
+    wakeServer();
+    const id = setInterval(() => visible() && wakeServer(), AWAKE_FOR);
+    const onShow = () => visible() && wakeServer();
+    if (typeof document !== 'undefined') document.addEventListener('visibilitychange', onShow);
+    return () => {
+      clearInterval(id);
+      if (typeof document !== 'undefined') document.removeEventListener('visibilitychange', onShow);
+    };
+  }, []);
+}
+
+const isNetworkError = (e: unknown) => {
+  const code = Number((e as { code?: number })?.code);
+  return code >= 500 || /ECONNREFUSED|ECONNRESET|Failed to fetch|Network|network|timeout|Load failed/i.test(String((e as Error)?.message ?? e));
+};
+
+/**
+ * Apre la stanza aspettando, se serve, che il server si svegli: invece di un errore si mostra
+ * "sveglio le stanze" e si riprova da soli per un minuto e mezzo.
+ */
+async function withServer<T>(open: () => Promise<T>): Promise<T> {
+  const start = Date.now();
+  const slow = setTimeout(() => set({ waking: true }), 1500);
+  try {
+    await wakeServer();
+    for (;;) {
+      try {
+        return await open();
+      } catch (e) {
+        if (!isNetworkError(e) || Date.now() - start > WAKE_LIMIT) throw e;
+        set({ waking: true });
+        awakeAt = 0;
+        await new Promise((r) => setTimeout(r, 3000));
+        await wakeServer();
+      }
+    }
+  } finally {
+    clearTimeout(slow);
+    set({ waking: false });
+  }
+}
+
 /** Sito pubblico di Tavolata, dove entra chi è invitato senza avere l'app. */
 const PUBLIC_WEB_URL = 'https://tavolata-five.vercel.app';
 
@@ -46,9 +124,11 @@ interface OnlineState {
   status: 'idle' | 'connecting' | 'connected' | 'reconnecting' | 'closed';
   /** Mossa inviata e non ancora confermata dal server. */
   pending: boolean;
+  /** Il server delle stanze dormiva e lo si sta svegliando (fino a un minuto). */
+  waking: boolean;
 }
 
-let current: OnlineState = { room: null, snapshot: null, seatView: null, error: null, status: 'idle', pending: false };
+let current: OnlineState = { room: null, snapshot: null, seatView: null, error: null, status: 'idle', pending: false, waking: false };
 const listeners = new Set<(s: OnlineState) => void>();
 
 function set(patch: Partial<OnlineState>) {
@@ -77,7 +157,7 @@ export async function rejoin(code: string): Promise<string | null> {
     const saved = typeof sessionStorage !== 'undefined' ? JSON.parse(sessionStorage.getItem(TOKEN_KEY) ?? 'null') : null;
     if (saved?.code === code && saved.token) {
       set({ status: 'connecting', error: null });
-      const room = await new Client(serverUrl()).reconnect(saved.token);
+      const room = await withServer(() => new Client(serverUrl()).reconnect(saved.token));
       attach(room);
       return room.roomId;
     }
@@ -106,7 +186,7 @@ function attach(room: Room) {
 function friendly(e: unknown): string {
   const msg = String((e as Error)?.message ?? e);
   if (/not found|no rooms found|invalid/i.test(msg)) return 'Nessuna stanza con questo codice.';
-  if (/ECONNREFUSED|Failed to fetch|Network|network/i.test(msg)) return 'Server delle stanze non raggiungibile. È acceso?';
+  if (/ECONNREFUSED|Failed to fetch|Network|network/i.test(msg)) return 'Le stanze online non rispondono. Riprova tra un minuto.';
   return msg;
 }
 
@@ -116,7 +196,7 @@ const withAvatar = <T extends JoinOptions>(o: T): T => (o.role === 'player' && g
 export async function createRoom(options: JoinOptions & { gameId?: string }) {
   set({ status: 'connecting', error: null });
   try {
-    const room = await new Client(serverUrl()).create(ROOM_NAME, withAvatar(options));
+    const room = await withServer(() => new Client(serverUrl()).create(ROOM_NAME, withAvatar(options)));
     attach(room);
     return room.roomId;
   } catch (e) {
@@ -128,7 +208,7 @@ export async function createRoom(options: JoinOptions & { gameId?: string }) {
 export async function joinRoom(code: string, options: JoinOptions) {
   set({ status: 'connecting', error: null });
   try {
-    const room = await new Client(serverUrl()).joinById(code, withAvatar(options));
+    const room = await withServer(() => new Client(serverUrl()).joinById(code, withAvatar(options)));
     attach(room);
     return room.roomId;
   } catch (e) {

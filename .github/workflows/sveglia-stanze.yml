@@ -1,0 +1,27 @@
+# Tiene sveglio il server delle stanze (Render gratuito, dorme dopo 15 minuti senza visite)
+# nelle ore in cui di solito si gioca: dalle 18 a mezzanotte, ora italiana d'inverno
+# (d'estate dalle 19 all'una). Il sito lo sveglia comunque da solo appena qualcuno lo apre;
+# questa è la riserva per non far aspettare nemmeno il primo.
+# Si può lanciare a mano da GitHub → Actions → "Sveglia stanze" → Run workflow.
+name: Sveglia stanze
+
+on:
+  schedule:
+    - cron: "*/10 17-22 * * *"
+  workflow_dispatch:
+
+jobs:
+  sveglia:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Bussa al server delle stanze
+        run: |
+          for i in 1 2 3; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 60 https://tavolata-stanze.onrender.com/ || true)
+            echo "Tentativo $i: risposta $code"
+            case "$code" in 2*|3*|4*) exit 0 ;; esac
+            sleep 10
+          done
+          echo "Il server non ha risposto"
+          exit 1

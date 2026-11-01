@@ -151,7 +151,7 @@ function QuickStart({ entry, onClose, wideScreen }: { entry: CatalogEntry | null
             {multi && (
               <QuickOption
                 icon="📱"
-                title={online.status === 'connecting' ? 'Creo la stanza…' : 'Con amici'}
+                title={online.waking ? 'Sveglio le stanze…' : online.status === 'connecting' ? 'Creo la stanza…' : 'Con amici'}
                 text="Ognuno col suo telefono"
                 onPress={go(() => startRoom(e, false))}
               />
@@ -217,7 +217,7 @@ function JoinBar({ initialCode }: { initialCode: string }) {
       <T size={30}>📱</T>
       <View style={{ flex: 1, minWidth: 0 }}>
         <T size={20} weight="900" color={colors.onAccent}>
-          {busy ? 'Entro…' : 'Entra'}
+          {online.waking ? 'Sveglio le stanze…' : busy ? 'Entro…' : 'Entra'}
         </T>
         <T size={14} weight="800" color={colors.onAccent} lines={2}>
           {online.error && !busy ? online.error : 'Hai un codice?'}
@@ -398,6 +398,12 @@ function HomeLobby({ size }: { size: number }) {
       <View style={styles.lobbyOff}>
         <T size={13} color={colors.muted}>
           📡 Stanze online non disponibili adesso
+        </T>
+      </View>
+    ) : online.waking ? (
+      <View style={styles.lobbyOff}>
+        <T size={13} color={colors.muted}>
+          ⏳ Sveglio le stanze online, ci vuole al massimo un minuto…
         </T>
       </View>
     ) : null;
