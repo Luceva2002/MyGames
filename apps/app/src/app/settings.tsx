@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import { Switch, View } from 'react-native';
 import { CharacterPicker } from '../ui/CharacterPicker';
-import { Button, Chip, Panel, Row, Screen, T } from '../ui/kit';
+import { Button, Chip, Panel, RoundButton, Row, Screen, T } from '../ui/kit';
 import { setSettings, useReducedMotion, useSettings, type Settings } from '../ui/settings';
 import { colors } from '../ui/theme';
 
@@ -25,7 +25,7 @@ export default function SettingsScreen() {
 
   return (
     <Screen>
-      <Button small kind="ghost" color={colors.muted} label="‹ Giochi" onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))} style={{ alignSelf: 'flex-start' }} />
+      <RoundButton icon="back" label="Indietro" onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))} />
       <T size={30} weight="900">
         Impostazioni
       </T>

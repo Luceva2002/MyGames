@@ -174,7 +174,7 @@ export function Scala40Board({ view, me, names, myTurn, onMove }: BoardProps<Sca
           </Row>
         </>
       )}
-      <MyCorner wideOnly info={me === null ? null : info(me)} note={myTurn ? banner : undefined} />
+      <MyCorner wideOnly style={{ flexDirection: 'row', gap: 8 }} info={me === null ? null : info(me)} note={myTurn ? banner : undefined} />
     </TableBg>
   );
 }

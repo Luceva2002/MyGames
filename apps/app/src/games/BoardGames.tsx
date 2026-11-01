@@ -9,7 +9,7 @@ import { colors } from '../ui/theme';
 function useBoardSize() {
   const { width, height } = useWindowDimensions();
   // Lascia spazio a barra in alto, giocatori, catture e cartello del turno.
-  return Math.floor(Math.min(width - 72, height - 330, 620) / 8) * 8;
+  return Math.floor(Math.min(width - 72, height - 380, 620) / 8) * 8;
 }
 
 /** Colori della scacchiera del Carnevale: crema e viola, cornice gialla col contorno spesso. */

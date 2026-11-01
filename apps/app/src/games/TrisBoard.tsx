@@ -10,16 +10,18 @@ const SYMBOL = ['✕', '◯'];
 export function TrisBoard({ view, me, names, myTurn, onMove }: BoardProps<TrisState, TrisMove>) {
   const shared = useSharedScreen();
   const { width, height } = useWindowDimensions();
-  const size = Math.min(width - 72, height - 260, 480);
+  const size = Math.min(width - 72, height - 340, 480);
   const cell = size / 3;
   return (
     <TableBg table="teal">
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 20 }}>
-      <View style={{ flexDirection: 'row', gap: 24 }}>
+      <View style={{ flexDirection: 'row', gap: 10 }}>
         {[0, 1].map((seat) => (
-          <T key={seat} size={18} weight="800" color={seatColors[seat]}>
-            {SYMBOL[seat]} {names[seat]}
-          </T>
+          <View key={seat} style={{ paddingHorizontal: 14, paddingVertical: 6, borderRadius: 999, backgroundColor: colors.scrim }}>
+            <T size={18} weight="800" color={seatColors[seat]}>
+              {SYMBOL[seat]} {names[seat]}
+            </T>
+          </View>
         ))}
       </View>
       <Banner

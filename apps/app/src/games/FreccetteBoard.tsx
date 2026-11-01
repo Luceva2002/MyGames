@@ -209,7 +209,7 @@ export function FreccetteBoard({ view, me, names, myTurn, onMove }: BoardProps<F
   const handAngle = base ? Math.max(150, Math.min(210, (Math.atan2(-(reticle.x - handX), reticle.y - HAND_Y) * 180) / Math.PI)) : 180;
 
   return (
-    <TableBg table="pub" scrim={0.2} style={{ alignItems: 'center', gap: 10, paddingTop: 8 }}>
+    <TableBg table="pub" scrim={0.2} style={{ alignItems: 'center', gap: 10, paddingTop: 12 }}>
       <Row gap={10} wrap style={{ justifyContent: 'center', paddingHorizontal: 8 }}>
         {view.remaining.map((r, p) => (
           <View key={p} style={{ alignItems: 'center', padding: 8, borderRadius: 12, minWidth: 80, backgroundColor: view.turn === p ? colors.surface2 : colors.surface, borderWidth: 2, borderColor: view.turn === p ? seatColors[p % seatColors.length] : 'transparent' }}>

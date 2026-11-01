@@ -60,7 +60,7 @@ export function MosaicoBoard({ view, me, names, myTurn, onMove }: BoardProps<Mos
   const wide = width >= 700 && width > height;
   const { box, onLayout } = useFit();
   const { size } = view;
-  const side = box.w ? Math.floor(Math.min(box.w, box.h) / size) * size : 0;
+  const side = box.w ? Math.floor((Math.min(box.w, box.h) - 16) / size) * size : 0;
   const cell = side / size;
 
   const [sel, setSel] = useState<MosaicoMove | null>(null);

@@ -120,7 +120,7 @@ export function Button({ label, onPress, color = colors.accent, kind = 'solid', 
 }
 
 /** Bottone tondo con un'icona: indietro in alto a sinistra, menu in alto a destra. */
-export function RoundButton({ icon, label, onPress }: { icon: 'back' | 'menu'; label: string; onPress: () => void }) {
+export function RoundButton({ icon, label, onPress, style }: { icon: 'back' | 'menu'; label: string; onPress: () => void; style?: StyleProp<ViewStyle> }) {
   return (
     <Pressable
       accessibilityRole="button"
@@ -129,7 +129,7 @@ export function RoundButton({ icon, label, onPress }: { icon: 'back' | 'menu'; l
         tap();
         onPress();
       }}
-      style={(state) => [styles.round, focusRing((state as { focused?: boolean }).focused ?? false)]}
+      style={(state) => [styles.round, style, { transform: [{ translateY: state.pressed ? 2 : 0 }] }, focusRing((state as { focused?: boolean }).focused ?? false)]}
     >
       <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">
         <Path d={icon === 'back' ? 'M15 5l-7 7 7 7' : 'M4 7h16M4 12h16M4 17h16'} />

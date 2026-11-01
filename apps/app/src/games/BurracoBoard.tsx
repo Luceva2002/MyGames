@@ -151,7 +151,7 @@ export function BurracoBoard({ view, me, names, myTurn, onMove }: BoardProps<Bur
           </Row>
         </>
       )}
-      <MyCorner wideOnly info={me === null ? null : info(me)} note={myTurn ? (view.phase === 'draw' ? 'Pesca o prendi tutti gli scarti' : 'Cala, attacca o scarta') : undefined} />
+      <MyCorner wideOnly style={{ flexDirection: 'row', gap: 8 }} info={me === null ? null : info(me)} note={myTurn ? (view.phase === 'draw' ? 'Pesca o prendi tutti gli scarti' : 'Cala, attacca o scarta') : undefined} />
     </TableBg>
   );
 }

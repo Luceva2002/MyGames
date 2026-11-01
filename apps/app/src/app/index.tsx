@@ -198,16 +198,13 @@ function HomeCover({ width, height, settings, skipRoom }: { width: number; heigh
   }, [online.room]); // eslint-disable-line react-hooks/exhaustive-deps
   const players = snap?.members.filter((m) => m.role === 'player') ?? [];
   const top = (
-    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-      <View style={{ gap: 2 }}>
-        <T size={56} weight="900" color={colors.accent} style={styles.wordmark}>
-          Tavolata
-        </T>
-        <T size={16} weight="800">
-          La TV è il tavolo, il telefono è il tuo controller.
-        </T>
-      </View>
-      {settings}
+    <View style={{ gap: 2 }}>
+      <T size={56} weight="900" color={colors.accent} style={styles.wordmark}>
+        Tavolata
+      </T>
+      <T size={16} weight="800">
+        La TV è il tavolo, il telefono è il tuo controller.
+      </T>
     </View>
   );
   return (
@@ -215,6 +212,7 @@ function HomeCover({ width, height, settings, skipRoom }: { width: number; heigh
       width={width}
       height={height}
       top={top}
+      action={settings}
       code={snap?.code}
       url={snap ? joinUrl(snap.code) : null}
       count={players.length}
@@ -229,7 +227,7 @@ const styles = StyleSheet.create({
   wordmark: { textShadowColor: colors.line, textShadowOffset: { width: 0, height: 4 }, textShadowRadius: 0 },
   choice: { flexGrow: 1, alignItems: 'center', justifyContent: 'center', gap: 10, minHeight: 170, padding: 14, borderRadius: 30, borderWidth: 3, borderColor: colors.line, marginBottom: 7 },
   choiceWide: { flex: 1, flexDirection: 'row', gap: 20, minHeight: 130 },
-  allGames: { minHeight: 60, alignItems: 'center', justifyContent: 'center', borderRadius: 22, borderWidth: 3, borderColor: colors.line, backgroundColor: '#FFFFFF', boxShadow: `0px 5px 0px ${colors.line}`, marginBottom: 5 },
+  allGames: { minHeight: 68, alignItems: 'center', justifyContent: 'center', borderRadius: 22, borderWidth: 3, borderColor: colors.line, backgroundColor: '#FFFFFF', boxShadow: `0px 5px 0px ${colors.line}`, marginBottom: 5 },
   codeRow: { minHeight: 68, flexDirection: 'row', alignItems: 'center', gap: 8, paddingLeft: 14, paddingRight: 8, borderRadius: 22, borderWidth: 3, borderColor: colors.line, backgroundColor: '#FFFFFF', boxShadow: `0px 5px 0px ${colors.line}`, marginBottom: 5 },
   codeInput: { width: 104, height: MIN_TOUCH, minWidth: 0, borderRadius: 14, borderWidth: 3, borderColor: colors.line, backgroundColor: '#F4F0FF', color: colors.onAccent, fontSize: 20, fontWeight: '900', letterSpacing: 3, textAlign: 'center' },
   enter: { width: 64, height: MIN_TOUCH, alignItems: 'center', justifyContent: 'center', borderRadius: 14, borderWidth: 3, borderColor: colors.line, backgroundColor: colors.accent },

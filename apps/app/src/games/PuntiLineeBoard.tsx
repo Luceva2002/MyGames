@@ -36,7 +36,7 @@ function Line({ x, y, gap, across, owner, last, can, onPress }: { x: number; y: 
 export function PuntiLineeBoard({ view, me, names, myTurn, onMove }: BoardProps<PuntiLineeState, PuntiLineeMove>) {
   const { box, onLayout } = useFit();
   const { dots } = view;
-  const side = box.w ? Math.floor(Math.min(box.w, box.h, 600)) - 6 : 0;
+  const side = box.w ? Math.floor(Math.min(box.w, box.h, 600)) - 22 : 0;
   const pad = 22;
   const gap = (side - pad * 2) / (dots - 1);
   const dot = Math.max(14, gap * 0.2);

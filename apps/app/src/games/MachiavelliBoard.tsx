@@ -139,7 +139,7 @@ export function MachiavelliBoard({ view, me, names, myTurn, onMove }: BoardProps
           )}
         </>
       )}
-      <MyCorner wideOnly info={me === null ? null : info(me)} note={myTurn ? hint : undefined} />
+      <MyCorner wideOnly style={{ flexDirection: 'row', gap: 8 }} info={me === null ? null : info(me)} note={myTurn ? hint : undefined} />
     </TableBg>
   );
 }

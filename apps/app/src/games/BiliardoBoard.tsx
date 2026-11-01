@@ -445,7 +445,7 @@ export function BiliardoBoard({ view, me, names, myTurn, onMove }: BoardProps<Bi
   const M = 0.85 * scale;
 
   return (
-    <TableBg table="billiard" scrim={0.2} style={{ alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 8 }}>
+    <TableBg table="billiard" scrim={0.2} style={{ alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 12 }}>
       <Row gap={20} wrap style={{ justifyContent: 'center' }}>
         {[0, 1].map((p) => (
           <View key={p} style={{ alignItems: 'center', opacity: view.turn === p ? 1 : 0.7, backgroundColor: '#12052BD9', borderRadius: 14, paddingHorizontal: 12, paddingVertical: 4, borderWidth: 2, borderColor: view.turn === p ? colors.accent : '#FFFFFF22' }}>

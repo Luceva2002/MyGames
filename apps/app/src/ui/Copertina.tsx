@@ -10,11 +10,13 @@ import { colors, font, OUTLINE } from './theme';
  * La copertina di PC e TV: le maschere e, in basso a sinistra, il riquadro con cui si entra (QR e
  * codice) e il conto di chi è al tavolo. Sul telefono non c'è.
  */
-export function Copertina({ width, height, top, code, url, count, avatars, notice }: {
+export function Copertina({ width, height, top, action, code, url, count, avatars, notice }: {
   width: number;
   height: number;
   /** Quello che sta in alto a sinistra: nome dell'app, frase, bottoni. */
   top: ReactNode;
+  /** Un bottone nell'angolo in alto a destra, sopra le maschere. */
+  action?: ReactNode;
   code?: string;
   url?: string | null;
   count?: number;
@@ -33,10 +35,10 @@ export function Copertina({ width, height, top, code, url, count, avatars, notic
   const artHeight = Math.round((artWidth * 720) / 1600);
   return (
     <View style={[styles.cover, { height }]}>
-      <View style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: masksWidth, overflow: 'hidden', justifyContent: 'center' }}>
+      <View style={{ position: 'absolute', right: 14, top: 0, bottom: 0, width: masksWidth, overflow: 'hidden', justifyContent: 'center' }}>
         <Image source={HERO} style={{ position: 'absolute', right: 0, top: Math.round((inside - artHeight) / 2), width: artWidth, height: artHeight }} accessibilityIgnoresInvertColors />
       </View>
-      <View style={{ flex: 1, padding: 16, marginRight: masksWidth, justifyContent: 'space-between', gap: 8 }}>
+      <View style={{ flex: 1, padding: 16, marginRight: masksWidth + 14, justifyContent: 'space-between', gap: 8 }}>
         {top}
         {code ? (
           <View style={styles.pill}>
@@ -68,6 +70,7 @@ export function Copertina({ width, height, top, code, url, count, avatars, notic
           </View>
         ) : null}
       </View>
+      {action ? <View style={{ position: 'absolute', top: 16, right: 16 }}>{action}</View> : null}
     </View>
   );
 }

@@ -1,17 +1,30 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { ActivityIndicator, Image, Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Image, Modal, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import type { GameMeta, GameResult, LastAction, Seat } from '@giochi/engine';
 import { BOARDS } from './registry';
 import { GAME_ART } from '../ui/art';
 import { BotFigure, SeatAvatar, SeatAvatars } from '../ui/avatars';
 import { botByName } from '@giochi/engine';
-import { Button, Confirm, focusRing, PlayerTag, Row, Sheet, SheetOption, T, tap } from '../ui/kit';
+import { Button, Confirm, PlayerTag, RoundButton, Row, Sheet, SheetOption, T } from '../ui/kit';
 import { DragProvider } from '../ui/drag';
 import { CardZoomLayer } from '../ui/cards';
 import { AnchorProvider, PopIn } from '../ui/motion';
 import { sfx } from '../ui/sound';
-import { setSettings, TvContext, useSettings } from '../ui/settings';
-import { colors, MIN_TOUCH, radius, seatColor } from '../ui/theme';
+import { setSettings, TvContext, useIsTv, useSettings } from '../ui/settings';
+import { colors, radius, seatColor } from '../ui/theme';
+
+/** I giochi senza il tavolo col bordo dorato: lo sfondo arriva fino al bordo dello schermo. */
+const NO_RIM = new Set(['freccette', 'biliardo', 'football', 'lupus', 'mrwhite']);
+
+/**
+ * La regola dei margini in partita: bottone del menu e posti stanno 8 px dentro il panno, che inizia
+ * dopo il bordo dorato (24 px sul telefono, 28 sugli schermi larghi). Senza bordo, 12 px dallo schermo.
+ */
+function useTableInset(gameId: string) {
+  const { width } = useWindowDimensions();
+  if (NO_RIM.has(gameId)) return 12;
+  return width < 500 ? 32 : 36;
+}
 
 /**
  * Guscio comune a ogni partita (P-SHELL-3): il tavolo a tutta altezza, il bottone del menu in alto
@@ -91,7 +104,7 @@ export function GameFrame({ meta, view, me, names, avatars, myTurn, active, onMo
             {Board ? <Board view={view} me={me} names={names} myTurn={myTurn && !waiting} onMove={onMove} /> : <T>Interfaccia non disponibile.</T>}
           </DragProvider>
           </CardZoomLayer>
-          <ActionStrip action={lastAction ?? null} me={me} names={names} low={meta.category !== 'carte'} />
+          <ActionStrip gameId={meta.id} action={lastAction ?? null} me={me} names={names} />
         </View>
         <GameMenu meta={meta} roomCode={roomCode} onRules={() => setRules(true)} onRestart={onRestart && !result ? () => setRestarting(true) : undefined} onChangeGame={onChangeGame} onExit={() => setLeaving(true)} />
         {waiting && (
@@ -230,6 +243,7 @@ export function GameFrame({ meta, view, me, names, avatars, myTurn, active, onMo
  */
 function GameMenu({ meta, roomCode, onRules, onRestart, onChangeGame, onExit }: { meta: GameMeta; roomCode?: string; onRules: () => void; onRestart?: () => void; onChangeGame?: () => void; onExit: () => void }) {
   const [open, setOpen] = useState(false);
+  const inset = useTableInset(meta.id);
   const settings = useSettings();
   const art = GAME_ART[meta.id];
   const pick = (f: () => void) => () => {
@@ -238,19 +252,7 @@ function GameMenu({ meta, roomCode, onRules, onRestart, onChangeGame, onExit }: 
   };
   return (
     <>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Menu della partita"
-        onPress={() => {
-          tap();
-          setOpen(true);
-        }}
-        style={(state) => [styles.menuButton, { transform: [{ translateY: state.pressed ? 2 : 0 }] }, focusRing((state as { focused?: boolean }).focused ?? false)]}
-      >
-        <T size={22} weight="800" color={colors.text}>
-          ☰
-        </T>
-      </Pressable>
+      <RoundButton icon="menu" label="Menu della partita" onPress={() => setOpen(true)} style={{ position: 'absolute', top: inset, right: inset, zIndex: 60 }} />
       <Sheet visible={open} onClose={() => setOpen(false)}>
         <Row gap={12}>
           {art ? <Image source={art} style={styles.menuArt} accessibilityIgnoresInvertColors /> : null}
@@ -313,11 +315,17 @@ function TurnPill({ active, names, me, myTurn }: { active: Seat[]; names: string
 /**
  * Cosa ha appena fatto un avversario, in una riga sola sul bordo del tavolo: icona, nome e mossa ("Pulcinella gioca 7 di denari e prende 2 carte"). Le mie mosse non si ripetono.
  */
-function ActionStrip({ action, me, names, low }: { action: LastAction | null; me: Seat | null; names: string[]; /** In basso: nei giochi senza carte in alto stanno i punteggi. */ low?: boolean }) {
+function ActionStrip({ gameId, action, me, names }: { gameId: string; action: LastAction | null; me: Seat | null; names: string[] }) {
+  const inset = useTableInset(gameId);
+  const { width } = useWindowDimensions();
+  const tv = useIsTv();
+  // Sta dentro il panno, mai sopra il bordo: sul telefono sotto la riga in alto, sugli schermi larghi
+  // su quella riga, fra i posti e il menu. Senza tavolo o sulla TV sta in basso: in alto c'è chi gioca.
+  const place = NO_RIM.has(gameId) || tv ? { left: inset, right: inset, bottom: inset } : width < 600 ? { left: inset, right: inset, top: inset + 52 } : { left: inset + 200, right: inset + 200, top: inset + 12 };
   if (!action || action.seat === me) return null;
   const text = action.text.replace(/%v(\d+)/g, (_, n) => (Number(n) === me ? 'te' : names[Number(n)] ?? ''));
   return (
-    <PopIn key={action.n} style={[styles.stripWrap, low ? styles.stripLow : styles.stripHigh]} pointerEvents="none">
+    <PopIn key={action.n} style={[styles.stripWrap, place]} pointerEvents="none">
       <View style={styles.strip} accessibilityLiveRegion="polite" accessibilityLabel={`${names[action.seat]} ${text}`}>
         <SeatAvatar seat={action.seat} name={names[action.seat]} size={18} />
         <T size={12} weight="800" lines={1} style={{ flexShrink: 1 }}>
@@ -351,13 +359,9 @@ export function HandoffCurtain({ seat, name, onReady }: { seat: Seat; name: stri
 }
 
 const styles = StyleSheet.create({
-  // La striscia delle mosse sta sul bordo alto del tavolo, a sinistra del bottone del menu.
-  stripWrap: { position: 'absolute', left: 12, alignItems: 'center', zIndex: 30 },
-  stripHigh: { top: 2, right: MIN_TOUCH + 18 },
-  stripLow: { bottom: 4, right: 12 },
+  stripWrap: { position: 'absolute', alignItems: 'center', zIndex: 30 },
   strip: { flexDirection: 'row', alignItems: 'center', gap: 5, maxWidth: '100%', paddingVertical: 2, paddingLeft: 2, paddingRight: 10, borderRadius: 999, backgroundColor: 'rgba(18,5,43,0.78)' },
   tvSafe: { paddingHorizontal: '5%', paddingVertical: '2.5%' },
-  menuButton: { position: 'absolute', top: 6, right: 6, width: MIN_TOUCH, height: MIN_TOUCH, borderRadius: MIN_TOUCH / 2, backgroundColor: colors.surface, borderWidth: 3, borderColor: colors.line, boxShadow: `0px 3px 0px ${colors.line}`, alignItems: 'center', justifyContent: 'center', zIndex: 60 },
   menuArt: { width: 64, height: 64, borderRadius: 16, borderWidth: 3, borderColor: colors.line },
   pill: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999, backgroundColor: colors.surface, borderWidth: 3, borderColor: colors.line, flexShrink: 0, boxShadow: `0px 4px 0px ${colors.line}` },
   pending: { position: 'absolute', bottom: 24, alignSelf: 'center', flexDirection: 'row', gap: 8, alignItems: 'center', backgroundColor: colors.accent, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 999 },

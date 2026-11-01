@@ -211,7 +211,7 @@ export function TableTop({ seats }: { seats: SeatInfo[] }) {
 }
 
 /** Spazio lasciato a destra, in alto, per il bottone tondo del menu della partita. */
-export const MENU_GAP = 34;
+export const MENU_GAP = 64;
 
 /**
  * Il mio posto: icona e punti in una pillola discreta, e quando tocca a me lo dice qui. Sul computer
@@ -223,7 +223,7 @@ export function MyCorner({ info, note, style, wideOnly }: { info: SeatInfo | nul
   if (!info || (wideOnly && width < 600)) return null;
   const narrow = width < 600;
   return (
-    <View pointerEvents="none" style={[narrow ? { alignItems: 'center', gap: 4, zIndex: 20 } : { position: 'absolute', right: 14, bottom: 12, zIndex: 20, alignItems: 'flex-end', gap: 4 }, style]}>
+    <View pointerEvents="none" style={[narrow ? { alignItems: 'center', gap: 4, zIndex: 20 } : { position: 'absolute', right: 8, bottom: 8, zIndex: 20, alignItems: 'flex-end', gap: 4 }, style]}>
       {note ? (
         <View style={styles.cornerNote}>
           <T size={11} weight="800" center>
@@ -288,8 +288,10 @@ export function seatsFrom(players: number, me: Seat | null): Seat[] {
 export function Opponents({ children, goal }: { children: ReactNode; goal?: string }) {
   const items = Children.toArray(children);
   const duel = items.length === 2;
+  // Sul telefono i due posti riempiono la riga: il VS non ci sta senza uscire dal panno.
+  const { width } = useWindowDimensions();
   return (
-    <View style={{ alignItems: 'center' }}>
+    <View style={{ alignItems: 'center', alignSelf: 'stretch' }}>
       {goal ? (
         <View style={styles.goal}>
           <T size={12} weight="800" color={colors.onAccent}>
@@ -301,9 +303,11 @@ export function Opponents({ children, goal }: { children: ReactNode; goal?: stri
         {duel ? (
           <>
             {items[0]}
-            <T size={18} weight="900" color={colors.accent2}>
-              VS
-            </T>
+            {width >= 430 && (
+              <T size={18} weight="900" color={colors.accent2}>
+                VS
+              </T>
+            )}
             {items[1]}
           </>
         ) : (
@@ -454,7 +458,7 @@ const styles = StyleSheet.create({
   stickerWrap: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' },
   sticker: { backgroundColor: colors.accent2, borderWidth: 3, borderColor: colors.line, borderRadius: 18, paddingHorizontal: 22, paddingVertical: 10, transform: [{ rotate: '-3deg' }], boxShadow: `0px 6px 0px ${colors.line}` },
   badge: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 6, paddingLeft: 6, paddingRight: 12, borderRadius: 18, borderWidth: 3, borderColor: colors.line, minWidth: 120, backgroundColor: colors.surface, boxShadow: `0px 4px 0px ${colors.line}` },
-  opponents: { gap: 10, paddingHorizontal: 12, paddingVertical: 8 },
+  opponents: { gap: 8, paddingHorizontal: 8, paddingVertical: 8, flexGrow: 1, justifyContent: 'center' },
   // La mano sale un po' sul bordo del tavolo, come le carte tenute in mano sopra il panno.
   hand: { flexDirection: 'row', justifyContent: 'center', alignItems: 'flex-end', paddingHorizontal: 8, paddingTop: 16, zIndex: 5 },
   feltFrame: { flex: 1, marginHorizontal: 4 },

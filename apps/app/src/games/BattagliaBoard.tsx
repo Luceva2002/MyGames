@@ -137,7 +137,7 @@ function Placement({ onMove }: { onMove: (m: NavaleMove) => void }) {
   };
   return (
     <>
-      <T size={16} weight="900" center>
+      <T size={16} weight="900" center style={{ marginTop: 28 }}>
         {next ? `Metti la nave da ${next}` : 'Flotta schierata!'}
       </T>
       <View onLayout={onLayout} style={{ flex: 1, alignSelf: 'stretch', alignItems: 'center', justifyContent: 'center' }}>

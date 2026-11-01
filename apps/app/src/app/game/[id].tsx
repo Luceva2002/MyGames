@@ -11,7 +11,7 @@ import { LevelPicker } from '../../ui/LevelPicker';
 import { canPassAndPlay, setPendingMatch, type SeatConfig } from '../../session/local';
 import { quickRoom, useOnline } from '../../session/online';
 import { defaultName, loadNames, saveNames } from '../../session/names';
-import { Button, Panel, Row, Screen, T, tap } from '../../ui/kit';
+import { Button, Panel, RoundButton, Row, Screen, T, tap } from '../../ui/kit';
 import { colors, radius } from '../../ui/theme';
 
 export default function GameDetail() {
@@ -77,7 +77,7 @@ export default function GameDetail() {
 
   return (
     <Screen>
-      <Button small kind="ghost" color={colors.muted} label="‹ Giochi" onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))} style={{ alignSelf: 'flex-start' }} />
+      <RoundButton icon="back" label="Indietro" onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))} />
       <View style={styles.hero}>
         {GAME_ART[meta.id] && <Image source={GAME_ART[meta.id]} style={styles.heroArt} accessibilityIgnoresInvertColors />}
         <View style={{ flex: 1, gap: 6, minWidth: 220 }}>
