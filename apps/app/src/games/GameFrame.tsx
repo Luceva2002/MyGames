@@ -151,7 +151,7 @@ export function GameFrame({ meta, view, me, names, avatars, myTurn, active, onMo
                 <View style={{ gap: 8 }}>
                   {names
                     .map((n, i) => ({ n, i, s: result.scores![i] }))
-                    .sort((a, b) => b.s - a.s)
+                    .sort((a, b) => (result.lowWins ? a.s - b.s : b.s - a.s))
                     .map(({ n, i, s }) => (
                       <Row key={i} gap={8}>
                         <View style={{ flex: 1 }}>

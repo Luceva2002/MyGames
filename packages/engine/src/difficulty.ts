@@ -3,6 +3,7 @@ import { clone } from './core/engine';
 import { damaMoves } from './games/dama';
 import { legalMoves } from './games/scacchi';
 import { YAHTZEE_CATEGORIES } from './games/yahtzee';
+import { mosaicoMoves } from './games/mosaico';
 
 /** Quanto è bravo il computer: si sceglie prima di giocare e vale per tutti i computer al tavolo. */
 export type BotLevel = 'facile' | 'normale' | 'difficile';
@@ -47,6 +48,15 @@ function candidates(gameId: string, s: any, seat: Seat): unknown[] {
       return s.phase === 'play' && !s.mustUse ? hand.map((c) => ({ type: 'discard', card: c.id })) : [];
     case 'machiavelli':
       return [{ type: 'draw' }];
+    case 'mosaico':
+      return mosaicoMoves(s, seat);
+    case 'puntielinee':
+      return (s.lines as unknown[]).flatMap((o, line) => (o === null ? [{ line }] : []));
+    case 'colorwars':
+      // Sulla prima cella una vale l'altra; dopo una qualsiasi delle sue.
+      return (s.cells as ({ o: Seat } | null)[]).flatMap((c, cell) => ((s.placed[seat] ? c?.o === seat : c === null) ? [{ cell }] : []));
+    case 'battaglia':
+      return s.phase === 'battle' ? Array.from({ length: 100 }, (_, cell) => ({ type: 'shot', cell })) : [];
     default:
       return [];
   }

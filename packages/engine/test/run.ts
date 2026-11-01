@@ -10,7 +10,7 @@ for (const game of GAMES) {
     let steps = 0;
     let runs = 0;
     try {
-      runs = game.meta.id === 'scacchi' ? 2 : game.meta.id === 'dama' ? 6 : 40;
+      runs = game.meta.id === 'scacchi' ? 2 : game.meta.id === 'dama' || game.meta.id === 'mosaico' ? 6 : 40;
       for (let seed = 1; seed <= runs; seed++) {
         let r;
         try {

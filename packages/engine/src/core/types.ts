@@ -35,6 +35,8 @@ export interface GameResult {
   winners: Seat[];
   /** Punteggio finale per posto, se ha senso. */
   scores?: number[];
+  /** Nel punteggio vince chi ne ha meno: il riepilogo mette prima lui. */
+  lowWins?: boolean;
   summary: string;
 }
 

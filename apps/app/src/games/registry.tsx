@@ -16,6 +16,10 @@ import { FootballBoard } from './FootballBoard';
 import { BiliardoBoard } from './BiliardoBoard';
 import { LupusBoard } from './LupusBoard';
 import { MrWhiteBoard } from './MrWhiteBoard';
+import { MosaicoBoard } from './MosaicoBoard';
+import { PuntiLineeBoard } from './PuntiLineeBoard';
+import { ColorWarsBoard } from './ColorWarsBoard';
+import { BattagliaBoard } from './BattagliaBoard';
 
 /** Interfaccia di ogni gioco giocabile: riceve la vista del giocatore e manda le mosse. */
 export const BOARDS: Record<string, ComponentType<BoardProps>> = {
@@ -37,4 +41,8 @@ export const BOARDS: Record<string, ComponentType<BoardProps>> = {
   biliardo: BiliardoBoard,
   lupus: LupusBoard,
   mrwhite: MrWhiteBoard,
+  mosaico: MosaicoBoard,
+  puntielinee: PuntiLineeBoard,
+  colorwars: ColorWarsBoard,
+  battaglia: BattagliaBoard,
 };
