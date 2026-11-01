@@ -55,6 +55,8 @@ export interface JoinOptions {
   name: string;
   role: MemberRole;
   avatar?: string;
+  /** Identifica il dispositivo: chi cade e rientra da qui ritrova il suo posto. */
+  deviceId?: string;
 }
 
 export const ROOM_NAME = 'tavolo';

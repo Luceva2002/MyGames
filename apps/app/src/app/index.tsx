@@ -366,7 +366,7 @@ function HomeLobby({ size }: { size: number }) {
   useEffect(() => {
     if (online.room || online.status === 'connecting') return;
     createRoom({ name: 'Schermo', role: 'screen' });
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [online.room]); // eslint-disable-line react-hooks/exhaustive-deps
   if (!snap) {
     return online.error ? (
       <View style={styles.lobbyOff}>

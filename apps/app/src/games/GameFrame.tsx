@@ -193,7 +193,7 @@ export function GameFrame({ meta, view, me, names, avatars, myTurn, active, onMo
         <Confirm
           visible={leaving}
           title="Vuoi uscire dalla partita?"
-          message={tv ? 'La stanza resta aperta per gli altri.' : 'La partita in corso andrà persa.'}
+          message={tv ? 'La stanza resta aperta per gli altri.' : roomCode ? 'La partita finisce per tutti e si torna alla stanza.' : 'La partita in corso andrà persa.'}
           confirmLabel="Esci"
           onCancel={() => setLeaving(false)}
           onConfirm={() => {

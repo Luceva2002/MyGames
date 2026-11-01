@@ -2,6 +2,7 @@ import { getSettings, setSettings } from '../ui/settings';
 import { useEffect, useState } from 'react';
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Client, type Room } from '@colyseus/sdk';
 import { BOT_CHARACTERS, characterById, DEFAULT_PORT, ROOM_NAME, type JoinOptions, type RoomSnapshot, type SeatView } from '@giochi/engine';
 
@@ -148,6 +149,20 @@ function saveToken(room: Room | null) {
   }
 }
 
+/** Un nome fisso per questo dispositivo: se la scheda si chiude e si rientra, il server riconosce chi torna. */
+const DEVICE_KEY = 'tavolata.device';
+let device: Promise<string> | null = null;
+function deviceId(): Promise<string> {
+  device ??= (async () => {
+    const saved = await AsyncStorage.getItem(DEVICE_KEY).catch(() => null);
+    if (saved) return saved;
+    const id = `${Date.now().toString(36)}${Math.random().toString(36).slice(2)}`;
+    await AsyncStorage.setItem(DEVICE_KEY, id).catch(() => {});
+    return id;
+  })();
+  return device;
+}
+
 /**
  * Rientra nella stanza `code`: prima col proprio posto (dopo una ricarica della pagina), altrimenti
  * come nuovo giocatore col nome salvato.
@@ -193,10 +208,17 @@ function friendly(e: unknown): string {
 /** Chi gioca porta con sé la maschera scelta nelle impostazioni (lo schermo condiviso no). */
 const withAvatar = <T extends JoinOptions>(o: T): T => (o.role === 'player' && getSettings().avatar ? { ...o, avatar: getSettings().avatar! } : o);
 
+/** Si sta in una stanza alla volta: chi ne apre un'altra lascia quella di prima, senza restare seduto al vecchio tavolo. */
+function leaveCurrent() {
+  if (current.room) leaveRoom();
+}
+
 export async function createRoom(options: JoinOptions & { gameId?: string }) {
+  leaveCurrent();
   set({ status: 'connecting', error: null });
   try {
-    const room = await withServer(() => new Client(serverUrl()).create(ROOM_NAME, withAvatar(options)));
+    const id = await deviceId();
+    const room = await withServer(() => new Client(serverUrl()).create(ROOM_NAME, withAvatar({ ...options, deviceId: id })));
     attach(room);
     return room.roomId;
   } catch (e) {
@@ -206,9 +228,13 @@ export async function createRoom(options: JoinOptions & { gameId?: string }) {
 }
 
 export async function joinRoom(code: string, options: JoinOptions) {
+  // Già dentro (si è tornati alla home e si riscrive il codice): niente secondo posto per la stessa persona.
+  if (current.room?.roomId === code) return code;
+  leaveCurrent();
   set({ status: 'connecting', error: null });
   try {
-    const room = await withServer(() => new Client(serverUrl()).joinById(code, withAvatar(options)));
+    const id = await deviceId();
+    const room = await withServer(() => new Client(serverUrl()).joinById(code, withAvatar({ ...options, deviceId: id })));
     attach(room);
     return room.roomId;
   } catch (e) {
@@ -251,6 +277,11 @@ export async function leaveRoom() {
   saveToken(null);
   set({ room: null, snapshot: null, seatView: null, status: 'idle', error: null });
   await room?.leave().catch(() => {});
+}
+
+/** Chi lascia la schermata della stanza a partita in corso (tasto indietro) esce davvero dal tavolo. */
+export function leaveIfPlaying() {
+  if (current.snapshot?.phase === 'playing') leaveRoom();
 }
 
 export function clearOnlineError() {

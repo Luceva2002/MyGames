@@ -4,7 +4,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useStayAwake } from '../../ui/keepAwake';
 import { assignAvatars, BOT_CHARACTERS, BOT_LEVELS, canControl, CODE_LENGTH, GAMES, getGame, normalizeCode, playerCounts, type RoomSnapshot } from '@giochi/engine';
 import { GameFrame } from '../../games/GameFrame';
-import { clearOnlineError, joinUrl, leaveRoom, rejoin, send, sendMove, useOnline } from '../../session/online';
+import { clearOnlineError, joinUrl, leaveIfPlaying, leaveRoom, rejoin, send, sendMove, useOnline } from '../../session/online';
 import { loadNames, saveNames } from '../../session/names';
 import { GAME_ART } from '../../ui/art';
 import { CharacterAvatar } from '../../ui/avatars';
@@ -33,6 +33,7 @@ export default function RoomScreen() {
     leaveRoom();
     router.replace('/');
   };
+  useEffect(() => leaveIfPlaying, []);
 
   // Ricaricando la pagina della stanza si rientra da soli, col codice dell'indirizzo.
   const { code: codeParam } = useLocalSearchParams<{ code?: string }>();
@@ -93,6 +94,8 @@ export default function RoomScreen() {
 
   if (snapshot.phase === 'playing' && seatView) {
     const game = getGame(seatView.gameId)!;
+    // Chi è caduto ha un minuto per tornare: intanto gli altri sanno chi stanno aspettando.
+    const away = snapshot.seats.filter((s) => snapshot.members.some((m) => m.id === s.memberId && !m.connected)).map((s) => s.name);
     return (
       <Screen scroll={false}>
         <GameFrame
@@ -113,7 +116,15 @@ export default function RoomScreen() {
           tv={tv}
           roomCode={snapshot.code}
           onChangeGame={isHost ? () => send('toLobby') : undefined}
-          overlay={reconnecting}
+          overlay={
+            reconnecting || (away.length > 0 && !seatView.result && (
+              <View style={styles.reconnect} accessibilityLiveRegion="polite">
+                <T weight="800" color={colors.onAccent}>
+                  ⏳ Aspetto {away.join(' e ')}, si sta ricollegando…
+                </T>
+              </View>
+            ))
+          }
         />
       </Screen>
     );
