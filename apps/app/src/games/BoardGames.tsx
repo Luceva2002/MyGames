@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Pressable, Text, useWindowDimensions, View } from 'react-native';
 import type { ChessMove, ChessView, DamaMove, DamaPlan, DamaState } from '@giochi/engine';
-import { Banner, Opponents, PlayerBadge, seatsFrom, turnText, type BoardProps } from './common';
+import { Banner, Opponents, PlayerBadge, seatsFrom, turnText, useSharedScreen, type BoardProps } from './common';
 import { Button, Row, T, tap } from '../ui/kit';
 import { TableBg } from '../ui/tables';
 import { colors } from '../ui/theme';
@@ -9,7 +9,7 @@ import { colors } from '../ui/theme';
 function useBoardSize() {
   const { width, height } = useWindowDimensions();
   // Lascia spazio a barra in alto, giocatori, catture e cartello del turno.
-  return Math.floor(Math.min(width - 48, height - 330, 620) / 8) * 8;
+  return Math.floor(Math.min(width - 72, height - 330, 620) / 8) * 8;
 }
 
 /** Colori della scacchiera del Carnevale: crema e viola, cornice gialla col contorno spesso. */
@@ -58,6 +58,9 @@ function Disc({ white, king, size, selected, movable }: { white: boolean; king: 
 }
 
 export function DamaBoard({ view, me, names, myTurn, onMove }: BoardProps<DamaState & { moves: DamaPlan[] }, DamaMove>) {
+  const shared = useSharedScreen();
+  // Sullo stesso schermo la scacchiera resta ferma: il bianco è sempre in basso.
+  const side = shared ? 0 : me;
   const size = useBoardSize();
   const cell = size / 8;
   const [sel, setSel] = useState<number | null>(null);
@@ -77,14 +80,15 @@ export function DamaBoard({ view, me, names, myTurn, onMove }: BoardProps<DamaSt
   };
 
   return (
-    <TableBg table="wood" scrim={0.35} style={{ alignItems: 'center', justifyContent: 'center', gap: 12 }}>
+    <TableBg table="teal">
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, paddingTop: 44 }}>
       <Opponents>
-        {seatsFrom(2, me).map((seat) => (
-          <PlayerBadge key={seat} seat={seat} isMe={seat === me} name={`${names[seat]} ${seat === 0 ? '⚪' : '⚫'}`} active={view.turn === seat} score={12 - view.board.filter((p) => p && p.owner !== seat).length} scoreLabel="mangiate" />
+        {seatsFrom(2, side).map((seat) => (
+          <PlayerBadge key={seat} seat={seat} isMe={!shared && seat === me} name={`${names[seat]} ${seat === 0 ? '⚪' : '⚫'}`} active={view.turn === seat} score={12 - view.board.filter((p) => p && p.owner !== seat).length} scoreLabel="mangiate" />
         ))}
       </Opponents>
       <BoardFrame size={size}>
-        {squares(me === 1).map((sq) => {
+        {squares(side === 1).map((sq) => {
           const dark = (Math.floor(sq / 8) + (sq % 8)) % 2 === 1;
           const p = view.board[sq];
           const isTarget = targetEnds.has(sq);
@@ -104,8 +108,9 @@ export function DamaBoard({ view, me, names, myTurn, onMove }: BoardProps<DamaSt
           );
         })}
       </BoardFrame>
-      <Banner text={turnText(myTurn, names, view.turn, me)} tone={myTurn ? 'turn' : 'info'} />
+      <Banner text={shared ? `Tocca a ${names[view.turn]}` : turnText(myTurn, names, view.turn, me)} tone={myTurn ? 'turn' : 'info'} />
       {myTurn && view.moves.some((m) => m.captured.length) && <T color={colors.accent}>Devi mangiare!</T>}
+      </View>
     </TableBg>
   );
 }
@@ -141,6 +146,9 @@ function Piece({ p, size }: { p: string; size: number }) {
 }
 
 export function ScacchiBoard({ view, me, names, myTurn, onMove }: BoardProps<ChessView, ChessMove>) {
+  const shared = useSharedScreen();
+  // Sullo stesso schermo la scacchiera resta ferma: il bianco è sempre in basso.
+  const side = shared ? 0 : me;
   const size = useBoardSize();
   const cell = size / 8;
   const [sel, setSel] = useState<number | null>(null);
@@ -161,15 +169,16 @@ export function ScacchiBoard({ view, me, names, myTurn, onMove }: BoardProps<Che
   };
 
   return (
-    <TableBg table="wood" scrim={0.35} style={{ alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+    <TableBg table="teal">
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 10, paddingTop: 44 }}>
       <Opponents>
-        {seatsFrom(2, me).map((seat) => (
-          <PlayerBadge key={seat} seat={seat} isMe={seat === me} name={`${names[seat]} (${seat === 0 ? 'bianco' : 'nero'})`} active={view.turn === seat} score={view.captured[seat === 0 ? 1 : 0].length} scoreLabel="catture" />
+        {seatsFrom(2, side).map((seat) => (
+          <PlayerBadge key={seat} seat={seat} isMe={!shared && seat === me} name={`${names[seat]} ${seat === 0 ? '⚪' : '⚫'}`} active={view.turn === seat} score={view.captured[seat === 0 ? 1 : 0].length} scoreLabel="catture" />
         ))}
       </Opponents>
-      <T size={20} color={colors.muted}>{view.captured[me === 1 ? 0 : 1].map(glyph).join('')} </T>
+      <T size={20} color={colors.muted}>{view.captured[side === 1 ? 0 : 1].map(glyph).join('')} </T>
       <BoardFrame size={size}>
-        {squares(me === 1).map((sq) => {
+        {squares(side === 1).map((sq) => {
           const light = (Math.floor(sq / 8) + (sq % 8)) % 2 === 0;
           const p = view.board[sq];
           const last = view.last && (view.last.from === sq || view.last.to === sq);
@@ -194,8 +203,8 @@ export function ScacchiBoard({ view, me, names, myTurn, onMove }: BoardProps<Che
           );
         })}
       </BoardFrame>
-      <T size={20} color={colors.muted}>{view.captured[me === 1 ? 1 : 0].map(glyph).join('')} </T>
-      <Banner text={view.check && myTurn ? 'Scacco! Tocca a te' : turnText(myTurn, names, view.turn, me)} tone={myTurn ? 'turn' : 'info'} />
+      <T size={20} color={colors.muted}>{view.captured[side === 1 ? 1 : 0].map(glyph).join('')} </T>
+      <Banner text={shared ? `${view.check ? 'Scacco! ' : ''}Tocca a ${names[view.turn]}` : view.check && myTurn ? 'Scacco! Tocca a te' : turnText(myTurn, names, view.turn, me)} tone={myTurn ? 'turn' : 'info'} />
       {promo && (
         <View style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, backgroundColor: '#000a', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
           <T size={20} weight="900">
@@ -218,6 +227,7 @@ export function ScacchiBoard({ view, me, names, myTurn, onMove }: BoardProps<Che
           <Button small kind="ghost" color={colors.text} label="Annulla" onPress={() => setPromo(null)} />
         </View>
       )}
+      </View>
     </TableBg>
   );
 }

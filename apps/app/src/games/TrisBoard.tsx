@@ -1,6 +1,6 @@
 import { Pressable, useWindowDimensions, View } from 'react-native';
 import type { TrisMove, TrisState } from '@giochi/engine';
-import { Banner, turnText, type BoardProps } from './common';
+import { Banner, turnText, useSharedScreen, type BoardProps } from './common';
 import { T, tap } from '../ui/kit';
 import { TableBg } from '../ui/tables';
 import { colors, seatColors } from '../ui/theme';
@@ -8,11 +8,13 @@ import { colors, seatColors } from '../ui/theme';
 const SYMBOL = ['✕', '◯'];
 
 export function TrisBoard({ view, me, names, myTurn, onMove }: BoardProps<TrisState, TrisMove>) {
+  const shared = useSharedScreen();
   const { width, height } = useWindowDimensions();
-  const size = Math.min(width - 48, height - 260, 480);
+  const size = Math.min(width - 72, height - 260, 480);
   const cell = size / 3;
   return (
-    <TableBg table="wood" scrim={0.35} style={{ alignItems: 'center', justifyContent: 'center', gap: 20 }}>
+    <TableBg table="teal">
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 20 }}>
       <View style={{ flexDirection: 'row', gap: 24 }}>
         {[0, 1].map((seat) => (
           <T key={seat} size={18} weight="800" color={seatColors[seat]}>
@@ -21,7 +23,7 @@ export function TrisBoard({ view, me, names, myTurn, onMove }: BoardProps<TrisSt
         ))}
       </View>
       <Banner
-        text={view.winLine ? `Tris di ${names[view.board[view.winLine[0]]!]}` : view.board.every((c) => c !== null) ? 'Pareggio' : turnText(myTurn, names, view.turn, me)}
+        text={view.winLine ? `Tris di ${names[view.board[view.winLine[0]]!]}` : view.board.every((c) => c !== null) ? 'Pareggio' : shared ? `Tocca a ${names[view.turn]}` : turnText(myTurn, names, view.turn, me)}
         tone={myTurn && !view.winLine ? 'turn' : 'info'}
       />
       <View style={{ width: size, height: size, flexDirection: 'row', flexWrap: 'wrap', backgroundColor: colors.line, gap: 6, borderRadius: 18, padding: 6 }}>
@@ -52,6 +54,7 @@ export function TrisBoard({ view, me, names, myTurn, onMove }: BoardProps<TrisSt
             </Pressable>
           );
         })}
+      </View>
       </View>
     </TableBg>
   );

@@ -1,4 +1,4 @@
-import { Children, useEffect, useRef, useState, type ReactNode } from 'react';
+import { Children, useEffect, useRef, useState, type ReactNode, createContext, useContext } from 'react';
 import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import type { Card, Seat } from '@giochi/engine';
 import { CARD_RATIO, CardBack, CardGhost, cardRatio, PlayingCard } from '../ui/cards';
@@ -429,6 +429,10 @@ export function Banner({ text, tone = 'info' }: { text: string; tone?: 'info' | 
     </Pulse>
   );
 }
+
+/** Due persone sullo stesso schermo: la scacchiera non ruota e nessuno è «tu». */
+export const SharedScreenContext = createContext(false);
+export const useSharedScreen = () => useContext(SharedScreenContext);
 
 export function turnText(myTurn: boolean, names: string[], turn: Seat, me: Seat | null) {
   if (myTurn) return 'Tocca a te';

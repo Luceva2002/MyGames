@@ -16,14 +16,11 @@ export interface MatchConfig {
 }
 
 /**
- * Giochi che si giocano tra amici sullo stesso dispositivo: quelli a vista e quelli con pochi
- * passaggi di telefono (Sette e mezzo: ognuno fa la sua mano intera; Rigori: un tocco a testa;
- * Mr. White: si passa solo per guardare la parola, poi si gioca a voce).
- * Gli altri hanno carte segrete a ogni turno: sullo stesso dispositivo solo contro il computer.
+ * Tra amici su un solo dispositivo si può giocare a tutto: se c'è qualcosa di segreto ci si passa
+ * il telefono a ogni turno, altrimenti si gioca sullo stesso schermo.
  */
-const PASS_AND_PLAY = new Set(['setteemezzo', 'football', 'mrwhite']);
-export function canPassAndPlay(meta: { id: string; hiddenInfo?: boolean; maxPlayers: number }) {
-  return meta.maxPlayers >= 2 && (!meta.hiddenInfo || PASS_AND_PLAY.has(meta.id));
+export function canPassAndPlay(meta: { maxPlayers: number }) {
+  return meta.maxPlayers >= 2;
 }
 
 /** Configurazione della prossima partita locale, passata dalla scheda del gioco allo schermo di gioco. */

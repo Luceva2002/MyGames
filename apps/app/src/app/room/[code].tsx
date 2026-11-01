@@ -2,21 +2,24 @@ import { useEffect, useRef, useState } from 'react';
 import { Image, Pressable, StyleSheet, Text, useWindowDimensions, View, Platform, Share } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useStayAwake } from '../../ui/keepAwake';
-import { assignAvatars, BOT_CHARACTERS, BOT_LEVELS, canControl, CODE_LENGTH, GAMES, getGame, normalizeCode, playerCounts, type RoomSnapshot } from '@giochi/engine';
+import { assignAvatars, BOT_CHARACTERS, BOT_LEVELS, canControl, CODE_LENGTH, GAMES, getGame, normalizeCode, playerCounts, type GameMeta, type RoomSnapshot } from '@giochi/engine';
 import { GameFrame } from '../../games/GameFrame';
 import { clearOnlineError, joinUrl, leaveIfPlaying, leaveRoom, rejoin, send, sendMove, useOnline } from '../../session/online';
 import { loadNames, saveNames } from '../../session/names';
 import { GAME_ART } from '../../ui/art';
 import { CharacterAvatar } from '../../ui/avatars';
+import { Copertina } from '../../ui/Copertina';
+import { useIsTable } from '../../ui/device';
+import { GameGrid, GameIcon, useIconSize } from '../../ui/GameIcon';
 import { LevelPicker } from '../../ui/LevelPicker';
 import { CharacterPickerModal } from '../../ui/CharacterPicker';
 import { PopIn } from '../../ui/motion';
 import { sfx } from '../../ui/sound';
 import { getSettings, setSettings } from '../../ui/settings';
-import { Button, Confirm, focusRing, Panel, Row, Screen, T, tap } from '../../ui/kit';
+import { Button, Confirm, focusRing, RoundButton, Row, Screen, T, tap } from '../../ui/kit';
 import { QrCode } from '../../ui/QrCode';
 import { TvContext } from '../../ui/settings';
-import { colors, font, MIN_TOUCH, radius } from '../../ui/theme';
+import { colors, font, radius } from '../../ui/theme';
 
 export default function RoomScreen() {
   useStayAwake();
@@ -147,11 +150,12 @@ function Lobby({ snapshot, myId, isHost, tv, error, onExit, reconnecting }: {
   reconnecting: React.ReactNode;
 }) {
   const { width, height } = useWindowDimensions();
+  const isTable = useIsTable();
   const [leaving, setLeaving] = useState(false);
-  const wide = width > 760;
+  const [choosing, setChoosing] = useState(false);
+  const big = tv || isTable;
   const game = snapshot.gameId ? getGame(snapshot.gameId) : undefined;
   const players = snapshot.members.filter((m) => m.role === 'player');
-  const hasScreen = snapshot.members.some((m) => m.role === 'screen' && m.connected);
   const total = players.length + snapshot.bots;
   const url = joinUrl(snapshot.code);
   const leader = snapshot.members.find((m) => m.id === snapshot.hostId && m.role === 'player') ?? players[0];
@@ -160,6 +164,7 @@ function Lobby({ snapshot, myId, isHost, tv, error, onExit, reconnecting }: {
   const meIndex = players.findIndex((p) => p.id === myId);
   const [picking, setPicking] = useState(false);
   const [editingBot, setEditingBot] = useState<number | null>(null);
+  const iconSize = useIconSize();
   // Chi entra si sente, come in Jackbox: un "ding" a ogni nuovo giocatore.
   const seen = useRef(players.length);
   useEffect(() => {
@@ -168,163 +173,12 @@ function Lobby({ snapshot, myId, isHost, tv, error, onExit, reconnecting }: {
   }, [players.length]);
   // Le maschere di tutti al tavolo: chi non ha scelto ne riceve una libera, come in partita.
   const avatars = assignAvatars([...players.map((m) => ({ name: m.name, bot: false, avatar: m.avatar })), ...snapshot.botNames.map((name) => ({ name, bot: true }))]);
-  // Codice della stanza almeno all'8% dell'altezza della TV (V-PTY-1).
-  const codeSize = Math.max(56, Math.round(height * (tv ? 0.12 : 0.07)));
-  // Copertine dei giochi in griglia: 3 per riga sul telefono, fino a 6 sugli schermi larghi.
-  const inner = Math.min(width, 1100) - 32 - 2 * (16 + 3);
-  const cols = inner > 900 ? 6 : inner > 600 ? 5 : inner > 420 ? 4 : 3;
-  const tileW = Math.floor((inner - (cols - 1) * 8) / cols);
+  const canBots = isHost && !game?.meta.humansOnly;
+  const addBot = () => send('setBots', { count: snapshot.bots + 1 });
+  const canAddBot = !game || total < game.meta.maxPlayers;
 
-  return (
-    <Screen>
-      <Row style={{ justifyContent: 'space-between' }}>
-        <Button small kind="ghost" color={colors.muted} label="‹ Esci dalla stanza" onPress={() => setLeaving(true)} />
-        {!tv && meIndex >= 0 && (
-          <View style={styles.joined} accessibilityLiveRegion="polite">
-            <T size={14} weight="800" color={colors.onAccent}>
-              ✓ Sei dentro
-            </T>
-          </View>
-        )}
-      </Row>
-
-      {/* Come si gioca in questa stanza, detto in una riga: lo decide il dispositivo di chi l'ha aperta. */}
-      <View style={styles.modeBanner} accessibilityRole="text">
-        <T size={22}>{hasScreen ? '📺' : '📱'}</T>
-        <T size={15} weight="800" style={{ flex: 1 }}>
-          {tv
-            ? 'Questo schermo è il tavolo: gli amici inquadrano il QR e giocano dal telefono.'
-            : hasScreen
-              ? 'Il tavolo è sullo schermo grande: da qui giochi tu.'
-              : 'Niente schermo comune: ognuno vede il tavolo e gioca dal suo telefono.'}
-        </T>
-      </View>
-
-      <View style={{ flexDirection: wide ? 'row' : 'column', gap: 16 }}>
-        <Panel style={[wide && { flex: 1 }, { alignItems: 'center' }]}>
-          <T size={14} weight="800" color={colors.muted}>
-            CODICE STANZA
-          </T>
-          <Text accessibilityLabel={`Codice stanza ${snapshot.code.split('').join(' ')}`} style={{ color: colors.accent, fontSize: codeSize, fontFamily: font.display, letterSpacing: codeSize * 0.15, textShadowColor: colors.line, textShadowOffset: { width: 0, height: 5 }, textShadowRadius: 0 }}>
-            {snapshot.code}
-          </Text>
-          {url && (tv || wide) && <QrCode value={url} size={Math.min(height * 0.26, 240)} light />}
-          {url && <InviteButtons url={url} code={snapshot.code} />}
-          <T size={13} color={colors.muted} center>
-            {url ? `Gli altri aprono ${url.replace(/\/\?code=.*/, '').replace(/^https?:\/\//, '')} e scrivono il codice, oppure usano il link.` : 'Dillo agli altri: lo scrivono nella home, in «Entra con un codice».'}
-          </T>
-        </Panel>
-
-        <Panel style={wide ? { flex: 1 } : undefined}>
-          <T size={18} weight="900">
-            Al tavolo · {players.length + snapshot.bots}
-          </T>
-          {/* Tutti uguali: persone e computer con la stessa icona tonda, in griglia. */}
-          <View style={styles.seatGrid}>
-            {players.map((m, i) => (
-              <PopIn key={m.id}>
-                <SeatCard
-                  avatar={avatars[i]}
-                  seat={i}
-                  name={m.name}
-                  note={!m.connected ? '📡 si ricollega' : m.id === myId ? 'tu ✎' : leader?.id === m.id ? '👑 capotavola' : 'telefono'}
-                  noteColor={!m.connected ? colors.danger : leader?.id === m.id && m.id !== myId ? colors.accent : colors.muted}
-                  crown={leader?.id === m.id}
-                  onPress={m.id === myId ? () => setPicking(true) : undefined}
-                  a11y={m.id === myId ? 'Cambia nome e personaggio' : undefined}
-                />
-              </PopIn>
-            ))}
-            {snapshot.botNames.map((name, i) => (
-              <PopIn key={name}>
-                <SeatCard
-                  avatar={avatars[players.length + i]}
-                  seat={players.length + i}
-                  name={name}
-                  note={`🤖 ${BOT_LEVELS.find((l) => l.id === (snapshot.botLevels?.[i] ?? 'normale'))?.label ?? 'Normale'}${isHost ? ' ✎' : ''}`}
-                  noteColor={colors.accent3}
-                  onPress={isHost ? () => setEditingBot(i) : undefined}
-                  a11y={isHost ? `Cambia maschera e bravura di ${name}` : undefined}
-                />
-              </PopIn>
-            ))}
-          </View>
-          {players.length === 0 && (
-            <T color={colors.muted} size={16}>
-              ⏳ Aspetto i telefoni…
-            </T>
-          )}
-          {isHost && !game?.meta.humansOnly && (
-            <Row gap={8}>
-              <Button small kind="ghost" color={colors.muted} label="− computer" a11y="Togli un computer" disabled={snapshot.bots === 0} onPress={() => send('setBots', { count: snapshot.bots - 1 })} />
-              <Button small kind="ghost" color={colors.muted} label="+ computer" a11y="Aggiungi un computer" disabled={!!game && total >= game.meta.maxPlayers} onPress={() => send('setBots', { count: snapshot.bots + 1 })} />
-            </Row>
-          )}
-        </Panel>
-      </View>
-
-      <Panel>
-        <T size={18} weight="900">
-          {isHost ? 'Scegli il gioco' : game ? `Si gioca a ${game.meta.name}` : `${leader?.name ?? 'Il capotavola'} sta scegliendo il gioco…`}
-        </T>
-        {isHost ? (
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-            {GAMES.map((g) => {
-              const fits = total === 0 || playerCounts(g.meta).includes(total) || total < g.meta.minPlayers;
-              const active = g.meta.id === snapshot.gameId;
-              return (
-                <Pressable
-                  key={g.meta.id}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: active }}
-                  accessibilityLabel={`${g.meta.name}, ${g.meta.minPlayers}–${g.meta.maxPlayers} giocatori`}
-                  onPress={() => {
-                    tap();
-                    send('setGame', { gameId: g.meta.id });
-                  }}
-                  style={(state) => [styles.gameChoice, { width: tileW, opacity: fits ? 1 : 0.45 }, active && { borderColor: colors.accent }, focusRing((state as { focused?: boolean }).focused ?? false)]}
-                >
-                  {GAME_ART[g.meta.id] && <Image source={GAME_ART[g.meta.id]} style={[styles.gameArt, { width: tileW - 18, height: tileW - 18 }]} />}
-                  <T weight="900" size={13} lines={1} center>
-                    {active ? '✓ ' : ''}
-                    {g.meta.name}
-                  </T>
-                  <T size={11} weight="800" color={colors.accent} lines={1} center>
-                    👤 {g.meta.minPlayers === g.meta.maxPlayers ? g.meta.minPlayers : `${g.meta.minPlayers}–${g.meta.maxPlayers}`}
-                  </T>
-                </Pressable>
-              );
-            })}
-          </View>
-        ) : (
-          game && (
-            <Row gap={14}>
-              {GAME_ART[game.meta.id] && <Image source={GAME_ART[game.meta.id]} style={[styles.gameArt, { width: 96, height: 96 }]} />}
-              <T color={colors.muted} style={{ flex: 1 }}>
-                {game.meta.tagline}
-              </T>
-            </Row>
-          )
-        )}
-      </Panel>
-
-      {error && (
-        <T color={colors.danger} weight="800">
-          ⚠ {error}
-        </T>
-      )}
-      {isHost ? (
-        <Button
-          label={!game ? 'Scegli un gioco' : canStart ? `Inizia ${game.meta.name}` : `Servono ${allowed.length > 2 && allowed[allowed.length - 1] - allowed[0] === allowed.length - 1 ? `da ${allowed[0]} a ${allowed[allowed.length - 1]}` : allowed.join(' o ')} giocatori (ora ${total})`}
-          disabled={!canStart}
-          onPress={() => send('start')}
-        />
-      ) : (
-        <T center color={colors.muted} size={16}>
-          ⏳ La partita parte quando {leader?.name ?? 'il capotavola'} preme «Inizia».
-        </T>
-      )}
-      {reconnecting}
+  const modals = (
+    <>
       <CharacterPickerModal
         visible={picking}
         title="Tu"
@@ -358,23 +212,373 @@ function Lobby({ snapshot, myId, isHost, tv, error, onExit, reconnecting }: {
         onClose={() => setEditingBot(null)}
       />
       <Confirm visible={leaving} title="Uscire dalla stanza?" message="Potrai rientrare con lo stesso codice." confirmLabel="Esci" onCancel={() => setLeaving(false)} onConfirm={onExit} />
+    </>
+  );
+
+  // Cambia gioco: prima quelli adatti a chi è al tavolo, sotto gli altri con quante persone servono.
+  if (choosing) {
+    const pick = (id: string) => {
+      send('setGame', { gameId: id });
+      setChoosing(false);
+    };
+    // Finché al tavolo non c'è ancora nessun altro, si può scegliere fra tutti i giochi.
+    const fits = GAMES.filter((g) => total <= 1 || playerCounts(g.meta).includes(total));
+    const others = GAMES.filter((g) => !fits.includes(g));
+    return (
+      <Screen>
+        <Row gap={10}>
+          <RoundButton icon="back" label="Torna alla stanza" onPress={() => setChoosing(false)} />
+          <T size={24} weight="900">
+            Scegli il gioco
+          </T>
+        </Row>
+        <CodeStrip code={snapshot.code} total={total} />
+        {total > 1 && (
+          <T size={20} weight="900" color={colors.accent}>
+            Adatti ai {total} al tavolo
+          </T>
+        )}
+        <GameGrid>
+          {fits.map((g) => (
+            <GameIcon key={g.meta.id} meta={g.meta} size={iconSize} selected={g.meta.id === snapshot.gameId} onPress={() => pick(g.meta.id)} />
+          ))}
+        </GameGrid>
+        {others.length > 0 && (
+          <>
+            <T size={15} weight="800" color={colors.muted}>
+              Con più o meno persone
+            </T>
+            <GameGrid>
+              {others.map((g) => (
+                <GameIcon key={g.meta.id} meta={g.meta} size={iconSize} dim selected={g.meta.id === snapshot.gameId} caption={`${g.meta.name}: ${needed(g.meta, total)}`} onPress={() => pick(g.meta.id)} />
+              ))}
+            </GameGrid>
+          </>
+        )}
+      </Screen>
+    );
+  }
+
+  // Chi è entrato col QR o col codice: nessuna domanda, sa che è dentro e chi c'è con lui.
+  if (!isHost && !tv) {
+    const others = players.filter((p) => p.id !== myId);
+    return (
+      <Screen style={{ flexGrow: 1 }}>
+        <View style={styles.guestTop}>
+          <RoundButton icon="back" label="Esci dalla stanza" onPress={() => setLeaving(true)} />
+          <CodeStrip code={snapshot.code} total={total} flat />
+        </View>
+        <View style={{ flexGrow: 1, alignItems: 'center', justifyContent: 'center', gap: 12 }}>
+          <T size={40} weight="900" color={colors.accent} style={styles.shadowText} center>
+            Sei dentro!
+          </T>
+          {meIndex >= 0 && <CharacterAvatar id={avatars[meIndex]} size={170} seat={meIndex} />}
+          <T size={28} weight="900" center>
+            {players[meIndex]?.name}
+          </T>
+          <Button small kind="ghost" color={colors.text} label="Cambia nome e maschera" onPress={() => setPicking(true)} />
+          {others.length > 0 && (
+            <>
+              <Row gap={0}>
+                {others.slice(0, 6).map((m, i) => (
+                  <View key={m.id} style={{ marginLeft: i ? -12 : 0 }}>
+                    <CharacterAvatar id={avatars[players.indexOf(m)]} size={54} />
+                  </View>
+                ))}
+              </Row>
+              <T size={15} weight="800" color={colors.muted} center>
+                Con te: {others.map((m) => m.name).join(', ')}
+              </T>
+            </>
+          )}
+        </View>
+        <GameRow game={game} text={game ? `Parte quando ${leader?.name ?? 'il capotavola'} è pronto` : `${leader?.name ?? 'Il capotavola'} sta scegliendo il gioco…`} />
+        {reconnecting}
+        {modals}
+      </Screen>
+    );
+  }
+
+  const seats = (
+    <TableSeats
+      big={big}
+      total={total}
+      maxPlayers={game?.meta.maxPlayers}
+      players={players}
+      botNames={snapshot.botNames}
+      botLevels={snapshot.botLevels}
+      avatars={avatars}
+      myId={myId}
+      leaderId={leader?.id}
+      isHost={isHost}
+      onMe={() => setPicking(true)}
+      onBot={setEditingBot}
+      onAddBot={canBots && canAddBot ? addBot : undefined}
+      onRemoveBot={canBots && snapshot.bots > 0 ? () => send('setBots', { count: snapshot.bots - 1 }) : undefined}
+    />
+  );
+  const gameRow = <GameRow game={game} text={isHost ? (game ? 'Cambia gioco' : 'Scegli il gioco') : `${leader?.name ?? 'Il capotavola'} sta scegliendo il gioco…`} onPress={isHost ? () => setChoosing(true) : undefined} />;
+  const start = isHost ? (
+    <StartButton game={game} total={total} allowed={allowed} canStart={canStart} onChoose={() => setChoosing(true)} />
+  ) : (
+    <T center color={colors.muted} size={16}>
+      La partita parte quando {leader?.name ?? 'il capotavola'} è pronto.
+    </T>
+  );
+
+  if (big) {
+    const coverWidth = Math.min(width, 1100) - 32;
+    return (
+      <Screen>
+        <Copertina
+          width={coverWidth}
+          height={Math.max(300, Math.min(380, Math.round(height * 0.46)))}
+          code={snapshot.code}
+          url={url}
+          count={total}
+          avatars={avatars}
+          top={
+            <Row gap={10}>
+              <RoundButton icon="back" label="Esci dalla stanza" onPress={() => setLeaving(true)} />
+              <T size={34} weight="900" color={colors.accent} style={styles.shadowText}>
+                Tavolata
+              </T>
+            </Row>
+          }
+        />
+        <View style={{ flexDirection: 'row', gap: 20, alignItems: 'stretch' }}>
+          <View style={{ flex: 2 }}>{seats}</View>
+          <View style={{ flex: 1, gap: 14, justifyContent: 'space-between' }}>
+            {gameRow}
+            {start}
+          </View>
+        </View>
+        {error && (
+          <T color={colors.danger} weight="800">
+            ⚠ {error}
+          </T>
+        )}
+        {reconnecting}
+        {modals}
+      </Screen>
+    );
+  }
+
+  // Dal telefono, tre blocchi: cosa si gioca, chi c'è, come si entra. Il via resta in fondo.
+  return (
+    <Screen style={{ flexGrow: 1 }}>
+      <Row gap={10}>
+        <RoundButton icon="back" label="Esci dalla stanza" onPress={() => setLeaving(true)} />
+        <View style={{ flex: 1 }}>{gameRow}</View>
+      </Row>
+      {seats}
+      <View style={styles.invite}>
+        <T size={15} weight="800">
+          Inquadra il QR per entrare
+        </T>
+        {url && <QrCode value={url} size={214} />}
+        <Row style={{ alignSelf: 'stretch', justifyContent: 'space-between' }} gap={10}>
+          <Text accessibilityLabel={`Codice stanza ${snapshot.code.split('').join(' ')}`} style={styles.code}>
+            {snapshot.code}
+          </Text>
+          {url && <InviteButton url={url} code={snapshot.code} />}
+        </Row>
+      </View>
+      {error && (
+        <T color={colors.danger} weight="800">
+          ⚠ {error}
+        </T>
+      )}
+      <View style={{ flexGrow: 1 }} />
+      {start}
+      {reconnecting}
+      {modals}
     </Screen>
   );
 }
 
+/** Quante persone servono per un gioco, rispetto a chi è al tavolo. */
+function needed(meta: GameMeta, total: number) {
+  const counts = playerCounts(meta);
+  if (meta.minPlayers === meta.maxPlayers) return `in ${meta.minPlayers}`;
+  if (total < meta.minPlayers) return `da ${meta.minPlayers}`;
+  if (total > meta.maxPlayers) return `fino a ${meta.maxPlayers}`;
+  return counts.join(' o ');
+}
+
+/** Il gioco scelto, in cima alla stanza: chi comanda lo cambia con un tocco. */
+function GameRow({ game, text, onPress }: { game?: { meta: GameMeta }; text: string; onPress?: () => void }) {
+  const art = game ? GAME_ART[game.meta.id] : null;
+  return (
+    <Pressable
+      disabled={!onPress}
+      accessibilityRole={onPress ? 'button' : undefined}
+      accessibilityLabel={`${game?.meta.name ?? 'Nessun gioco'}. ${text}`}
+      onPress={() => {
+        tap();
+        onPress?.();
+      }}
+      style={(state) => [styles.gameRow, { transform: [{ translateY: (state as { pressed: boolean }).pressed ? 3 : 0 }] }, focusRing((state as { focused?: boolean }).focused ?? false)]}
+    >
+      {art ? <Image source={art} style={styles.gameArt} accessibilityIgnoresInvertColors /> : null}
+      <View style={{ flex: 1, minWidth: 0 }}>
+        <T size={22} weight="900" lines={1}>
+          {game?.meta.name ?? 'Nessun gioco'}
+        </T>
+        <T size={14} weight="800" color={colors.accent} lines={2}>
+          {text}
+        </T>
+      </View>
+    </Pressable>
+  );
+}
+
+/** Il bottone del via: quando manca qualcosa dice cosa, così non serve spiegare altro. */
+function StartButton({ game, total, allowed, canStart, onChoose }: { game?: { meta: GameMeta }; total: number; allowed: number[]; canStart: boolean; onChoose: () => void }) {
+  if (!game) return <Button label="Scegli il gioco" onPress={onChoose} />;
+  if (canStart)
+    return (
+      <Button
+        label="Si gioca!"
+        onPress={() => {
+          setSettings({ ...getSettings(), lastGame: game.meta.id });
+          send('start');
+        }}
+      />
+    );
+  const next = allowed.find((n) => n > total);
+  const missing = next === undefined ? null : next - total;
+  return (
+    <View style={styles.waiting} accessibilityLiveRegion="polite">
+      <T size={22} weight="900" center>
+        {missing === null ? `Troppi: massimo ${allowed[allowed.length - 1]}` : `Serve${missing === 1 ? '' : 'no'} ancora ${missing} giocator${missing === 1 ? 'e' : 'i'}`}
+      </T>
+    </View>
+  );
+}
+
+/** Codice e conto in una striscia, dove il QR non c'è. */
+function CodeStrip({ code, total, flat }: { code: string; total: number; flat?: boolean }) {
+  return (
+    <View style={[styles.strip, flat && { flex: 1 }]}>
+      <Text accessibilityLabel={`Codice stanza ${code.split('').join(' ')}`} style={styles.stripCode}>
+        {code}
+      </Text>
+      <T size={15} weight="800" style={{ flex: 1, textAlign: 'right' }}>
+        {total} al tavolo
+      </T>
+    </View>
+  );
+}
+
+/** Chi è al tavolo: persone e computer con la stessa icona tonda, più i posti ancora liberi. */
+function TableSeats({ big, total, maxPlayers, players, botNames, botLevels, avatars, myId, leaderId, isHost, onMe, onBot, onAddBot, onRemoveBot }: {
+  big: boolean;
+  total: number;
+  maxPlayers?: number;
+  players: RoomSnapshot['members'];
+  botNames: string[];
+  botLevels?: RoomSnapshot['botLevels'];
+  avatars: string[];
+  myId: string;
+  leaderId?: string;
+  isHost: boolean;
+  onMe: () => void;
+  onBot: (i: number) => void;
+  onAddBot?: () => void;
+  onRemoveBot?: () => void;
+}) {
+  const size = big ? 84 : 66;
+  const row = 4;
+  const tiles = (onAddBot ? 1 : 0) + (onRemoveBot ? 1 : 0);
+  const free = Math.max(0, Math.min((maxPlayers ?? row) - total, row - total - tiles));
+  return (
+    <View style={styles.seats}>
+      <T size={22} weight="900" color={colors.accent}>
+        {total} al tavolo
+      </T>
+      <View style={styles.seatGrid}>
+        {players.map((m, i) => (
+          <PopIn key={m.id}>
+            <SeatCard
+              size={size}
+              avatar={avatars[i]}
+              seat={i}
+              mine={m.id === myId}
+              name={m.id === myId ? 'Tu' : m.name}
+              note={!m.connected ? '📡 si ricollega' : leaderId === m.id && m.id !== myId && !big ? 'capotavola' : undefined}
+              onPress={m.id === myId ? onMe : undefined}
+              a11y={m.id === myId ? 'Cambia nome e personaggio' : undefined}
+            />
+          </PopIn>
+        ))}
+        {botNames.map((name, i) => (
+          <PopIn key={name}>
+            <SeatCard
+              size={size}
+              avatar={avatars[players.length + i]}
+              seat={players.length + i}
+              name={name}
+              note={big ? undefined : BOT_LEVELS.find((l) => l.id === (botLevels?.[i] ?? 'normale'))?.label ?? 'Normale'}
+              onPress={isHost ? () => onBot(i) : undefined}
+              a11y={isHost ? `Cambia maschera e bravura di ${name}` : undefined}
+            />
+          </PopIn>
+        ))}
+        {Array.from({ length: free }, (_, i) => (
+          <EmptySeat key={i} size={size} label="Libero" />
+        ))}
+        {onAddBot && <EmptySeat size={size} label="Computer" sign="+" a11y="Aggiungi un computer" onPress={onAddBot} />}
+        {onRemoveBot && <EmptySeat size={size} label="Togli" sign="−" a11y="Togli un computer" onPress={onRemoveBot} />}
+      </View>
+    </View>
+  );
+}
+
+function EmptySeat({ size, label, sign, a11y, onPress }: { size: number; label: string; sign?: string; a11y?: string; onPress?: () => void }) {
+  return (
+    <Pressable
+      disabled={!onPress}
+      accessibilityRole={onPress ? 'button' : undefined}
+      accessibilityLabel={a11y ?? label}
+      onPress={() => {
+        tap();
+        onPress?.();
+      }}
+      style={[styles.seatCard, { width: size + (size > 70 ? 36 : 12) }]}
+    >
+      <View style={{ width: size, height: size, borderRadius: size / 2, borderWidth: 3, borderStyle: 'dashed', borderColor: colors.dim, alignItems: 'center', justifyContent: 'center' }}>
+        {sign ? (
+          <T size={26} weight="900" color={colors.muted}>
+            {sign}
+          </T>
+        ) : null}
+      </View>
+      <T size={14} weight="800" color={colors.muted} lines={1} center>
+        {label}
+      </T>
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
-  modeBanner: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, paddingHorizontal: 14, borderRadius: radius.m, backgroundColor: colors.surface2, borderWidth: 3, borderColor: colors.line },
-  joined: { backgroundColor: colors.success, borderRadius: 999, paddingHorizontal: 14, paddingVertical: 8 },
-  seatGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  seatCard: { width: 96, alignItems: 'center', gap: 3, paddingVertical: 8, paddingHorizontal: 4, borderRadius: radius.m, backgroundColor: colors.surface2 },
-  // Griglia di copertine: tre per riga sul telefono, di più sugli schermi larghi.
-  gameChoice: { alignItems: 'center', padding: 6, borderRadius: radius.m, borderWidth: 3, borderColor: 'transparent', backgroundColor: colors.surface2, gap: 3, minHeight: MIN_TOUCH },
-  gameArt: { borderRadius: radius.s, borderWidth: 2, borderColor: colors.line },
+  seats: { backgroundColor: colors.surface, borderRadius: radius.l, borderWidth: 3, borderColor: colors.line, boxShadow: `0px 6px 0px ${colors.line}`, marginBottom: 6, paddingHorizontal: 14, paddingTop: 12, paddingBottom: 14, gap: 10 },
+  seatGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, justifyContent: 'space-between' },
+  seatCard: { alignItems: 'center', gap: 3 },
+  invite: { alignItems: 'center', gap: 10, paddingHorizontal: 14, paddingTop: 12, paddingBottom: 14, borderRadius: radius.l, borderWidth: 3, borderColor: colors.line, backgroundColor: colors.cover, boxShadow: `0px 6px 0px ${colors.line}`, marginBottom: 6 },
+  code: { color: colors.accent, fontFamily: font.display, fontSize: 38, lineHeight: 44, letterSpacing: 3 },
+  gameRow: { minHeight: 76, flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 22, borderWidth: 3, borderColor: colors.line, backgroundColor: colors.surface, boxShadow: `0px 5px 0px ${colors.line}`, marginBottom: 5 },
+  gameArt: { width: 52, height: 52, borderRadius: 12, borderWidth: 2, borderColor: colors.line },
+  waiting: { minHeight: 66, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 12, borderRadius: radius.l, borderWidth: 3, borderStyle: 'dashed', borderColor: colors.dim },
+  strip: { minHeight: 56, flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, borderRadius: 20, backgroundColor: colors.line },
+  stripCode: { color: colors.accent, fontFamily: font.display, fontSize: 24, letterSpacing: 2 },
+  guestTop: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  shadowText: { textShadowColor: colors.line, textShadowOffset: { width: 0, height: 3 }, textShadowRadius: 0 },
   reconnect: { position: 'absolute', top: 8, alignSelf: 'center', backgroundColor: colors.accent, borderRadius: 999, paddingHorizontal: 16, paddingVertical: 10 },
 });
 
-/** Un posto al tavolo nella stanza: icona tonda, nome e una riga (tu, capotavola, bravura del computer). */
-function SeatCard({ avatar, seat, name, note, noteColor, onPress, a11y, crown }: { avatar: string; seat: number; name: string; note: string; noteColor: string; onPress?: () => void; a11y?: string; crown?: boolean }) {
+/** Un posto al tavolo nella stanza: icona tonda, nome e, se serve, una riga (capotavola, bravura del computer). */
+function SeatCard({ size, avatar, seat, mine, name, note, onPress, a11y }: { size: number; avatar: string; seat: number; mine?: boolean; name: string; note?: string; onPress?: () => void; a11y?: string }) {
   return (
     <Pressable
       disabled={!onPress}
@@ -384,46 +588,37 @@ function SeatCard({ avatar, seat, name, note, noteColor, onPress, a11y, crown }:
         tap();
         onPress?.();
       }}
-      style={(state) => [styles.seatCard, { transform: [{ translateY: (state as { pressed: boolean }).pressed ? 2 : 0 }] }]}
+      style={(state) => [styles.seatCard, { width: size + (size > 70 ? 36 : 12), transform: [{ translateY: (state as { pressed: boolean }).pressed ? 2 : 0 }] }]}
     >
-      <CharacterAvatar id={avatar} size={58} seat={seat} />
-      <T size={14} weight="900" lines={1} center>
-        {crown ? '👑 ' : ''}
+      <View style={mine ? { borderRadius: size, borderWidth: 3, borderColor: colors.accent } : undefined}>
+        <CharacterAvatar id={avatar} size={mine ? size - 6 : size} seat={seat} />
+      </View>
+      <T size={14} weight="800" lines={1} center>
         {name}
       </T>
-      <T size={11} weight="800" lines={1} center color={noteColor}>
-        {note}
-      </T>
+      {note ? (
+        <T size={11} weight="800" lines={1} center color={colors.muted}>
+          {note}
+        </T>
+      ) : null}
     </Pressable>
   );
 }
 
 /** Invito come in Jackbox: il link porta dritto alla stanza col codice già scritto. */
-function InviteButtons({ url, code }: { url: string; code: string }) {
+function InviteButton({ url, code }: { url: string; code: string }) {
   const [copied, setCopied] = useState(false);
   const message = `Vieni a giocare su Tavolata! Stanza ${code}: ${url}`;
-  const share = async () => {
-    tap();
+  const share = () => {
     const nav = typeof navigator !== 'undefined' ? (navigator as Navigator & { share?: (d: { title?: string; text?: string; url?: string }) => Promise<void> }) : null;
-    if (Platform.OS === 'web' && nav?.share) {
-      nav.share({ title: 'Tavolata', text: `Stanza ${code}`, url }).catch(() => {});
-    } else if (Platform.OS !== 'web') {
-      Share.share({ message }).catch(() => {});
-    } else copy();
-  };
-  const copy = () => {
-    tap();
-    if (Platform.OS === 'web' && typeof navigator !== 'undefined' && navigator.clipboard) {
-      navigator.clipboard.writeText(url).then(() => {
+    if (Platform.OS !== 'web') Share.share({ message }).catch(() => {});
+    else if (nav?.share) nav.share({ title: 'Tavolata', text: `Stanza ${code}`, url }).catch(() => {});
+    else if (nav?.clipboard) {
+      nav.clipboard.writeText(url).then(() => {
         setCopied(true);
         setTimeout(() => setCopied(false), 1800);
       }).catch(() => {});
-    } else Share.share({ message }).catch(() => {});
+    }
   };
-  return (
-    <Row gap={8} wrap style={{ justifyContent: 'center' }}>
-      <Button small label="Condividi link" icon="📤" onPress={share} />
-      <Button small kind="ghost" color={colors.text} label={copied ? '✓ Copiato' : 'Copia link'} onPress={copy} />
-    </Row>
-  );
+  return <Button small label={copied ? '✓ Copiato' : 'Manda il link'} color="#FFFFFF" onPress={share} />;
 }

@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Svg, { Path } from 'react-native-svg';
 import * as Haptics from 'expo-haptics';
 import { getSettings, TEXT_SCALE, useIsTv, useSettings } from './settings';
 import { SeatAvatar } from './avatars';
@@ -114,6 +115,25 @@ export function Button({ label, onPress, color = colors.accent, kind = 'solid', 
         {icon ? `${icon}  ` : ''}
         {label}
       </T>
+    </Pressable>
+  );
+}
+
+/** Bottone tondo con un'icona: indietro in alto a sinistra, menu in alto a destra. */
+export function RoundButton({ icon, label, onPress }: { icon: 'back' | 'menu'; label: string; onPress: () => void }) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      onPress={() => {
+        tap();
+        onPress();
+      }}
+      style={(state) => [styles.round, focusRing((state as { focused?: boolean }).focused ?? false)]}
+    >
+      <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">
+        <Path d={icon === 'back' ? 'M15 5l-7 7 7 7' : 'M4 7h16M4 12h16M4 17h16'} />
+      </Svg>
     </Pressable>
   );
 }
@@ -242,6 +262,7 @@ const styles = StyleSheet.create({
   tvInset: { paddingHorizontal: '5%', paddingVertical: '3%', maxWidth: undefined },
   button: { minHeight: MIN_TOUCH + 8, paddingVertical: 14, paddingHorizontal: 22, borderRadius: radius.l, borderWidth: OUTLINE, alignItems: 'center', justifyContent: 'center', marginBottom: 6 },
   buttonSmall: { minHeight: MIN_TOUCH, paddingVertical: 10, paddingHorizontal: 16 },
+  round: { width: MIN_TOUCH, height: MIN_TOUCH, flexShrink: 0, borderRadius: MIN_TOUCH / 2, borderWidth: OUTLINE, borderColor: colors.line, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
   chip: { minHeight: MIN_TOUCH - 4, justifyContent: 'center', paddingVertical: 8, paddingHorizontal: 16, borderRadius: 999, borderWidth: OUTLINE, borderColor: colors.line, backgroundColor: colors.surface },
   panel: { backgroundColor: colors.surface, borderRadius: radius.l, padding: 16, gap: 12, borderWidth: OUTLINE, borderColor: colors.line, boxShadow: `0px 6px 0px ${colors.line}`, marginBottom: 6 },
   sheet: { width: '100%', maxWidth: 460, gap: 10, padding: 18, borderRadius: 28, backgroundColor: colors.surface, borderWidth: OUTLINE, borderColor: colors.line, boxShadow: `0px 8px 0px ${colors.line}` },

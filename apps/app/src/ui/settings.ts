@@ -17,10 +17,12 @@ export interface Settings {
   highContrast: boolean;
   /** Bravura del computer nelle partite su questo dispositivo. */
   botLevel: 'facile' | 'normale' | 'difficile';
+  /** L'ultimo gioco giocato, per ripartire con un tocco. */
+  lastGame: string | null;
 }
 
 const KEY = 'tavolata.settings';
-export const DEFAULT_SETTINGS: Settings = { textSize: 0, reduceMotion: null, haptics: true, sound: true, avatar: null, highContrast: false, botLevel: 'normale' };
+export const DEFAULT_SETTINGS: Settings = { textSize: 0, reduceMotion: null, haptics: true, sound: true, avatar: null, highContrast: false, botLevel: 'normale', lastGame: null };
 export const TEXT_SCALE = [1, 1.18, 1.36] as const;
 
 let current: Settings = DEFAULT_SETTINGS;

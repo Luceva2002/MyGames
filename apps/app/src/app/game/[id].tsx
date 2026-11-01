@@ -15,10 +15,12 @@ import { Button, Panel, Row, Screen, T, tap } from '../../ui/kit';
 import { colors, radius } from '../../ui/theme';
 
 export default function GameDetail() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  // Con ?persone=1 si arriva da «In tanti, un telefono»: tutti i posti sono per le persone.
+  const { id, persone } = useLocalSearchParams<{ id: string; persone?: string }>();
   const entry = catalog().find((e) => e.meta.id === id);
   const meta = entry?.meta;
-  const [count, setCount] = useState(meta ? Math.max(meta.minPlayers, Math.min(meta.humansOnly ? 4 : 2, meta.maxPlayers)) : 2);
+  const onlyPeople = !!meta?.humansOnly || persone === '1';
+  const [count, setCount] = useState(meta ? Math.max(meta.minPlayers, Math.min(meta.humansOnly ? 4 : persone === '1' ? 3 : 2, meta.maxPlayers)) : 2);
   const [seats, setSeats] = useState<SeatConfig[]>([]);
   // Una maschera diversa per ogni posto, scelta a caso e cambiabile con un tocco.
   const [masks, setMasks] = useState(() => pickBots(10, Math.random, [getSettings().avatar]).map((b) => b.name));
@@ -29,9 +31,9 @@ export default function GameDetail() {
   useEffect(() => {
     loadNames().then((saved) => {
       // Di partenza: tu contro il computer; si aggiungono persone o computer con un tocco.
-      setSeats(Array.from({ length: 10 }, (_, i) => ({ name: saved[i] ?? (i === 0 ? 'Io' : defaultName(i)), bot: i > 0 && !meta?.humansOnly })));
+      setSeats(Array.from({ length: 10 }, (_, i) => ({ name: saved[i] ?? (i === 0 ? 'Io' : defaultName(i)), bot: i > 0 && !onlyPeople })));
     });
-  }, [meta]);
+  }, [meta, onlyPeople]);
 
   if (!entry || !meta) {
     return (
@@ -200,11 +202,6 @@ export default function GameDetail() {
               </View>
             )}
           </View>
-          {!canPassAndPlay(meta) && meta.maxPlayers >= 2 && (
-            <T size={13} color={colors.muted}>
-              Qui ognuno ha carte o ruoli segreti: su questo dispositivo giochi contro il computer. Per giocare tra persone usa «Multiplayer»: ognuno entra col suo telefono, anche solo dal browser.
-            </T>
-          )}
         </Panel>
       )}
 
