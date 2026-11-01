@@ -150,6 +150,7 @@ function Lobby({ snapshot, myId, isHost, tv, error, onExit, reconnecting }: {
   const wide = width > 760;
   const game = snapshot.gameId ? getGame(snapshot.gameId) : undefined;
   const players = snapshot.members.filter((m) => m.role === 'player');
+  const hasScreen = snapshot.members.some((m) => m.role === 'screen' && m.connected);
   const total = players.length + snapshot.bots;
   const url = joinUrl(snapshot.code);
   const leader = snapshot.members.find((m) => m.id === snapshot.hostId && m.role === 'player') ?? players[0];
@@ -185,6 +186,18 @@ function Lobby({ snapshot, myId, isHost, tv, error, onExit, reconnecting }: {
           </View>
         )}
       </Row>
+
+      {/* Come si gioca in questa stanza, detto in una riga: lo decide il dispositivo di chi l'ha aperta. */}
+      <View style={styles.modeBanner} accessibilityRole="text">
+        <T size={22}>{hasScreen ? '📺' : '📱'}</T>
+        <T size={15} weight="800" style={{ flex: 1 }}>
+          {tv
+            ? 'Questo schermo è il tavolo: gli amici inquadrano il QR e giocano dal telefono.'
+            : hasScreen
+              ? 'Il tavolo è sullo schermo grande: da qui giochi tu.'
+              : 'Niente schermo comune: ognuno vede il tavolo e gioca dal suo telefono.'}
+        </T>
+      </View>
 
       <View style={{ flexDirection: wide ? 'row' : 'column', gap: 16 }}>
         <Panel style={[wide && { flex: 1 }, { alignItems: 'center' }]}>
@@ -349,6 +362,7 @@ function Lobby({ snapshot, myId, isHost, tv, error, onExit, reconnecting }: {
 }
 
 const styles = StyleSheet.create({
+  modeBanner: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, paddingHorizontal: 14, borderRadius: radius.m, backgroundColor: colors.surface2, borderWidth: 3, borderColor: colors.line },
   joined: { backgroundColor: colors.success, borderRadius: 999, paddingHorizontal: 14, paddingVertical: 8 },
   seatGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   seatCard: { width: 96, alignItems: 'center', gap: 3, paddingVertical: 8, paddingHorizontal: 4, borderRadius: radius.m, backgroundColor: colors.surface2 },

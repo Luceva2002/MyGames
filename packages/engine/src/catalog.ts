@@ -19,7 +19,8 @@ import { lupus } from './games/lupus/lupus';
 import { mrwhite } from './games/mrwhite/mrwhite';
 
 /** Giochi giocabili, nell'ordine in cui compaiono nel catalogo. */
-export const GAMES: Game[] = [scopa, briscola, tresette, setteemezzo, scala40, burraco, machiavelli, uno, solitario, dama, scacchi, yahtzee, freccette, biliardo, football, tris, lupus, mrwhite];
+// Ordine della home: tipi di gioco alternati, così le carte non stanno tutte all'inizio.
+export const GAMES: Game[] = [scopa, mrwhite, scacchi, uno, freccette, briscola, yahtzee, lupus, burraco, dama, setteemezzo, biliardo, scala40, tris, tresette, football, machiavelli, solitario];
 
 export function getGame(id: string): Game | undefined {
   return GAMES.find((g) => g.meta.id === id);

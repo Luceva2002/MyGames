@@ -7,6 +7,7 @@ import { canPassAndPlay } from '../session/local';
 import { CharacterAvatar } from '../ui/avatars';
 import { PopIn } from '../ui/motion';
 import { LevelPicker } from '../ui/LevelPicker';
+import { useIsTable } from '../ui/device';
 import { QrCode } from '../ui/QrCode';
 import { GAME_ART, HERO } from '../ui/art';
 import { Chip, focusRing, Row, Screen, T, tap } from '../ui/kit';
@@ -115,8 +116,13 @@ async function startRoom(e: CatalogEntry, screen: boolean) {
   if (code) router.push({ pathname: '/room/[code]', params: { code } });
 }
 
-/** La scelta rapida di come giocare, sopra la home: due tocchi in tutto e si è al tavolo. */
-function QuickStart({ entry, onClose, wideScreen }: { entry: CatalogEntry | null; onClose: () => void; wideScreen: boolean }) {
+/**
+ * La scelta rapida di come giocare, sopra la home: due tocchi in tutto e si è al tavolo.
+ * Online decide il dispositivo, senza domande: dal computer (o tablet, TV) lo schermo diventa il
+ * tavolo e gli amici giocano dal telefono; dal telefono ognuno siede al tavolo col suo telefono.
+ * Senza internet si gioca sempre: contro il computer o passandosi il dispositivo.
+ */
+function QuickStart({ entry, onClose, isTable }: { entry: CatalogEntry | null; onClose: () => void; isTable: boolean }) {
   const online = useOnline();
   const e = entry;
   const art = e ? GAME_ART[e.meta.id] : null;
@@ -126,6 +132,7 @@ function QuickStart({ entry, onClose, wideScreen }: { entry: CatalogEntry | null
     onClose();
     fn();
   };
+  const roomBusy = online.waking ? 'Sveglio le stanze…' : online.status === 'connecting' ? 'Creo la stanza…' : null;
   return (
     <Modal visible={!!e} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable style={styles.sheetScrim} onPress={onClose} accessibilityLabel="Chiudi">
@@ -143,21 +150,30 @@ function QuickStart({ entry, onClose, wideScreen }: { entry: CatalogEntry | null
                 </T>
               </View>
             </Row>
-            <T size={14} weight="900" color={colors.muted}>
-              COME GIOCATE?
-            </T>
-            {!e.meta.humansOnly && <QuickOption icon="🤖" title={multi ? 'Contro il computer' : 'Gioca'} text="Parti subito, qui" primary onPress={go(() => startVsComputer(e))} />}
-            {!e.meta.humansOnly && multi && <LevelPicker />}
             {multi && (
-              <QuickOption
-                icon="📱"
-                title={online.waking ? 'Sveglio le stanze…' : online.status === 'connecting' ? 'Creo la stanza…' : 'Con amici'}
-                text="Ognuno col suo telefono"
-                onPress={go(() => startRoom(e, false))}
-              />
+              <>
+                <T size={14} weight="900" color={colors.muted}>
+                  CON GLI AMICI · ONLINE
+                </T>
+                <QuickOption
+                  icon={isTable ? '📺' : '📱'}
+                  title={roomBusy ?? (isTable ? 'Questo schermo è il tavolo' : 'Ognuno col suo telefono')}
+                  text={isTable ? 'Gli amici inquadrano il QR e giocano dal telefono' : 'Tutti al tavolo dal proprio telefono, senza schermo comune'}
+                  primary
+                  onPress={go(() => startRoom(e, isTable))}
+                />
+              </>
             )}
-            {multi && wideScreen && <QuickOption icon="📺" title="Questo schermo è il tavolo" text="Gli altri giocano dal telefono" onPress={go(() => startRoom(e, true))} />}
-            {multi && canPassAndPlay(e.meta) && <QuickOption icon="🫶" title="Tutti su questo dispositivo" text="Vi passate il telefono a turno" onPress={go(() => router.push({ pathname: '/game/[id]', params: { id: e.meta.id } }))} />}
+            {(!e.meta.humansOnly || (multi && canPassAndPlay(e.meta))) && (
+              <T size={14} weight="900" color={colors.muted}>
+                {multi ? 'SENZA INTERNET' : 'GIOCA'}
+              </T>
+            )}
+            {!e.meta.humansOnly && <QuickOption icon="🤖" title={multi ? 'Contro il computer' : 'Gioca'} text="Parti subito, qui" primary={!multi} onPress={go(() => startVsComputer(e))} />}
+            {!e.meta.humansOnly && multi && <LevelPicker />}
+            {multi && canPassAndPlay(e.meta) && (
+              <QuickOption icon="🫶" title="Tutti su questo dispositivo" text={isTable ? 'Giocate a turno su questo schermo' : 'Vi passate il telefono a turno'} onPress={go(() => router.push({ pathname: '/game/[id]', params: { id: e.meta.id } }))} />
+            )}
             <Pressable accessibilityRole="button" onPress={go(() => router.push({ pathname: '/game/[id]', params: { id: e.meta.id } }))} style={{ alignSelf: 'center', padding: 8 }}>
               <T size={14} weight="800" color={colors.accent}>
                 Regole e più opzioni ›
@@ -249,6 +265,7 @@ function JoinBar({ initialCode }: { initialCode: string }) {
 
 export default function Home() {
   const { width } = useWindowDimensions();
+  const isTable = useIsTable();
   // Il link d'invito e il QR portano qui con ?code=ABCD: si entra subito, senza altre schermate.
   const { code: codeParam } = useLocalSearchParams<{ code?: string }>();
   const linkCode = normalizeCode(codeParam ?? '');
@@ -306,7 +323,7 @@ export default function Home() {
                   La TV è il tavolo, il telefono è il tuo controller.
                 </T>
               </View>
-              <HomeLobby size={Math.round(Math.min(150, heroHeight * 0.38))} />
+              {isTable && <HomeLobby size={Math.round(Math.min(150, heroHeight * 0.38))} />}
             </View>
             {gear}
           </Row>
@@ -324,7 +341,7 @@ export default function Home() {
               Tavolata
             </T>
             <T size={13} weight="800" color={colors.text}>
-              La TV è il tavolo, il telefono è il tuo controller.
+              Ognuno al tavolo col suo telefono, anche senza TV.
             </T>
           </View>
           {gear}
@@ -335,11 +352,11 @@ export default function Home() {
       <Row gap={12} wrap>
         <BigAction
           primary
-          icon="📺"
+          icon={isTable ? '📺' : '📱'}
           title="Crea una stanza"
-          text={width > 760 ? 'Questo schermo fa da tavolo' : 'Gli amici entrano col codice'}
+          text={isTable ? 'Questo schermo è il tavolo, gli amici giocano dal telefono' : 'Ognuno gioca dal suo telefono'}
           onPress={async () => {
-            const code = await quickRoom(undefined, width > 760);
+            const code = await quickRoom(undefined, isTable);
             if (code) router.push({ pathname: '/room/[code]', params: { code } });
           }}
         />
@@ -359,7 +376,7 @@ export default function Home() {
         ))}
         {entries.length === 0 && <T color={colors.muted}>Nessun gioco con questi filtri.</T>}
       </View>
-      <QuickStart entry={quick} onClose={() => setQuick(null)} wideScreen={width > 760} />
+      <QuickStart entry={quick} onClose={() => setQuick(null)} isTable={isTable} />
     </Screen>
   );
 }
