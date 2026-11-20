@@ -2,7 +2,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
 import { CharacterAvatar } from '../ui/avatars';
 import { focusRing, RoundButton, Screen, T, tap } from '../ui/kit';
-import { shellColors as colors } from '../ui/theme';
+import { SOFT, shellColors as colors } from '../ui/theme';
 
 function Choice({ mode, label, children, text }: { mode: 'bots' | 'two' | 'many'; label: string; children: React.ReactNode; text: string }) {
   return (
@@ -13,7 +13,7 @@ function Choice({ mode, label, children, text }: { mode: 'bots' | 'two' | 'many'
         tap();
         router.push({ pathname: '/giochi', params: { mode } });
       }}
-      style={(state) => [styles.choice, { transform: [{ translateY: state.pressed ? 4 : 0 }], boxShadow: `0px ${state.pressed ? 3 : 7}px 0px ${colors.line}` }, focusRing((state as { focused?: boolean }).focused ?? false)]}
+      style={(state) => [styles.choice, { transform: [{ translateY: state.pressed ? 4 : 0 }], boxShadow: SOFT }, focusRing((state as { focused?: boolean }).focused ?? false)]}
     >
       {children}
       <T size={21} weight="900" center>
@@ -32,7 +32,7 @@ function Digits({ children }: { children: React.ReactNode }) {
 
 function Digit({ value, color, size = 54 }: { value: string; color: string; size?: number }) {
   return (
-    <T size={size} weight="900" color={color} style={{ lineHeight: 60, textShadowColor: colors.line, textShadowOffset: { width: 0, height: 4 }, textShadowRadius: 0 }}>
+    <T size={size} weight="900" color={color} style={{ lineHeight: 60 }}>
       {value}
     </T>
   );
@@ -83,6 +83,6 @@ export default function Offline() {
 
 const styles = StyleSheet.create({
   top: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  tag: { paddingVertical: 8, paddingHorizontal: 14, borderRadius: 18, backgroundColor: colors.accent, borderWidth: 3, borderColor: colors.line },
-  choice: { flexGrow: 1, alignItems: 'center', justifyContent: 'center', gap: 6, minHeight: 170, padding: 12, borderRadius: 30, borderWidth: 3, borderColor: colors.line, backgroundColor: colors.surface, marginBottom: 7 },
+  tag: { paddingVertical: 8, paddingHorizontal: 14, borderRadius: 18, backgroundColor: colors.accent, borderWidth: 1, borderColor: colors.line },
+  choice: { flexGrow: 1, alignItems: 'center', justifyContent: 'center', gap: 6, minHeight: 170, padding: 12, borderRadius: 30, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.surface, marginBottom: 7 },
 });

@@ -19,7 +19,7 @@ import { getSettings, setSettings } from '../../ui/settings';
 import { Button, Confirm, focusRing, RoundButton, Row, Screen, T, tap } from '../../ui/kit';
 import { QrCode } from '../../ui/QrCode';
 import { TvContext } from '../../ui/settings';
-import { shellColors as colors, shellFont as font, radius } from '../../ui/theme';
+import { SOFT, shellColors as colors, shellFont as font, radius } from '../../ui/theme';
 
 export default function RoomScreen() {
   useStayAwake();
@@ -269,7 +269,7 @@ function Lobby({ snapshot, myId, isHost, tv, error, onExit, reconnecting }: {
           <CodeStrip code={snapshot.code} total={total} flat />
         </View>
         <View style={{ flexGrow: 1, alignItems: 'center', justifyContent: 'center', gap: 12 }}>
-          <T size={40} weight="900" color={colors.accent} style={styles.shadowText} center>
+          <T size={40} weight="900" color={colors.accent} center>
             Sei dentro!
           </T>
           {meIndex >= 0 && <CharacterAvatar id={avatars[meIndex]} size={170} seat={meIndex} />}
@@ -340,7 +340,7 @@ function Lobby({ snapshot, myId, isHost, tv, error, onExit, reconnecting }: {
           top={
             <Row gap={10}>
               <RoundButton icon="back" label="Esci dalla stanza" onPress={() => setLeaving(true)} />
-              <T size={34} weight="900" color={colors.accent} style={styles.shadowText}>
+              <T size={34} weight="900" color={colors.accent}>
                 Tavolata
               </T>
             </Row>
@@ -552,7 +552,7 @@ function EmptySeat({ size, label, sign, a11y, onPress }: { size: number; label: 
       }}
       style={[styles.seatCard, { width: size + (size > 70 ? 36 : 12) }]}
     >
-      <View style={{ width: size, height: size, borderRadius: size / 2, borderWidth: 3, borderStyle: 'dashed', borderColor: colors.dim, alignItems: 'center', justifyContent: 'center' }}>
+      <View style={{ width: size, height: size, borderRadius: size / 2, borderWidth: 1, borderStyle: 'dashed', borderColor: colors.dim, alignItems: 'center', justifyContent: 'center' }}>
         {sign ? (
           <T size={26} weight="900" color={colors.muted}>
             {sign}
@@ -567,20 +567,18 @@ function EmptySeat({ size, label, sign, a11y, onPress }: { size: number; label: 
 }
 
 const styles = StyleSheet.create({
-  seats: { backgroundColor: colors.surface, borderRadius: radius.l, borderWidth: 3, borderColor: colors.line, boxShadow: `0px 6px 0px ${colors.line}`, marginBottom: 6, paddingHorizontal: 14, paddingTop: 12, paddingBottom: 14, gap: 10 },
+  seats: { backgroundColor: colors.surface, borderRadius: radius.l, borderWidth: 1, borderColor: colors.line, boxShadow: SOFT, marginBottom: 6, paddingHorizontal: 14, paddingTop: 12, paddingBottom: 14, gap: 10 },
   seatsBig: { flex: 1, justifyContent: 'center' },
   fill: { flex: 1, marginBottom: 6 },
   seatGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, justifyContent: 'space-between' },
   seatCard: { alignItems: 'center', gap: 3 },
-  invite: { alignItems: 'center', gap: 10, paddingHorizontal: 14, paddingTop: 12, paddingBottom: 14, borderRadius: radius.l, borderWidth: 3, borderColor: colors.line, backgroundColor: colors.cover, boxShadow: `0px 6px 0px ${colors.line}`, marginBottom: 6 },
+  invite: { alignItems: 'center', gap: 10, paddingHorizontal: 14, paddingTop: 12, paddingBottom: 14, borderRadius: radius.l, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.cover, boxShadow: SOFT, marginBottom: 6 },
   code: { color: colors.accent, fontFamily: font.display, fontSize: 38, lineHeight: 44, letterSpacing: 3 },
-  gameRow: { minHeight: 76, flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 22, borderWidth: 3, borderColor: colors.line, backgroundColor: colors.surface, boxShadow: `0px 5px 0px ${colors.line}`, marginBottom: 5 },
-  gameArt: { width: 52, height: 52, borderRadius: 12, borderWidth: 2, borderColor: colors.line },
-  waiting: { minHeight: 66, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 12, borderRadius: radius.l, borderWidth: 3, borderStyle: 'dashed', borderColor: colors.dim },
+  gameRow: { minHeight: 76, flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 22, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.surface, boxShadow: SOFT, marginBottom: 5 },
+  waiting: { minHeight: 66, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 12, borderRadius: radius.l, borderWidth: 1, borderStyle: 'dashed', borderColor: colors.dim },
   strip: { minHeight: 56, flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, borderRadius: 20, backgroundColor: colors.line },
   stripCode: { color: colors.accent, fontFamily: font.display, fontSize: 24, letterSpacing: 2 },
   guestTop: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  shadowText: { textShadowColor: colors.line, textShadowOffset: { width: 0, height: 3 }, textShadowRadius: 0 },
   reconnect: { position: 'absolute', top: 8, alignSelf: 'center', backgroundColor: colors.accent, borderRadius: 999, paddingHorizontal: 16, paddingVertical: 10 },
 });
 
@@ -597,7 +595,7 @@ function SeatCard({ size, avatar, seat, mine, name, note, onPress, a11y }: { siz
       }}
       style={(state) => [styles.seatCard, { width: size + (size > 70 ? 36 : 12), transform: [{ translateY: (state as { pressed: boolean }).pressed ? 2 : 0 }] }]}
     >
-      <View style={mine ? { borderRadius: size, borderWidth: 3, borderColor: colors.accent } : undefined}>
+      <View style={mine ? { borderRadius: size, borderWidth: 1, borderColor: colors.accent } : undefined}>
         <CharacterAvatar id={avatar} size={mine ? size - 6 : size} seat={seat} />
       </View>
       <T size={14} weight="800" lines={1} center>

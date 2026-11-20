@@ -8,9 +8,9 @@ import { quickRoom, useOnline } from '../session/online';
 import { GameArt } from '../ui/GameArt';
 import { useIsTable } from '../ui/device';
 import { GameGrid, GameIcon, useIconSize } from '../ui/GameIcon';
-import { focusRing, RoundButton, Screen, Sheet, SheetOption, T, tap } from '../ui/kit';
+import { focusRing, onColor, RoundButton, Screen, Sheet, SheetOption, T, tap } from '../ui/kit';
 import { getSettings } from '../ui/settings';
-import { shellColors as colors } from '../ui/theme';
+import { SOFT, shellColors as colors } from '../ui/theme';
 
 type Mode = 'bots' | 'two' | 'many' | 'all';
 
@@ -93,7 +93,7 @@ function Tag({ label, color, onPress }: { label: string; color: string; onPress:
       }}
       style={(state) => [styles.tag, { backgroundColor: color }, focusRing((state as { focused?: boolean }).focused ?? false)]}
     >
-      <T size={14} weight="800" color={colors.onAccent} lines={1}>
+      <T size={14} weight="800" color={onColor(color)} lines={1}>
         {label}
       </T>
     </Pressable>
@@ -140,7 +140,7 @@ export default function Games() {
         ) : (
           <>
             <Tag label="Offline" color={colors.accent} onPress={() => router.replace('/')} />
-            {!isTable && <Tag label={LABEL[mode]} color="#FFFFFF" onPress={() => router.replace('/offline')} />}
+            {!isTable && <Tag label={LABEL[mode]} color={colors.surface2} onPress={() => router.replace('/offline')} />}
           </>
         )}
       </View>
@@ -191,8 +191,6 @@ export default function Games() {
 
 const styles = StyleSheet.create({
   top: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  tag: { minHeight: 44, flexShrink: 1, justifyContent: 'center', paddingHorizontal: 14, borderRadius: 22, borderWidth: 3, borderColor: colors.line },
-  again: { minHeight: 70, flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 12, borderRadius: 22, borderWidth: 3, borderColor: colors.line, backgroundColor: colors.accent, boxShadow: `0px 5px 0px ${colors.line}`, marginBottom: 5 },
-  againArt: { width: 46, height: 46, borderRadius: 12, borderWidth: 2, borderColor: colors.line },
-  sheetArt: { width: 68, height: 68, borderRadius: 16, borderWidth: 3, borderColor: colors.line },
+  tag: { minHeight: 44, flexShrink: 1, justifyContent: 'center', paddingHorizontal: 14, borderRadius: 22, borderWidth: 1, borderColor: colors.line },
+  again: { minHeight: 70, flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 12, borderRadius: 22, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.accent, boxShadow: SOFT, marginBottom: 5 },
 });

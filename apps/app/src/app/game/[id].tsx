@@ -12,7 +12,7 @@ import { canPassAndPlay, setPendingMatch, type SeatConfig } from '../../session/
 import { quickRoom, useOnline } from '../../session/online';
 import { defaultName, loadNames, saveNames } from '../../session/names';
 import { Button, Panel, RoundButton, Row, Screen, T, tap } from '../../ui/kit';
-import { shellColors as colors, radius } from '../../ui/theme';
+import { SOFT, shellColors as colors, radius } from '../../ui/theme';
 
 export default function GameDetail() {
   // Con ?persone=1 si arriva da «In tanti, un telefono»: tutti i posti sono per le persone.
@@ -248,12 +248,11 @@ export default function GameDetail() {
 }
 
 const styles = StyleSheet.create({
-  hero: { borderRadius: radius.l, padding: 16, flexDirection: 'row', alignItems: 'center', gap: 16, flexWrap: 'wrap', backgroundColor: colors.brand, borderWidth: 3, borderColor: colors.line, boxShadow: `0px 6px 0px ${colors.line}`, marginBottom: 6 },
-  heroArt: { width: 140, height: 140, borderRadius: radius.m, borderWidth: 3, borderColor: colors.line },
+  hero: { borderRadius: radius.l, padding: 16, flexDirection: 'row', alignItems: 'center', gap: 16, flexWrap: 'wrap', backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.line, boxShadow: SOFT, marginBottom: 6 },
   badge: { backgroundColor: '#0007', borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 },
   seatGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  seatCard: { width: '47%', maxWidth: 170, flexGrow: 1, alignItems: 'center', gap: 8, padding: 12, borderRadius: radius.m, backgroundColor: colors.surface2, borderWidth: 3, borderColor: colors.line },
-  remove: { position: 'absolute', top: -8, right: -8, width: 30, height: 30, borderRadius: 15, backgroundColor: colors.accent2, borderWidth: 2, borderColor: colors.line, alignItems: 'center', justifyContent: 'center' },
-  addTile: { alignSelf: 'stretch', minHeight: 64, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', borderRadius: radius.m, borderWidth: 3, borderStyle: 'dashed', borderColor: colors.dim },
+  seatCard: { width: '47%', maxWidth: 170, flexGrow: 1, alignItems: 'center', gap: 8, padding: 12, borderRadius: radius.m, backgroundColor: colors.surface2, borderWidth: 1, borderColor: colors.line },
+  remove: { position: 'absolute', top: -8, right: -8, width: 30, height: 30, borderRadius: 15, backgroundColor: colors.accent2, borderWidth: 1, borderColor: colors.line, alignItems: 'center', justifyContent: 'center' },
+  addTile: { alignSelf: 'stretch', minHeight: 64, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', borderRadius: radius.m, borderWidth: 1, borderStyle: 'dashed', borderColor: colors.dim },
   input: { alignSelf: 'stretch', textAlign: 'center', minHeight: 44, backgroundColor: colors.surface2, color: colors.text, borderRadius: radius.s, paddingHorizontal: 12, paddingVertical: 12, fontSize: 16, fontWeight: '600' },
 });

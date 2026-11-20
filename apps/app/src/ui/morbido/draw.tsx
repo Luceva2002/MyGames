@@ -7,7 +7,7 @@ import { INK, type Part } from './shapes';
  * rispetto al disegno che lo contiene: serve a tenere il contorno dello stesso spessore ovunque.
  */
 export function drawParts(parts: Part[], scale: number, key = 'p'): ReactNode[] {
-  const sw = 1.5 / scale;
+  const sw = 1.1 / scale;
   return parts.map((p, i) => {
     const k = `${key}-${i}`;
     if (p.group) {

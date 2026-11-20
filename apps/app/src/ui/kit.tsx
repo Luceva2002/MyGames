@@ -5,7 +5,7 @@ import Svg, { Path } from 'react-native-svg';
 import * as Haptics from 'expo-haptics';
 import { getSettings, TEXT_SCALE, useIsTv, useSettings } from './settings';
 import { SeatAvatar } from './avatars';
-import { colors, MIN_TEXT, MIN_TOUCH, OUTLINE, PaletteContext, radius, seatColor, SHELL, TV_MIN_TEXT, TV_SCALE, usePalette } from './theme';
+import { colors, SOFT, MIN_TEXT, MIN_TOUCH, OUTLINE, PaletteContext, radius, seatColor, SHELL, TV_MIN_TEXT, TV_SCALE, usePalette } from './theme';
 
 /** Vibrazione leggera al tocco, se attiva nelle impostazioni (P-A11Y-3). */
 export function tap() {
@@ -29,7 +29,7 @@ export function onColor(bg: string) {
 
 /** Bordo di focus visibile per tastiera e telecomando, non solo colore (V-IN-5). */
 export const focusRing = (focused: boolean): ViewStyle | null =>
-  focused && Platform.OS === 'web' && keyboardNav ? ({ outlineColor: '#3E7BD6', outlineWidth: 3, outlineStyle: 'solid', outlineOffset: 3 } as ViewStyle) : null;
+  focused && Platform.OS === 'web' && keyboardNav ? ({ outlineColor: '#FFC933', outlineWidth: 3, outlineStyle: 'solid', outlineOffset: 3 } as ViewStyle) : null;
 
 /**
  * Il bordo di focus serve a chi usa tastiera o telecomando: con mouse e dita non si vede
@@ -45,7 +45,7 @@ if (Platform.OS === 'web' && typeof window !== 'undefined') {
 
 export function Screen({ children, scroll = true, style }: { children: ReactNode; scroll?: boolean; style?: StyleProp<ViewStyle> }) {
   const tv = useIsTv();
-  // Le schermate dell'app sono il guscio Morbido: tutto quello che c'è dentro usa la tavolozza chiara.
+  // Le schermate dell'app sono il guscio Pop: tutto quello che c'è dentro usa la sua tavolozza.
   return (
     <PaletteContext.Provider value={SHELL}>
     <SafeAreaView style={[styles.screen, { backgroundColor: SHELL.colors.bg }]} edges={['top', 'left', 'right', 'bottom']}>
@@ -72,7 +72,7 @@ export function T({ children, style, size = 16, weight = '500', color, center, l
 }) {
   const fontSize = useTextSize(size);
   const { colors: c, font } = usePalette();
-  // I testi "900" sono titoli, punteggi e cartelli: Fredoka nel guscio, Bagel Fat One sui tavoli di prima. Il resto è Nunito.
+  // I testi "900" sono titoli, punteggi e cartelli: Outfit nel guscio, Bagel Fat One sui tavoli di prima. Il resto è Outfit nel guscio e Nunito sui tavoli.
   const w = String(weight);
   const fontFamily = w === '900' ? font.display : Number(w) >= 700 || w === 'bold' ? font.bold : font.body;
   return (
@@ -110,10 +110,10 @@ export function Button({ label, onPress, color: colorProp, kind = 'solid', disab
       style={(state) => [
         styles.button,
         small && styles.buttonSmall,
-        solid ? { backgroundColor: color, borderColor: c.line, ...shadowOf(c.line, state.pressed ? 1 : shell ? 4 : 6) } : { borderColor: shell ? c.line : color, backgroundColor: c.surface, ...(shell ? shadowOf(c.line, state.pressed ? 1 : 4) : null) },
-        shell && { borderWidth: 2.5, borderRadius: 18 },
+        solid ? { backgroundColor: color, borderColor: c.line, ...(shell ? null : shadowOf(c.line, state.pressed ? 1 : 6)) } : { borderColor: shell ? c.line : color, backgroundColor: c.surface },
+        shell && { borderWidth: solid ? 0 : 1, borderRadius: 18, opacity: state.pressed ? 0.85 : 1 },
         hc && { borderColor: c.text },
-        { opacity: disabled ? 0.5 : 1, transform: [{ translateY: (solid || shell) && state.pressed ? 3 : 0 }] },
+        { opacity: disabled ? 0.5 : 1, transform: [{ translateY: solid && !shell && state.pressed ? 3 : 0 }, { scale: shell && state.pressed ? 0.98 : 1 }] },
         focusRing((state as { focused?: boolean }).focused ?? false),
         style,
       ]}
@@ -137,7 +137,7 @@ export function RoundButton({ icon, label, onPress, style }: { icon: 'back' | 'm
         tap();
         onPress();
       }}
-      style={(state) => [styles.round, shell && { backgroundColor: c.surface, borderWidth: 2.5, ...shadowOf(c.line, state.pressed ? 0 : 3) }, style, { transform: [{ translateY: state.pressed ? 2 : 0 }] }, focusRing((state as { focused?: boolean }).focused ?? false)]}
+      style={(state) => [styles.round, shell && { backgroundColor: state.pressed ? c.surface2 : c.surface, borderWidth: 0 }, style, { transform: [{ translateY: !shell && state.pressed ? 2 : 0 }] }, focusRing((state as { focused?: boolean }).focused ?? false)]}
     >
       <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke={shell ? c.text : '#FFFFFF'} strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">
         <Path d={icon === 'back' ? 'M15 5l-7 7 7 7' : 'M4 7h16M4 12h16M4 17h16'} />
@@ -158,7 +158,7 @@ export function Chip({ label, active, onPress, color: colorProp }: { label: stri
         onPress();
       }}
       // Scelto: pieno del suo colore; non scelto: bordo del suo colore, così la categoria si riconosce sempre.
-      style={(state) => [styles.chip, { backgroundColor: c.surface }, shell && { borderWidth: 2, borderColor: c.line, ...shadowOf(c.line, 2) }, active ? { backgroundColor: color, borderColor: c.line } : shell ? null : { borderColor: color === c.line ? c.dim : color }, focusRing((state as { focused?: boolean }).focused ?? false)]}
+      style={(state) => [styles.chip, { backgroundColor: c.surface }, shell && { borderWidth: 1, borderColor: c.line }, active ? { backgroundColor: color, borderColor: shell ? color : c.line } : shell ? null : { borderColor: color === c.line ? c.dim : color }, focusRing((state as { focused?: boolean }).focused ?? false)]}
     >
       <T size={15} weight="700" color={active ? onColor(color) : shell ? c.text : c.muted}>
         {active ? '✓ ' : ''}
@@ -189,7 +189,7 @@ export function PlayerTag({ seat, name, size = 15, active, suffix }: { seat: num
 export function Panel({ children, style }: { children: ReactNode; style?: StyleProp<ViewStyle> }) {
   const hc = useSettings().highContrast;
   const { colors: c, shell } = usePalette();
-  return <View style={[styles.panel, { backgroundColor: c.surface, borderColor: c.line, boxShadow: `0px ${shell ? 4 : 6}px 0px ${c.line}` }, shell && { borderWidth: 2.5, borderRadius: 22 }, hc && { borderColor: c.muted }, style]}>{children}</View>;
+  return <View style={[styles.panel, { backgroundColor: c.surface, borderColor: c.line, boxShadow: shell ? SOFT : `0px 6px 0px ${c.line}` }, shell && { borderWidth: 1, borderRadius: 22 }, hc && { borderColor: c.muted }, style]}>{children}</View>;
 }
 
 export function Row({ children, gap = 8, style, wrap }: { children: ReactNode; gap?: number; style?: StyleProp<ViewStyle>; wrap?: boolean }) {
@@ -200,7 +200,7 @@ export function Row({ children, gap = 8, style, wrap }: { children: ReactNode; g
 export function Sheet({ visible, onClose, children }: { visible: boolean; onClose: () => void; children: ReactNode }) {
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      {/* Le finestre fanno parte del guscio: chiare anche sopra il tavolo di un gioco. */}
+      {/* Le finestre fanno parte del guscio: uguali anche sopra il tavolo di un gioco. */}
       <PaletteContext.Provider value={SHELL}>
         <Pressable style={[styles.scrim, { backgroundColor: SHELL.colors.scrim }]} onPress={onClose} accessibilityLabel="Chiudi">
           <Pressable style={[styles.sheet, sheetShell]} onPress={() => {}} accessibilityViewIsModal>
@@ -223,7 +223,7 @@ export function SheetOption({ icon, title, text, primary, chevron = true, onPres
         tap();
         onPress();
       }}
-      style={(state) => [styles.sheetOption, { backgroundColor: colors.surface2, borderColor: colors.line, boxShadow: `0px 4px 0px ${colors.line}`, borderWidth: 2.5 }, primary && { backgroundColor: colors.accent }, { transform: [{ translateY: state.pressed ? 3 : 0 }] }, focusRing((state as { focused?: boolean }).focused ?? false)]}
+      style={(state) => [styles.sheetOption, { backgroundColor: colors.surface2, borderColor: colors.line, boxShadow: 'none', borderWidth: 0 }, primary && { backgroundColor: colors.accent }, { opacity: state.pressed ? 0.85 : 1 }, focusRing((state as { focused?: boolean }).focused ?? false)]}
     >
       <T size={26}>{icon}</T>
       <View style={{ flex: 1 }}>
@@ -274,8 +274,8 @@ export function Confirm({ visible, title, message, confirmLabel, onConfirm, onCa
 
 /** Ombra piena verso il basso, del colore del contorno. */
 const shadowOf = (line: string, y: number) => ({ boxShadow: `0px ${y}px 0px ${line}` }) as const;
-/** Finestre del guscio: bianche, contorno morbido, ombra corta. */
-const sheetShell: ViewStyle = { backgroundColor: SHELL.colors.surface, borderColor: SHELL.colors.line, borderWidth: 2.5, boxShadow: `0px 5px 0px ${SHELL.colors.line}` };
+/** Finestre del guscio Pop: superficie scura, filo sottile, ombra morbida. */
+const sheetShell: ViewStyle = { backgroundColor: SHELL.colors.surface, borderColor: SHELL.colors.line, borderWidth: 1, boxShadow: '0px 18px 48px rgba(0,0,0,0.5)' };
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },

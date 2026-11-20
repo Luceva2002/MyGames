@@ -8,7 +8,7 @@ import { Copertina } from '../ui/Copertina';
 import { useIsTable } from '../ui/device';
 import { focusRing, onColor, RoundButton, Screen, T, tap } from '../ui/kit';
 import { getSettings } from '../ui/settings';
-import { shellColors as colors, MIN_TOUCH } from '../ui/theme';
+import { SOFT, shellColors as colors, MIN_TOUCH } from '../ui/theme';
 
 /** Una delle grandi scelte: Offline o Multiplayer. */
 function BigChoice({ title, text, color, wide, onPress, children }: { title: string; text: string; color: string; wide?: boolean; onPress: () => void; children: React.ReactNode }) {
@@ -23,7 +23,7 @@ function BigChoice({ title, text, color, wide, onPress, children }: { title: str
       style={(state) => [
         styles.choice,
         wide && styles.choiceWide,
-        { backgroundColor: color, transform: [{ translateY: state.pressed ? 4 : 0 }], boxShadow: `0px ${state.pressed ? 2 : 5}px 0px ${colors.line}` },
+        { backgroundColor: color, transform: [{ translateY: state.pressed ? 4 : 0 }], boxShadow: SOFT },
         focusRing((state as { focused?: boolean }).focused ?? false),
       ]}
     >
@@ -62,7 +62,7 @@ function AllGames() {
       }}
       style={(state) => [styles.allGames, { transform: [{ translateY: state.pressed ? 3 : 0 }] }, focusRing((state as { focused?: boolean }).focused ?? false)]}
     >
-      <T size={20} weight="900" color={colors.onAccent}>
+      <T size={20} weight="900" color={colors.text}>
         Tutti i giochi
       </T>
     </Pressable>
@@ -75,11 +75,11 @@ function CodeRow({ code, setCode, go }: { code: string; setCode: (c: string) => 
   const busy = online.status === 'connecting';
   return (
     <View style={styles.codeRow}>
-      <T size={15} weight="800" color={colors.onAccent} style={{ flex: 1, lineHeight: 17 }} lines={2}>
+      <T size={15} weight="800" color={colors.text} style={{ flex: 1, lineHeight: 17 }} lines={2}>
         {online.waking ? 'Sveglio le stanze…' : busy ? 'Entro…' : online.error ?? 'Hai un codice?'}
       </T>
       {busy ? (
-        <ActivityIndicator color={colors.onAccent} />
+        <ActivityIndicator color={colors.accent} />
       ) : (
         <>
           <TextInput
@@ -90,7 +90,7 @@ function CodeRow({ code, setCode, go }: { code: string; setCode: (c: string) => 
               if (c.length === CODE_LENGTH) go(c);
             }}
             placeholder="ABCD"
-            placeholderTextColor="#2A2D3466"
+            placeholderTextColor="#FFFFFF55"
             autoCapitalize="characters"
             autoCorrect={false}
             maxLength={CODE_LENGTH}
@@ -225,10 +225,10 @@ function HomeCover({ width, height, settings, skipRoom }: { width: number; heigh
 const styles = StyleSheet.create({
   phoneTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   wordmark: {},
-  choice: { flexGrow: 1, alignItems: 'center', justifyContent: 'center', gap: 10, minHeight: 170, padding: 14, borderRadius: 30, borderWidth: 3, borderColor: colors.line, marginBottom: 7 },
+  choice: { flexGrow: 1, alignItems: 'center', justifyContent: 'center', gap: 10, minHeight: 170, padding: 14, borderRadius: 30, borderWidth: 1, borderColor: colors.line, marginBottom: 7 },
   choiceWide: { flex: 1, flexDirection: 'row', gap: 20, minHeight: 130 },
-  allGames: { minHeight: 68, alignItems: 'center', justifyContent: 'center', borderRadius: 22, borderWidth: 3, borderColor: colors.line, backgroundColor: '#FFFFFF', boxShadow: `0px 5px 0px ${colors.line}`, marginBottom: 5 },
-  codeRow: { minHeight: 68, flexDirection: 'row', alignItems: 'center', gap: 8, paddingLeft: 14, paddingRight: 8, borderRadius: 22, borderWidth: 3, borderColor: colors.line, backgroundColor: '#FFFFFF', boxShadow: `0px 5px 0px ${colors.line}`, marginBottom: 5 },
-  codeInput: { width: 104, height: MIN_TOUCH, minWidth: 0, borderRadius: 14, borderWidth: 3, borderColor: colors.line, backgroundColor: '#F7F8F6', color: colors.onAccent, fontSize: 20, fontWeight: '900', letterSpacing: 3, textAlign: 'center' },
-  enter: { width: 64, height: MIN_TOUCH, alignItems: 'center', justifyContent: 'center', borderRadius: 14, borderWidth: 3, borderColor: colors.line, backgroundColor: colors.accent },
+  allGames: { minHeight: 68, alignItems: 'center', justifyContent: 'center', borderRadius: 22, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.surface, boxShadow: SOFT, marginBottom: 5 },
+  codeRow: { minHeight: 68, flexDirection: 'row', alignItems: 'center', gap: 8, paddingLeft: 14, paddingRight: 8, borderRadius: 22, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.surface, boxShadow: SOFT, marginBottom: 5 },
+  codeInput: { width: 104, height: MIN_TOUCH, minWidth: 0, borderRadius: 14, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.surface2, color: colors.text, fontSize: 20, fontWeight: '900', letterSpacing: 3, textAlign: 'center' },
+  enter: { width: 64, height: MIN_TOUCH, alignItems: 'center', justifyContent: 'center', borderRadius: 14, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.accent },
 });

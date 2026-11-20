@@ -24,7 +24,7 @@ export function CharacterPicker({ value, onChange, size = 64, disabled = [] }: {
               onChange(selected ? null : c.id);
             }}
             style={(state) => [
-              { alignItems: 'center', gap: 4, padding: 6, borderRadius: 16, borderWidth: 3, borderColor: selected ? colors.accent : 'transparent', backgroundColor: selected ? colors.surface2 : 'transparent', width: size + 24, opacity: off ? 0.3 : 1 },
+              { alignItems: 'center', gap: 4, padding: 6, borderRadius: 16, borderWidth: 1, borderColor: selected ? colors.accent : 'transparent', backgroundColor: selected ? colors.surface2 : 'transparent', width: size + 24, opacity: off ? 0.3 : 1 },
               focusRing((state as { focused?: boolean }).focused ?? false),
             ]}
           >
@@ -64,7 +64,7 @@ export function CharacterPickerModal({ visible, title, value, taken = [], onPick
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={close}>
       <View style={{ flex: 1, backgroundColor: colors.scrim, alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-        <View style={{ backgroundColor: colors.surface, borderRadius: 26, padding: 20, gap: 14, width: '100%', maxWidth: 560, borderWidth: 3, borderColor: colors.line }} accessibilityViewIsModal>
+        <View style={{ backgroundColor: colors.surface, borderRadius: 26, padding: 20, gap: 14, width: '100%', maxWidth: 560, borderWidth: 1, borderColor: colors.line }} accessibilityViewIsModal>
           <T size={22} weight="900">
             {title}
           </T>

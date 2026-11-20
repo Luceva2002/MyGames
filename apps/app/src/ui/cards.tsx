@@ -271,7 +271,7 @@ export function DeckPile({ count, width, deck = 'it' }: { count: number; width: 
 }
 
 /** Contorno della carta Morbido: lo stesso tratto dei semi, mai più sottile di un pixel e mezzo. */
-const edge = (w: number) => Math.max(1.2, Math.min(3, w * 0.022));
+const edge = (w: number) => Math.max(0.8, Math.min(1.8, w * 0.013));
 
 const styles = StyleSheet.create({
   // Carta Morbido: bianca, contorno scuro morbido, ombra leggera (stile approvato il 20/11/2026).

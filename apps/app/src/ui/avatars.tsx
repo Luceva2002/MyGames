@@ -3,7 +3,7 @@ import { Text, View, type ImageSourcePropType } from 'react-native';
 import Svg, { Circle, ClipPath, Defs, G } from 'react-native-svg';
 import { botByName, characterById } from '@giochi/engine';
 import { Place } from './morbido/draw';
-import { INK, MOSTRINI, shade } from './morbido/shapes';
+import { MOSTRINI, shade } from './morbido/shapes';
 import { colors, OUTLINE, seatColor } from './theme';
 
 /** Pulcinella resta solo nel Razzo, che passa allo stile nuovo col suo lotto. */
@@ -46,8 +46,9 @@ export function CharacterAvatar({ id, size, seat }: { id: string; size: number; 
         borderRadius: size / 2,
         overflow: 'hidden',
         backgroundColor: avatarBg(ch.id),
-        borderWidth: OUTLINE,
-        borderColor: seat === undefined ? INK : seatColor(seat),
+        // Nel guscio Pop niente contorno scuro: solo l'anello del colore del posto, quando c'è.
+        borderWidth: seat === undefined ? 0 : Math.max(2, Math.round(size * 0.05)),
+        borderColor: seat === undefined ? 'transparent' : seatColor(seat),
       }}
     >
       <Svg width="100%" height="100%" viewBox="0 0 100 100">

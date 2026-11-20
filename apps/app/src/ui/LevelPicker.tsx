@@ -26,7 +26,7 @@ export function LevelPicker({ value, onChange }: { value?: BotLevel; onChange?: 
               if (onChange) onChange(l.id);
               else setSettings({ ...getSettings(), botLevel: l.id });
             }}
-            style={{ flex: 1, alignItems: 'center', paddingVertical: 7, borderRadius: 999, borderWidth: 2.5, borderColor: on ? colors.line : colors.dim, backgroundColor: on ? colors.accent3 : 'transparent' }}
+            style={{ flex: 1, alignItems: 'center', paddingVertical: 7, borderRadius: 999, borderWidth: 1, borderColor: on ? colors.line : colors.dim, backgroundColor: on ? colors.accent3 : 'transparent' }}
           >
             <T size={13} weight="900" color={on ? colors.onAccent : colors.text}>
               {l.label}

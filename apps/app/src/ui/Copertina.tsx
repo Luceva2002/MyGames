@@ -4,7 +4,7 @@ import { MostriniHero } from './MostriniHero';
 import { CharacterAvatar } from './avatars';
 import { T } from './kit';
 import { QrCode } from './QrCode';
-import { shellColors as colors, shellFont as font, OUTLINE } from './theme';
+import { SOFT, shellColors as colors, shellFont as font } from './theme';
 
 /**
  * La copertina di PC e TV: i mostrini attorno al tavolo e, in basso a sinistra, il riquadro con cui si entra (QR e
@@ -27,7 +27,7 @@ export function Copertina({ width, height, top, action, code, url, count, avatar
   // Il QR lascia posto a quello che sta sopra e ai margini del riquadro.
   const qr = Math.round(Math.min(height * 0.56, height - 170));
   const codeSize = Math.round(Math.max(48, height * 0.17));
-  const inside = height - OUTLINE * 2;
+  const inside = height - 2;
   // I mostrini hanno una colonna tutta loro a destra, così il riquadro del QR non li copre mai.
   const masksWidth = Math.round(Math.min(width * 0.46, inside * 1.33));
   const artHeight = Math.round(Math.min(inside - 16, (masksWidth * 3) / 4));
@@ -74,7 +74,7 @@ export function Copertina({ width, height, top, action, code, url, count, avatar
 }
 
 const styles = StyleSheet.create({
-  cover: { borderRadius: 30, borderWidth: OUTLINE, borderColor: colors.line, overflow: 'hidden', backgroundColor: colors.cover, boxShadow: `0px 7px 0px ${colors.line}`, marginBottom: 7 },
+  cover: { borderRadius: 30, borderWidth: 1, borderColor: colors.line, overflow: 'hidden', backgroundColor: colors.cover, boxShadow: SOFT, marginBottom: 7 },
   pill: { flexDirection: 'row', alignItems: 'center', gap: 18, alignSelf: 'stretch', padding: 14, paddingRight: 18, borderRadius: 24, backgroundColor: colors.line },
   code: { color: colors.accent, fontFamily: font.display, letterSpacing: 4 },
 });

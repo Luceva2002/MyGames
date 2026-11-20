@@ -29,32 +29,39 @@ export const colors = {
 };
 
 /**
- * Il guscio dell'app nello stile Morbido (lotto 2, approvato da Luca il 20/11/2026): fondo chiaro
- * grigio-verde, superfici bianche, contorno scuro morbido e ombra piena corta, come carte e mostrini.
+ * Il guscio dell'app nello stile Pop (scelto da Luca il 21/11/2026): fondo grigio carbone tranquillo,
+ * superfici appena più chiare, niente contorni spessi né ombre piene. I colori pieni stanno solo
+ * nelle icone dei giochi, che si alternano, e nel giallo delle cose importanti.
  * Stesse chiavi di `colors`, così le schermate passano da una tavolozza all'altra senza altri cambi.
  * I tavoli dei giochi non ancora ridisegnati restano su `colors`.
  */
 export const shellColors: typeof colors = {
-  bg: '#F3F5F1',
-  surface: '#FFFFFF',
-  surface2: '#E9ECE7',
-  brand: '#3E7BD6',
-  cover: '#F3F5F1',
-  line: '#2A2D34',
-  text: '#2A2D34',
-  muted: '#4F5752',
-  dim: '#6B736D',
-  accent: '#FFD24A',
-  onAccent: '#2A2D34',
-  accent2: '#3E7BD6',
-  accent3: '#3FA66B',
-  danger: '#C93A3F',
-  success: '#2E8B57',
-  focus: '#2A2D34',
-  felt: '#2B7553',
-  feltDark: '#1E5C40',
-  scrim: '#2A2D34CC',
+  bg: '#16171B',
+  surface: '#202228',
+  surface2: '#2A2D35',
+  brand: '#5B3FE0',
+  cover: '#16171B',
+  line: '#33363F',
+  text: '#F4F5F7',
+  muted: '#B4B9C2',
+  dim: '#8E94A0',
+  accent: '#FFC933',
+  onAccent: '#17181C',
+  accent2: '#FF4F8B',
+  accent3: '#1FA67A',
+  danger: '#FF6B7A',
+  success: '#3FD39A',
+  focus: '#FFC933',
+  felt: '#2C6D55',
+  feltDark: '#17402F',
+  scrim: '#0D0E11D9',
 };
+
+/** Ombra del guscio Pop: morbida e larga, mai piena. */
+export const SOFT = '0px 8px 22px rgba(0,0,0,0.32)';
+
+/** I colori pieni delle tessere Pop: si alternano nelle icone dei giochi e nei posti. */
+export const POP_TILES = ['#5B3FE0', '#FF4F8B', '#1FA67A', '#3D7BFF', '#FF8A3D', '#2B2E36'] as const;
 
 /** Colore di ogni categoria: è lo sfondo delle copertine e dei filtri in home (palette brand-alt, SPEC §7 e §9). */
 export const CATEGORY_COLORS = { carte: '#19D3C5', tavolo: '#6B2BD9', dadi: '#FFE14D', abilita: '#FF2E88', party: '#12052B' } as const;
@@ -79,15 +86,15 @@ export const font = {
   bold: 'Nunito_800ExtraBold',
 };
 
-/** Caratteri del guscio Morbido: Fredoka per titoli e punteggi, Nunito per testi e bottoni. */
+/** Caratteri del guscio Pop: Outfit per tutto, più pieno per titoli e punteggi. Fredoka resta sulle carte. */
 export const shellFont: typeof font = {
-  display: 'Fredoka_700Bold',
-  body: 'Nunito_500Medium',
-  bold: 'Nunito_800ExtraBold',
+  display: 'Outfit_800ExtraBold',
+  body: 'Outfit_500Medium',
+  bold: 'Outfit_700Bold',
   card: 'Fredoka_600SemiBold',
 };
 
-/** La tavolozza di dove si trova un componente: il guscio chiaro o il tavolo di un gioco. */
+/** La tavolozza di dove si trova un componente: il guscio Pop o il tavolo di un gioco. */
 export interface Palette {
   colors: typeof colors;
   font: typeof font;

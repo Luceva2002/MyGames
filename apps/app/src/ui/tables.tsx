@@ -77,8 +77,8 @@ function FeltTable({ children, style }: { children?: ReactNode; style?: StylePro
 const FELT = TABLES.teal;
 
 /**
- * Il tavolo Morbido (approvato il 20/11/2026): panno verde con una luce morbida al centro, bordo
- * verde scuro e contorno scuro arrotondato, senza borchie. Stesse misure del tavolo di prima, così
+ * Il tavolo Pop (21/11/2026): panno verde con una luce morbida al centro e un bordo quasi nero,
+ * senza contorni spessi né borchie. Stesse misure del tavolo di prima, così
  * menu e posti restano dove sono.
  */
 function MorbidoTable({ children, style }: { children?: ReactNode; style?: StyleProp<ViewStyle> }) {
@@ -90,14 +90,14 @@ function MorbidoTable({ children, style }: { children?: ReactNode; style?: Style
     <View style={[{ flex: 1, padding: 6, backgroundColor: shellColors.bg }, style]}>
       <View
         onLayout={(e) => setSize({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}
-        style={{ flex: 1, borderRadius: radius, backgroundColor: '#2B6B4C', borderWidth: 2.5, borderColor: shellColors.line, padding: rim, boxShadow: `0px 4px 0px ${shellColors.line}` }}
+        style={{ flex: 1, borderRadius: radius, backgroundColor: '#0D0E11', padding: rim, boxShadow: '0px 12px 30px rgba(0,0,0,0.45)' }}
       >
-        <View style={{ flex: 1, borderRadius: inner, overflow: 'hidden', borderWidth: 2.5, borderColor: '#1B4A35' }}>
+        <View style={{ flex: 1, borderRadius: inner, overflow: 'hidden' }}>
           <Svg style={StyleSheet.absoluteFill} width="100%" height="100%" preserveAspectRatio="none" viewBox="0 0 100 100">
             <Defs>
               <RadialGradient id="feltLight" cx="50%" cy="42%" r="70%">
-                <Stop offset="0" stopColor="#3A8C64" />
-                <Stop offset="1" stopColor="#1E5C40" />
+                <Stop offset="0" stopColor="#2C6D55" />
+                <Stop offset="1" stopColor="#17402F" />
               </RadialGradient>
             </Defs>
             <Rect x={0} y={0} width={100} height={100} fill="url(#feltLight)" />

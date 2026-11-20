@@ -462,10 +462,10 @@ export function turnText(myTurn: boolean, names: string[], turn: Seat, me: Seat 
   return `Tocca a ${names[turn]}`;
 }
 
-/** Sul tavolo Morbido i posti sono bollini bianchi col contorno scuro; chi deve giocare ha il fondo giallo. */
-const INK = '#2A2D34';
-const MUTED_M = '#5B635D';
-const pillM = (active: boolean) => ({ backgroundColor: active ? '#FFD24A' : '#FFFFFF', borderWidth: 2, borderColor: INK, boxShadow: `0px 2px 0px ${INK}` });
+/** Sul tavolo Pop i posti sono bollini bianchi con un'ombra morbida; chi deve giocare ha il fondo giallo. */
+const INK = '#17181C';
+const MUTED_M = '#5B6170';
+const pillM = (active: boolean) => ({ backgroundColor: active ? '#FFC933' : 'rgba(255,255,255,0.94)', borderWidth: 0, boxShadow: '0px 4px 10px rgba(0,0,0,0.2)' });
 
 const styles = StyleSheet.create({
   stickerWrap: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' },
