@@ -1,13 +1,13 @@
 import type { ReactNode } from 'react';
-import { Image, StyleSheet, Text, View } from 'react-native';
-import { HERO } from './art';
+import { StyleSheet, Text, View } from 'react-native';
+import { MostriniHero } from './MostriniHero';
 import { CharacterAvatar } from './avatars';
 import { T } from './kit';
 import { QrCode } from './QrCode';
-import { colors, font, OUTLINE } from './theme';
+import { shellColors as colors, shellFont as font, OUTLINE } from './theme';
 
 /**
- * La copertina di PC e TV: le maschere e, in basso a sinistra, il riquadro con cui si entra (QR e
+ * La copertina di PC e TV: i mostrini attorno al tavolo e, in basso a sinistra, il riquadro con cui si entra (QR e
  * codice) e il conto di chi è al tavolo. Sul telefono non c'è.
  */
 export function Copertina({ width, height, top, action, code, url, count, avatars, notice }: {
@@ -15,7 +15,7 @@ export function Copertina({ width, height, top, action, code, url, count, avatar
   height: number;
   /** Quello che sta in alto a sinistra: nome dell'app, frase, bottoni. */
   top: ReactNode;
-  /** Un bottone nell'angolo in alto a destra, sopra le maschere. */
+  /** Un bottone nell'angolo in alto a destra, sopra l'illustrazione. */
   action?: ReactNode;
   code?: string;
   url?: string | null;
@@ -28,15 +28,13 @@ export function Copertina({ width, height, top, action, code, url, count, avatar
   const qr = Math.round(Math.min(height * 0.56, height - 170));
   const codeSize = Math.round(Math.max(48, height * 0.17));
   const inside = height - OUTLINE * 2;
-  // Le maschere stanno nel 64% destro dell'illustrazione: hanno una colonna tutta loro, così il
-  // riquadro del QR non le copre mai.
-  const masksWidth = Math.round(Math.min(width * 0.46, inside * 1.42));
-  const artWidth = Math.round(masksWidth / 0.64);
-  const artHeight = Math.round((artWidth * 720) / 1600);
+  // I mostrini hanno una colonna tutta loro a destra, così il riquadro del QR non li copre mai.
+  const masksWidth = Math.round(Math.min(width * 0.46, inside * 1.33));
+  const artHeight = Math.round(Math.min(inside - 16, (masksWidth * 3) / 4));
   return (
     <View style={[styles.cover, { height }]}>
       <View style={{ position: 'absolute', right: 14, top: 0, bottom: 0, width: masksWidth, overflow: 'hidden', justifyContent: 'center' }}>
-        <Image source={HERO} style={{ position: 'absolute', right: 0, top: Math.round((inside - artHeight) / 2), width: artWidth, height: artHeight }} accessibilityIgnoresInvertColors />
+        <MostriniHero width={masksWidth} height={artHeight} />
       </View>
       <View style={{ flex: 1, padding: 16, marginRight: masksWidth + 14, justifyContent: 'space-between', gap: 8 }}>
         {top}
@@ -44,13 +42,13 @@ export function Copertina({ width, height, top, action, code, url, count, avatar
           <View style={styles.pill}>
             {url ? <QrCode value={url} size={qr} /> : null}
             <View style={{ gap: 6, flex: 1, minWidth: 0 }}>
-              <T size={16} weight="800" color={colors.muted}>
+              <T size={16} weight="800" color="#D5DAD6">
                 Inquadra o scrivi il codice
               </T>
               <Text accessibilityLabel={`Codice stanza ${code.split('').join(' ')}`} numberOfLines={1} style={[styles.code, { fontSize: codeSize, lineHeight: Math.round(codeSize * 1.1) }]}>
                 {code}
               </Text>
-              <T size={26} weight="900">
+              <T size={26} weight="900" color="#FFFFFF">
                 {count ?? 0} al tavolo
               </T>
               <View style={{ flexDirection: 'row' }}>
@@ -64,7 +62,7 @@ export function Copertina({ width, height, top, action, code, url, count, avatar
           </View>
         ) : notice ? (
           <View style={styles.pill}>
-            <T size={15} color={colors.muted}>
+            <T size={15} color="#D5DAD6">
               {notice}
             </T>
           </View>

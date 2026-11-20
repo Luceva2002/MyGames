@@ -3,7 +3,7 @@ import { Modal, Pressable, ScrollView, TextInput, View } from 'react-native';
 import { BOT_CHARACTERS } from '@giochi/engine';
 import { CharacterAvatar } from './avatars';
 import { Button, focusRing, T, tap } from './kit';
-import { colors } from './theme';
+import { shellColors as colors } from './theme';
 
 /** Griglia delle 16 maschere: chi gioca sceglie la sua, che appare al tavolo e nei punteggi. */
 export function CharacterPicker({ value, onChange, size = 64, disabled = [] }: { value: string | null; onChange: (id: string | null) => void; size?: number; disabled?: string[] }) {

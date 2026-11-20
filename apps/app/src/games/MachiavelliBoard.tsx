@@ -66,7 +66,7 @@ export function MachiavelliBoard({ view, me, names, myTurn, onMove }: BoardProps
 
   const info = (seat: Seat): SeatInfo => ({ seat, name: names[seat], active: view.turn === seat, cards: view.handCounts[seat], deck: 'fr', score: view.handCounts[seat], scoreLabel: 'carte da calare' });
   return (
-    <TableBg table="teal">
+    <TableBg table="morbido">
       <CardTable
         me={me === null ? null : info(me)}
         top={<TableTop seats={othersOf(view.players, me).map(info)} />}

@@ -1,3 +1,5 @@
+import { createContext, useContext } from 'react';
+
 /**
  * Token del design system, stile "Carnevale semplice" (docs/SPEC-carnevale-semplice.md).
  * Contrasti sul fondo `bg` #2A0E5C: text 15:1, muted 10:1, dim 6:1, accent 13:1 (V-CON-1).
@@ -26,6 +28,34 @@ export const colors = {
   scrim: '#12052BCC',
 };
 
+/**
+ * Il guscio dell'app nello stile Morbido (lotto 2, approvato da Luca il 20/11/2026): fondo chiaro
+ * grigio-verde, superfici bianche, contorno scuro morbido e ombra piena corta, come carte e mostrini.
+ * Stesse chiavi di `colors`, così le schermate passano da una tavolozza all'altra senza altri cambi.
+ * I tavoli dei giochi non ancora ridisegnati restano su `colors`.
+ */
+export const shellColors: typeof colors = {
+  bg: '#F3F5F1',
+  surface: '#FFFFFF',
+  surface2: '#E9ECE7',
+  brand: '#3E7BD6',
+  cover: '#F3F5F1',
+  line: '#2A2D34',
+  text: '#2A2D34',
+  muted: '#4F5752',
+  dim: '#6B736D',
+  accent: '#FFD24A',
+  onAccent: '#2A2D34',
+  accent2: '#3E7BD6',
+  accent3: '#3FA66B',
+  danger: '#C93A3F',
+  success: '#2E8B57',
+  focus: '#2A2D34',
+  felt: '#2B7553',
+  feltDark: '#1E5C40',
+  scrim: '#2A2D34CC',
+};
+
 /** Colore di ogni categoria: è lo sfondo delle copertine e dei filtri in home (palette brand-alt, SPEC §7 e §9). */
 export const CATEGORY_COLORS = { carte: '#19D3C5', tavolo: '#6B2BD9', dadi: '#FFE14D', abilita: '#FF2E88', party: '#12052B' } as const;
 
@@ -48,6 +78,25 @@ export const font = {
   card: 'Fredoka_600SemiBold',
   bold: 'Nunito_800ExtraBold',
 };
+
+/** Caratteri del guscio Morbido: Fredoka per titoli e punteggi, Nunito per testi e bottoni. */
+export const shellFont: typeof font = {
+  display: 'Fredoka_700Bold',
+  body: 'Nunito_500Medium',
+  bold: 'Nunito_800ExtraBold',
+  card: 'Fredoka_600SemiBold',
+};
+
+/** La tavolozza di dove si trova un componente: il guscio chiaro o il tavolo di un gioco. */
+export interface Palette {
+  colors: typeof colors;
+  font: typeof font;
+  shell: boolean;
+}
+export const SHELL: Palette = { colors: shellColors, font: shellFont, shell: true };
+export const TABLE: Palette = { colors, font, shell: false };
+export const PaletteContext = createContext<Palette>(TABLE);
+export const usePalette = () => useContext(PaletteContext);
 
 export const radius = { s: 10, m: 18, l: 26 };
 export const space = { xs: 4, s: 8, m: 12, l: 16, xl: 24 };

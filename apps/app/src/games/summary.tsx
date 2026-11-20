@@ -1,7 +1,7 @@
 import { View } from 'react-native';
 import { teamSeats } from '@giochi/engine';
 import { T } from '../ui/kit';
-import { colors } from '../ui/theme';
+import { shellColors as colors } from '../ui/theme';
 
 /** Nome di una squadra: in quattro sono le due persone, altrimenti il giocatore. */
 export function teamLabel(team: number, players: number, names: string[]): string {

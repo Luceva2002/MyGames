@@ -94,7 +94,7 @@ export function SolitarioBoard({ view, myTurn, onMove }: BoardProps<SolitarioVie
   };
 
   return (
-    <TableBg table="teal">
+    <TableBg table="morbido">
       {/* Nel solitario ogni tocco sposta le carte: niente lente. */}
       <NoCardZoom.Provider value>
       <Row style={{ padding: 4, paddingTop: compact ? 62 : 8, paddingRight: compact ? 4 : MENU_GAP + 8, justifyContent: 'center' }} gap={compact ? 4 : 6}>

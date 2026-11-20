@@ -6,7 +6,7 @@ import { assignAvatars, BOT_CHARACTERS, BOT_LEVELS, canControl, CODE_LENGTH, GAM
 import { GameFrame } from '../../games/GameFrame';
 import { clearOnlineError, joinUrl, leaveIfPlaying, leaveRoom, rejoin, send, sendMove, useOnline } from '../../session/online';
 import { loadNames, saveNames } from '../../session/names';
-import { GAME_ART } from '../../ui/art';
+import { GameArt } from '../../ui/GameArt';
 import { CharacterAvatar } from '../../ui/avatars';
 import { Copertina } from '../../ui/Copertina';
 import { useIsTable } from '../../ui/device';
@@ -19,7 +19,7 @@ import { getSettings, setSettings } from '../../ui/settings';
 import { Button, Confirm, focusRing, RoundButton, Row, Screen, T, tap } from '../../ui/kit';
 import { QrCode } from '../../ui/QrCode';
 import { TvContext } from '../../ui/settings';
-import { colors, font, radius } from '../../ui/theme';
+import { shellColors as colors, shellFont as font, radius } from '../../ui/theme';
 
 export default function RoomScreen() {
   useStayAwake();
@@ -276,7 +276,7 @@ function Lobby({ snapshot, myId, isHost, tv, error, onExit, reconnecting }: {
           <T size={28} weight="900" center>
             {players[meIndex]?.name}
           </T>
-          <Button small kind="ghost" color={colors.text} label="Cambia nome e maschera" onPress={() => setPicking(true)} />
+          <Button small kind="ghost" color={colors.text} label="Cambia nome e mostrino" onPress={() => setPicking(true)} />
           {others.length > 0 && (
             <>
               <Row gap={0}>
@@ -409,7 +409,6 @@ function needed(meta: GameMeta, total: number) {
 
 /** Il gioco scelto, in cima alla stanza: chi comanda lo cambia con un tocco. */
 function GameRow({ game, text, onPress, fill }: { game?: { meta: GameMeta }; text: string; onPress?: () => void; fill?: boolean }) {
-  const art = game ? GAME_ART[game.meta.id] : null;
   return (
     <Pressable
       disabled={!onPress}
@@ -421,7 +420,7 @@ function GameRow({ game, text, onPress, fill }: { game?: { meta: GameMeta }; tex
       }}
       style={(state) => [styles.gameRow, fill && styles.fill, { transform: [{ translateY: (state as { pressed: boolean }).pressed ? 3 : 0 }] }, focusRing((state as { focused?: boolean }).focused ?? false)]}
     >
-      {art ? <Image source={art} style={styles.gameArt} accessibilityIgnoresInvertColors /> : null}
+      {game ? <GameArt id={game.meta.id} size={52} /> : null}
       <View style={{ flex: 1, minWidth: 0 }}>
         <T size={22} weight="900" lines={1}>
           {game?.meta.name ?? 'Nessun gioco'}
@@ -527,7 +526,7 @@ function TableSeats({ big, total, maxPlayers, players, botNames, botLevels, avat
               name={name}
               note={big ? undefined : BOT_LEVELS.find((l) => l.id === (botLevels?.[i] ?? 'normale'))?.label ?? 'Normale'}
               onPress={isHost ? () => onBot(i) : undefined}
-              a11y={isHost ? `Cambia maschera e bravura di ${name}` : undefined}
+              a11y={isHost ? `Cambia mostrino e bravura di ${name}` : undefined}
             />
           </PopIn>
         ))}

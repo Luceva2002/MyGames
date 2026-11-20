@@ -68,7 +68,7 @@ export function Scala40Board({ view, me, names, myTurn, onMove }: BoardProps<Sca
 
   const info = (seat: Seat): SeatInfo => ({ seat, name: names[seat] + (view.out[seat] ? ' · fuori' : view.opened[seat] ? ' · aperto' : ''), active: view.turn === seat, cards: view.out[seat] ? 0 : view.handCounts[seat], deck: 'fr', drawFrom: view.last?.includes('scart') ? 'discard' : 'deck', score: view.scores[seat], scoreLabel: 'punti' });
   return (
-    <TableBg table="teal">
+    <TableBg table="morbido">
       <CardTable
         me={me === null ? null : info(me)}
         top={<TableTop seats={othersOf(view.players, me).map(info)} />}

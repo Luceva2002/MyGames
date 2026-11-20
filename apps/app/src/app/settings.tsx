@@ -3,7 +3,7 @@ import { Switch, View } from 'react-native';
 import { CharacterPicker } from '../ui/CharacterPicker';
 import { Button, Chip, Panel, RoundButton, Row, Screen, T } from '../ui/kit';
 import { setSettings, useReducedMotion, useSettings, type Settings } from '../ui/settings';
-import { colors } from '../ui/theme';
+import { shellColors as colors } from '../ui/theme';
 
 /** Impostazioni di accessibilità (V-A11Y-1). Valgono per l'app e per ogni gioco. */
 export default function SettingsScreen() {
@@ -19,7 +19,7 @@ export default function SettingsScreen() {
           {hint}
         </T>
       </View>
-      <Switch accessibilityLabel={label} value={value} onValueChange={onChange} trackColor={{ true: colors.accent, false: colors.line }} thumbColor="#fff" />
+      <Switch accessibilityLabel={label} value={value} onValueChange={onChange} trackColor={{ true: colors.accent3, false: colors.surface2 }} thumbColor="#fff" />
     </Row>
   );
 
@@ -35,7 +35,7 @@ export default function SettingsScreen() {
           Il tuo personaggio
         </T>
         <T size={14} color={colors.muted}>
-          Scegli la tua maschera: ti rappresenta al tavolo e nei punteggi, in ogni partita.
+          Scegli il tuo mostrino: ti rappresenta al tavolo e nei punteggi, in ogni partita.
         </T>
         <CharacterPicker value={s.avatar} onChange={(avatar) => patch({ avatar })} />
       </Panel>

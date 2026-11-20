@@ -146,7 +146,7 @@ export function SetteBoard({ view, me, names, myTurn, onMove }: BoardProps<Sette
   else hint = 'Conti fatti';
 
   return (
-    <TableBg table="teal">
+    <TableBg table="morbido">
       <View style={{ flex: 1, padding: 8, gap: 8 }}>
         <Row style={{ justifyContent: 'space-between', paddingLeft: 18, paddingRight: MENU_GAP + 18, paddingBottom: narrow ? 28 : 0 }}>
           <T size={13} weight="800" color="#ffffffcc">

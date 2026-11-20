@@ -1,0 +1,43 @@
+/**
+ * Icone dei giochi nello stile Morbido (lotto 2): l'oggetto del gioco, grande e chiaro, su un fondo
+ * pieno, con lo stesso contorno delle carte. Ogni oggetto vive in un quadrato 100×100.
+ */
+import { INK, MOSTRINI, PAL, circ, ell, frSuit, itSuit, shade, type Part } from './shapes';
+
+const W = '#FFFFFF';
+const card = (suit: Part[], fill = W): Part[] => [{ d: 'M32 18 H68 Q74 18 74 24 V80 Q74 86 68 86 H32 Q26 86 26 80 V24 Q26 18 32 18 Z', fill }, { group: suit, x: 36, y: 38, s: 0.28 }];
+const num = (t: string, x: number, y: number, ts: number, fill = INK): Part => ({ t, tx: x, ty: y, ts, fill });
+const tile = (x: number, y: number, s: number, fill: string): Part => ({ d: `M${x + 3} ${y} H${x + s - 3} Q${x + s} ${y} ${x + s} ${y + 3} V${y + s - 3} Q${x + s} ${y + s} ${x + s - 3} ${y + s} H${x + 3} Q${x} ${y + s} ${x} ${y + s - 3} V${y + 3} Q${x} ${y} ${x + 3} ${y} Z`, fill });
+const die = (dots: number[][]): Part[] => [{ d: 'M24 20 H76 Q84 20 84 28 V80 Q84 88 76 88 H24 Q16 88 16 80 V28 Q16 20 24 20 Z', fill: W }, ...dots.map(([x, y]) => ({ d: circ(x, y, 6), fill: INK, detail: true }))];
+
+export const GAME_ICONS: Record<string, { bg: string; parts: Part[] }> = {
+  scopa: { bg: PAL.green, parts: [{ group: card(frSuit('s')), x: -2, y: 4, s: 0.9, r: -18 }, { group: card(itSuit('d')), x: 18, y: 2, s: 0.9, r: 14 }, { group: card(frSuit('h')), x: 8, y: 0, s: 0.9 }] },
+  briscola: { bg: '#2FB3A3', parts: [{ group: card(itSuit('c')), x: 2, y: 6, s: 0.9, r: -10 }, { group: card(itSuit('b')), x: 16, y: 4, s: 0.9, r: 10 }] },
+  tresette: { bg: '#E5484D', parts: [{ group: card(itSuit('s')), x: -4, y: 6, s: 0.86, r: -16 }, { group: card(itSuit('d')), x: 20, y: 6, s: 0.86, r: 16 }, { d: 'M32 18 H68 Q74 18 74 24 V80 Q74 86 68 86 H32 Q26 86 26 80 V24 Q26 18 32 18 Z', fill: W }, num('3', 50, 52, 40)] },
+  setteemezzo: { bg: '#7A5CC9', parts: [{ group: card(itSuit('c')), x: -2, y: 2, s: 0.9, r: -8 }, { d: circ(70, 70, 17), fill: PAL.gold }, { d: circ(70, 70, 11), fill: shade(PAL.gold, 1.35) }, num('½', 70, 70, 16)] },
+  scala40: { bg: '#3E7BD6', parts: [0, 1, 2, 3].map((i) => ({ group: card(frSuit(i % 2 ? 'h' : 's')), x: -24 + i * 15, y: 16 - i * 9, s: 0.72 })) },
+  burraco: { bg: '#9C7BD1', parts: [{ group: card(frSuit('c')), x: -6, y: 6, s: 0.86, r: -20 }, { group: card(frSuit('d')), x: 7, y: 2, s: 0.86, r: -6 }, { group: card(frSuit('s')), x: 20, y: 4, s: 0.86, r: 10 }] },
+  machiavelli: { bg: '#2A2D34', parts: [0, 1, 2].map((i) => ({ group: card(frSuit('h')), x: -20 + i * 20, y: 8, s: 0.8 })) },
+  solitario: { bg: '#3FA66B', parts: [0, 1, 2, 3].map((i) => ({ group: card(frSuit(['s', 'h', 'c', 'd'][i])), x: 12, y: -14 + i * 13, s: 0.74 })) },
+  uno: { bg: '#F5B83D', parts: [{ d: 'M32 18 H68 Q74 18 74 24 V80 Q74 86 68 86 H32 Q26 86 26 80 V24 Q26 18 32 18 Z', fill: PAL.blue, }, { group: [{ d: 'M32 18 H68 Q74 18 74 24 V80 Q74 86 68 86 H32 Q26 86 26 80 V24 Q26 18 32 18 Z', fill: PAL.red }, { d: ell(50, 52, 16, 26), fill: W }, num('+2', 50, 52, 16, PAL.red)], x: 12, y: 2, s: 0.9, r: 12 }] },
+  scacchi: { bg: '#7A5CC9', parts: [{ d: 'M28 88 H72 V96 H28 Z', fill: W }, { d: 'M34 88 C34 76 42 70 44 60 H56 C58 70 66 76 66 88 Z', fill: W }, { d: 'M38 54 H62 V61 H38 Z', fill: W }, { d: circ(50, 42, 13), fill: W }] },
+  dama: { bg: PAL.gold, parts: [{ d: ell(50, 66, 34, 14), fill: shade(PAL.red, 0.75) }, { d: ell(50, 58, 34, 14), fill: PAL.red }, { d: ell(50, 58, 22, 8), stroke: W, w: 2.4, detail: true }, { d: ell(50, 44, 34, 14), fill: W }, { d: ell(50, 44, 22, 8), stroke: INK, w: 1.6, detail: true }] },
+  tris: { bg: PAL.blue, parts: [{ d: 'M38 14 V86 M62 14 V86 M14 38 H86 M14 62 H86', stroke: W, w: 5, detail: true }, { d: 'M18 18 L34 34 M34 18 L18 34', stroke: INK, w: 4.5, detail: true }, { d: circ(50, 50, 7.5), stroke: INK, w: 4.5, detail: true }, { d: 'M66 66 L82 82 M82 66 L66 82', stroke: INK, w: 4.5, detail: true }] },
+  yahtzee: { bg: '#F08A3C', parts: [{ group: die([[34, 38], [66, 70], [50, 54]]), x: -6, y: 18, s: 0.6, r: -12 }, { group: die([[34, 38], [66, 38], [34, 70], [66, 70], [50, 54]]), x: 40, y: 0, s: 0.6, r: 12 }] },
+  raddoppia: { bg: '#F28BB0', parts: [{ group: [tile(0, 0, 100, '#FFE39A'), num('2', 50, 50, 56)], x: 10, y: 10, s: 0.38 }, { group: [tile(0, 0, 100, PAL.gold), num('4', 50, 50, 56)], x: 52, y: 10, s: 0.38 }, { group: [tile(0, 0, 100, '#F08A3C'), num('8', 50, 50, 56)], x: 10, y: 52, s: 0.38 }, { group: [tile(0, 0, 100, PAL.red), num('16', 50, 50, 44, W)], x: 52, y: 52, s: 0.38 }] },
+  freccette: { bg: '#2FB3A3', parts: [{ d: circ(46, 54, 36), fill: W }, { d: circ(46, 54, 26), fill: PAL.red }, { d: circ(46, 54, 16), fill: W }, { d: circ(46, 54, 7), fill: PAL.red }, { d: 'M48 52 L84 16', stroke: INK, w: 3.4, detail: true }, { d: 'M78 14 L92 8 L86 22 Z', fill: PAL.gold }] },
+  biliardo: { bg: PAL.green, parts: [{ d: circ(50, 52, 34), fill: INK }, { d: circ(50, 52, 15), fill: W }, num('8', 50, 52, 18), { d: 'M36 32 Q42 24 52 22', stroke: W, w: 3, detail: true }] },
+  sudoku: { bg: '#F28BB0', parts: [{ d: 'M16 16 H84 V84 H16 Z', fill: W }, { d: 'M38.7 16 V84 M61.3 16 V84 M16 38.7 H84 M16 61.3 H84', stroke: INK, w: 1.6, detail: true }, num('5', 27.3, 27.3, 15), num('3', 50, 50, 15), num('7', 72.7, 72.7, 15, PAL.blue), num('1', 27.3, 72.7, 15)] },
+  memory: { bg: '#9AD0F5', parts: [{ d: 'M14 22 H46 V70 H14 Z', fill: W }, { d: 'M54 30 H86 V78 H54 Z', fill: W }, { group: MOSTRINI.bobo.parts, x: 12, y: 26, s: 0.34 }, { group: MOSTRINI.bobo.parts, x: 52, y: 34, s: 0.34 }] },
+  mosaico: { bg: '#2A2D34', parts: [[PAL.red, PAL.gold, PAL.blue], [PAL.green, '#F28BB0', PAL.gold], [PAL.blue, PAL.red, PAL.green]].flatMap((row, y) => row.map((c, x) => tile(16 + x * 24, 16 + y * 24, 20, c))) },
+  puntielinee: { bg: PAL.gold, parts: [{ d: 'M26 26 H50 V50 H26 Z', fill: PAL.red }, { d: 'M26 26 H74 M26 26 V74 M50 26 V50 M26 50 H50 M50 50 H74 V74', stroke: INK, w: 3, detail: true }, ...[26, 50, 74].flatMap((y) => [26, 50, 74].map((x) => ({ d: circ(x, y, 4.5), fill: W })))] },
+  colorwars: { bg: '#E5484D', parts: [tile(14, 14, 34, W), tile(52, 14, 34, W), tile(14, 52, 34, W), tile(52, 52, 34, W), { d: circ(31, 31, 9), fill: PAL.blue }, { d: circ(69, 69, 9), fill: PAL.red }, { d: circ(63, 31, 6), fill: PAL.blue }, { d: circ(75, 31, 6), fill: PAL.blue }, { d: circ(31, 69, 6), fill: PAL.red }] },
+  battaglia: { bg: PAL.blue, parts: [{ d: 'M14 60 H86 L76 76 H24 Z', fill: '#8A93A6' }, { d: 'M36 48 H62 V60 H36 Z', fill: W }, { d: 'M44 34 H54 V48 H44 Z', fill: PAL.red }, { d: 'M8 84 Q20 78 32 84 Q44 90 56 84 Q68 78 80 84 Q88 88 94 84', stroke: W, w: 3.5, detail: true }] },
+  coriandoli: { bg: '#7A5CC9', parts: [tile(18, 58, 20, PAL.red), tile(40, 58, 20, PAL.red), tile(40, 36, 20, PAL.red), tile(62, 58, 20, PAL.gold), tile(62, 80 - 44, 20, PAL.gold), tile(40, 12, 20, PAL.green), tile(62, 12, 20, PAL.green)] },
+  serpentina: { bg: '#3FA66B', parts: [{ d: 'M14 70 C14 40 40 40 44 56 C48 72 70 72 70 50 C70 36 80 30 88 34', stroke: INK, w: 15, detail: true }, { d: 'M14 70 C14 40 40 40 44 56 C48 72 70 72 70 50 C70 36 80 30 88 34', stroke: PAL.gold, w: 10, detail: true }, { d: circ(86, 33, 9), fill: PAL.gold }, { d: circ(88, 31, 2.4), fill: INK, detail: true }] },
+  frutta: { bg: '#F5B83D', parts: [{ d: 'M14 46 A36 36 0 0 0 86 46 Z', fill: PAL.green }, { d: 'M20 46 A30 30 0 0 0 80 46 Z', fill: '#FF6B6B' }, ...[[38, 58], [50, 64], [62, 58], [44, 52], [56, 52]].map(([x, y]) => ({ d: ell(x, y, 1.8, 2.8), fill: INK, detail: true })), { d: 'M12 86 L90 14', stroke: W, w: 4, detail: true }] },
+  razzo: { bg: '#2A2D34', parts: [{ d: 'M40 74 L50 96 L60 74 Z', fill: '#F08A3C' }, { d: 'M36 60 L24 76 L38 74 Z', fill: PAL.red }, { d: 'M64 60 L76 76 L62 74 Z', fill: PAL.red }, { d: 'M50 8 C64 20 66 44 62 74 H38 C34 44 36 20 50 8 Z', fill: W }, { d: circ(50, 40, 8), fill: '#9AD0F5' }] },
+  lupus: { bg: '#2A2D34', parts: [{ d: 'M60 14 A30 30 0 1 0 86 58 A24 24 0 1 1 60 14 Z', fill: PAL.gold }, { d: 'M20 22 L22 28 L28 30 L22 32 L20 38 L18 32 L12 30 L18 28 Z', fill: W }, { d: 'M28 74 L30 78 L34 79 L30 80 L28 84 L26 80 L22 79 L26 78 Z', fill: W }] },
+  mrwhite: { bg: '#2A2D34', parts: [{ d: 'M18 22 Q18 12 28 12 H72 Q82 12 82 22 V58 Q82 68 72 68 H44 L28 84 V68 H28 Q18 68 18 58 Z', fill: W }, { d: 'M40 32 C40 22 60 22 60 32 C60 40 50 40 50 48', stroke: INK, w: 5, detail: true }, { d: circ(50, 58, 3.2), fill: INK, detail: true }] },
+  ballo: { bg: '#9C7BD1', parts: [{ d: 'M50 4 V18', stroke: INK, w: 2.4, detail: true }, { d: circ(50, 52, 32), fill: '#DDE3EA' }, { d: 'M18 52 H82 M50 20 V84 M26 32 H74 M26 72 H74 M32 24 C40 40 40 64 32 80 M68 24 C60 40 60 64 68 80', stroke: '#8A93A6', w: 1.6, detail: true }, { d: 'M34 36 L42 36 L42 44 L34 44 Z', fill: W, detail: true }] },
+};

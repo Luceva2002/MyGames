@@ -6,9 +6,9 @@ import { createRoom, joinUrl, quickJoin, quickRoom, useOnline } from '../session
 import { CharacterAvatar } from '../ui/avatars';
 import { Copertina } from '../ui/Copertina';
 import { useIsTable } from '../ui/device';
-import { focusRing, RoundButton, Screen, T, tap } from '../ui/kit';
+import { focusRing, onColor, RoundButton, Screen, T, tap } from '../ui/kit';
 import { getSettings } from '../ui/settings';
-import { colors, MIN_TOUCH } from '../ui/theme';
+import { shellColors as colors, MIN_TOUCH } from '../ui/theme';
 
 /** Una delle grandi scelte: Offline o Multiplayer. */
 function BigChoice({ title, text, color, wide, onPress, children }: { title: string; text: string; color: string; wide?: boolean; onPress: () => void; children: React.ReactNode }) {
@@ -23,16 +23,16 @@ function BigChoice({ title, text, color, wide, onPress, children }: { title: str
       style={(state) => [
         styles.choice,
         wide && styles.choiceWide,
-        { backgroundColor: color, transform: [{ translateY: state.pressed ? 4 : 0 }], boxShadow: `0px ${state.pressed ? 3 : 7}px 0px ${colors.line}` },
+        { backgroundColor: color, transform: [{ translateY: state.pressed ? 4 : 0 }], boxShadow: `0px ${state.pressed ? 2 : 5}px 0px ${colors.line}` },
         focusRing((state as { focused?: boolean }).focused ?? false),
       ]}
     >
       <View style={{ flexDirection: 'row' }}>{children}</View>
       <View style={{ gap: 6, alignItems: wide ? 'flex-start' : 'center', flexShrink: 1 }}>
-        <T size={wide ? 40 : 34} weight="900" color={colors.onAccent} style={{ lineHeight: wide ? 44 : 38 }}>
+        <T size={wide ? 40 : 34} weight="900" color={onColor(color)} style={{ lineHeight: wide ? 44 : 38 }}>
           {title}
         </T>
-        <T size={15} weight="800" color={colors.onAccent} center={!wide}>
+        <T size={15} weight="800" color={onColor(color)} center={!wide}>
           {text}
         </T>
       </View>
@@ -90,7 +90,7 @@ function CodeRow({ code, setCode, go }: { code: string; setCode: (c: string) => 
               if (c.length === CODE_LENGTH) go(c);
             }}
             placeholder="ABCD"
-            placeholderTextColor="#12052B66"
+            placeholderTextColor="#2A2D3466"
             autoCapitalize="characters"
             autoCorrect={false}
             maxLength={CODE_LENGTH}
@@ -165,7 +165,7 @@ export default function Home() {
   return (
     <Screen style={{ flexGrow: 1 }}>
       <View style={styles.phoneTop}>
-        <T size={38} weight="900" color={colors.accent} style={styles.wordmark}>
+        <T size={38} weight="900" color={colors.text} style={styles.wordmark}>
           Tavolata
         </T>
         {settings}
@@ -199,7 +199,7 @@ function HomeCover({ width, height, settings, skipRoom }: { width: number; heigh
   const players = snap?.members.filter((m) => m.role === 'player') ?? [];
   const top = (
     <View style={{ gap: 2 }}>
-      <T size={56} weight="900" color={colors.accent} style={styles.wordmark}>
+      <T size={56} weight="900" color={colors.text} style={styles.wordmark}>
         Tavolata
       </T>
       <T size={16} weight="800">
@@ -224,11 +224,11 @@ function HomeCover({ width, height, settings, skipRoom }: { width: number; heigh
 
 const styles = StyleSheet.create({
   phoneTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  wordmark: { textShadowColor: colors.line, textShadowOffset: { width: 0, height: 4 }, textShadowRadius: 0 },
+  wordmark: {},
   choice: { flexGrow: 1, alignItems: 'center', justifyContent: 'center', gap: 10, minHeight: 170, padding: 14, borderRadius: 30, borderWidth: 3, borderColor: colors.line, marginBottom: 7 },
   choiceWide: { flex: 1, flexDirection: 'row', gap: 20, minHeight: 130 },
   allGames: { minHeight: 68, alignItems: 'center', justifyContent: 'center', borderRadius: 22, borderWidth: 3, borderColor: colors.line, backgroundColor: '#FFFFFF', boxShadow: `0px 5px 0px ${colors.line}`, marginBottom: 5 },
   codeRow: { minHeight: 68, flexDirection: 'row', alignItems: 'center', gap: 8, paddingLeft: 14, paddingRight: 8, borderRadius: 22, borderWidth: 3, borderColor: colors.line, backgroundColor: '#FFFFFF', boxShadow: `0px 5px 0px ${colors.line}`, marginBottom: 5 },
-  codeInput: { width: 104, height: MIN_TOUCH, minWidth: 0, borderRadius: 14, borderWidth: 3, borderColor: colors.line, backgroundColor: '#F4F0FF', color: colors.onAccent, fontSize: 20, fontWeight: '900', letterSpacing: 3, textAlign: 'center' },
+  codeInput: { width: 104, height: MIN_TOUCH, minWidth: 0, borderRadius: 14, borderWidth: 3, borderColor: colors.line, backgroundColor: '#F7F8F6', color: colors.onAccent, fontSize: 20, fontWeight: '900', letterSpacing: 3, textAlign: 'center' },
   enter: { width: 64, height: MIN_TOUCH, alignItems: 'center', justifyContent: 'center', borderRadius: 14, borderWidth: 3, borderColor: colors.line, backgroundColor: colors.accent },
 });

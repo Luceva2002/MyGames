@@ -3,7 +3,7 @@ import { ActivityIndicator, Image, Modal, Pressable, ScrollView, StyleSheet, use
 import type { GameMeta, GameResult, LastAction, Seat } from '@giochi/engine';
 import { BOARDS } from './registry';
 import { PausedContext } from './common';
-import { GAME_ART } from '../ui/art';
+import { GameArt } from '../ui/GameArt';
 import { BotFigure, SeatAvatar, SeatAvatars } from '../ui/avatars';
 import { botByName } from '@giochi/engine';
 import { Button, Confirm, PlayerTag, RoundButton, Row, Sheet, SheetOption, T } from '../ui/kit';
@@ -13,7 +13,10 @@ import { AnchorProvider, PopIn } from '../ui/motion';
 import { sfx } from '../ui/sound';
 import { Bounce, Confetti } from '../ui/Celebration';
 import { setSettings, TvContext, useIsTv, useSettings } from '../ui/settings';
-import { colors, radius, seatColor } from '../ui/theme';
+import { PaletteContext, radius, seatColor, SHELL, shellColors as colors, TABLE } from '../ui/theme';
+import Svg from 'react-native-svg';
+import { Place } from '../ui/morbido/draw';
+import { CAT } from '../ui/morbido/shapes';
 
 /** I giochi senza il tavolo col bordo dorato: lo sfondo arriva fino al bordo dello schermo. */
 const NO_RIM = new Set(['freccette', 'biliardo', 'lupus', 'mrwhite', 'frutta', 'razzo']);
@@ -97,7 +100,9 @@ export function GameFrame({ meta, view, me, names, avatars, myTurn, active, onMo
     if (won) sfx('win');
   }, [resultKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Il telaio della partita (menu, mosse, risultati) è guscio Morbido; il tavolo del gioco ha la sua tavolozza.
   return (
+    <PaletteContext.Provider value={SHELL}>
     <TvContext.Provider value={!!tv}>
     <SeatAvatars.Provider value={avatars ?? []}>
       <AnchorProvider>
@@ -111,7 +116,9 @@ export function GameFrame({ meta, view, me, names, avatars, myTurn, active, onMo
           <CardZoomLayer>
           <DragProvider>
             <PausedContext.Provider value={paused}>
+              <PaletteContext.Provider value={TABLE}>
               {Board ? <Board view={view} me={me} names={names} myTurn={myTurn && !waiting} onMove={onMove} /> : <T>Interfaccia non disponibile.</T>}
+              </PaletteContext.Provider>
             </PausedContext.Provider>
           </DragProvider>
           </CardZoomLayer>
@@ -147,7 +154,7 @@ export function GameFrame({ meta, view, me, names, avatars, myTurn, active, onMo
         )}
         {result && won && !dismissed && <Confetti onTop={!settled} />}
         {result && !settled && won && (
-          <Pressable accessibilityRole="button" accessibilityLabel={`${headline}. Tocca per continuare`} onPress={() => setSettled(true)} style={[styles.endWrap, { backgroundColor: 'rgba(18,5,43,0.35)' }]}>
+          <Pressable accessibilityRole="button" accessibilityLabel={`${headline}. Tocca per continuare`} onPress={() => setSettled(true)} style={[styles.endWrap, { backgroundColor: 'rgba(42,45,52,0.35)' }]}>
             <Bounce big>
               <View style={[styles.endSticker, styles.winSticker]}>
                 <T size={34} weight="900" color={colors.onAccent} center>
@@ -181,8 +188,15 @@ export function GameFrame({ meta, view, me, names, avatars, myTurn, active, onMo
                     <BotFigure key={w} name={names[w]} height={150} />
                   ))}
                 </View>
+              ) : me !== null && result.winners.includes(me) ? (
+                // Hai vinto tu: festeggia Briscola, la gatta di casa.
+                <View style={styles.winCat}>
+                  <Svg width={130} height={130} viewBox="0 0 100 100" accessibilityLabel="Briscola festeggia">
+                    <Place parts={CAT} cx={50} cy={52} size={96} />
+                  </Svg>
+                </View>
               ) : (
-                GAME_ART[meta.id] && <Image source={GAME_ART[meta.id]} style={styles.resultArt} accessibilityIgnoresInvertColors />
+                <View style={{ alignSelf: 'center' }}><GameArt id={meta.id} size={96} /></View>
               )}
               <T size={28} weight="900" center>
                 {result.title
@@ -267,6 +281,7 @@ export function GameFrame({ meta, view, me, names, avatars, myTurn, active, onMo
       </AnchorProvider>
     </SeatAvatars.Provider>
     </TvContext.Provider>
+    </PaletteContext.Provider>
   );
 }
 
@@ -282,7 +297,6 @@ function GameMenu({ meta, roomCode, onOpenChange, onRules, onRestart, onChangeGa
   };
   const inset = useTableInset(meta.id);
   const settings = useSettings();
-  const art = GAME_ART[meta.id];
   const pick = (f: () => void) => () => {
     setOpen(false);
     f();
@@ -292,7 +306,7 @@ function GameMenu({ meta, roomCode, onOpenChange, onRules, onRestart, onChangeGa
       <RoundButton icon="menu" label="Menu della partita" onPress={() => setOpen(true)} style={{ position: 'absolute', top: inset, right: inset, zIndex: 60 }} />
       <Sheet visible={open} onClose={() => setOpen(false)}>
         <Row gap={12}>
-          {art ? <Image source={art} style={styles.menuArt} accessibilityIgnoresInvertColors /> : null}
+          <GameArt id={meta.id} size={64} />
           <View style={{ flex: 1, gap: 2 }}>
             <T size={24} weight="900" lines={1}>
               {meta.name}
@@ -365,7 +379,7 @@ function ActionStrip({ gameId, action, me, names }: { gameId: string; action: La
     <PopIn key={action.n} style={[styles.stripWrap, place]} pointerEvents="none">
       <View style={styles.strip} accessibilityLiveRegion="polite" accessibilityLabel={`${names[action.seat]} ${text}`}>
         <SeatAvatar seat={action.seat} name={names[action.seat]} size={18} />
-        <T size={12} weight="800" lines={1} style={{ flexShrink: 1 }}>
+        <T size={12} weight="800" lines={1} color="#FFFFFF" style={{ flexShrink: 1 }}>
           {names[action.seat]}{' '}
           <T size={12} weight="700" color="#ffffffcc">
             {text}
@@ -397,17 +411,17 @@ export function HandoffCurtain({ seat, name, onReady }: { seat: Seat; name: stri
 
 const styles = StyleSheet.create({
   stripWrap: { position: 'absolute', alignItems: 'center', zIndex: 30 },
-  strip: { flexDirection: 'row', alignItems: 'center', gap: 5, maxWidth: '100%', paddingVertical: 2, paddingLeft: 2, paddingRight: 10, borderRadius: 999, backgroundColor: 'rgba(18,5,43,0.78)' },
+  strip: { flexDirection: 'row', alignItems: 'center', gap: 5, maxWidth: '100%', paddingVertical: 2, paddingLeft: 2, paddingRight: 10, borderRadius: 999, backgroundColor: 'rgba(30,34,32,0.74)' },
   tvSafe: { paddingHorizontal: '5%', paddingVertical: '2.5%' },
   menuArt: { width: 64, height: 64, borderRadius: 16, borderWidth: 3, borderColor: colors.line },
   pill: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999, backgroundColor: colors.surface, borderWidth: 3, borderColor: colors.line, flexShrink: 0, boxShadow: `0px 4px 0px ${colors.line}` },
   pending: { position: 'absolute', bottom: 24, alignSelf: 'center', flexDirection: 'row', gap: 8, alignItems: 'center', backgroundColor: colors.accent, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 999 },
   toast: { position: 'absolute', top: 80, alignSelf: 'center', backgroundColor: colors.danger, paddingHorizontal: 18, paddingVertical: 12, borderRadius: 999, maxWidth: '90%' },
   cover: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: colors.scrim, alignItems: 'center', justifyContent: 'center', padding: 16 },
-  card: { backgroundColor: colors.surface, borderRadius: radius.l, padding: 24, gap: 14, width: '100%', maxWidth: 460, borderWidth: 3, borderColor: colors.line, boxShadow: `0px 8px 0px ${colors.line}` },
+  card: { backgroundColor: colors.surface, borderRadius: radius.l, padding: 24, gap: 14, width: '100%', maxWidth: 460, borderWidth: 2.5, borderColor: colors.line, boxShadow: `0px 5px 0px ${colors.line}` },
   endWrap: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, alignItems: 'center', justifyContent: 'center', zIndex: 40 },
   endSticker: { backgroundColor: colors.accent2, borderWidth: 3, borderColor: colors.line, borderRadius: 18, paddingHorizontal: 22, paddingVertical: 10, transform: [{ rotate: '-5deg' }], boxShadow: `0px 6px 0px ${colors.line}` },
   winSticker: { maxWidth: 330, backgroundColor: colors.accent, paddingHorizontal: 22, paddingVertical: 18, gap: 4, transform: [{ rotate: '-4deg' }], borderWidth: 4, boxShadow: `0px 8px 0px ${colors.line}` },
   endBar: { position: 'absolute', left: 12, right: 12, bottom: 12, zIndex: 40, flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'center', padding: 10, borderRadius: 20, backgroundColor: colors.surface, borderWidth: 3, borderColor: colors.line },
-  resultArt: { width: 96, height: 96, borderRadius: 20, alignSelf: 'center' },
+  winCat: { alignSelf: 'stretch', alignItems: 'center', backgroundColor: colors.accent, borderRadius: 20, borderWidth: 2.5, borderColor: colors.line, paddingVertical: 6 },
 });

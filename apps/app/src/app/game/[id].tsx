@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Image, Pressable, StyleSheet, TextInput, View } from 'react-native';
-import { GAME_ART } from '../../ui/art';
+import { GameArt } from '../../ui/GameArt';
 import { getSettings, setSettings } from '../../ui/settings';
 import { router, useLocalSearchParams } from 'expo-router';
 import { assignAvatars, BOT_CHARACTERS, catalog, pickBots, playerCounts } from '@giochi/engine';
@@ -12,7 +12,7 @@ import { canPassAndPlay, setPendingMatch, type SeatConfig } from '../../session/
 import { quickRoom, useOnline } from '../../session/online';
 import { defaultName, loadNames, saveNames } from '../../session/names';
 import { Button, Panel, RoundButton, Row, Screen, T, tap } from '../../ui/kit';
-import { colors, radius } from '../../ui/theme';
+import { shellColors as colors, radius } from '../../ui/theme';
 
 export default function GameDetail() {
   // Con ?persone=1 si arriva da «In tanti, un telefono»: tutti i posti sono per le persone.
@@ -79,7 +79,7 @@ export default function GameDetail() {
     <Screen>
       <RoundButton icon="back" label="Indietro" onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))} />
       <View style={styles.hero}>
-        {GAME_ART[meta.id] && <Image source={GAME_ART[meta.id]} style={styles.heroArt} accessibilityIgnoresInvertColors />}
+        <GameArt id={meta.id} size={140} />
         <View style={{ flex: 1, gap: 6, minWidth: 220 }}>
           <T size={34} weight="900" color="#fff">
             {meta.name}
@@ -228,7 +228,7 @@ export default function GameDetail() {
       )}
       <CharacterPickerModal
         visible={picking !== null}
-        title={picking === null ? '' : active[picking]?.bot ? 'Maschera del computer' : `Personaggio di ${active[picking]?.name.trim() || defaultName(picking)}`}
+        title={picking === null ? '' : active[picking]?.bot ? 'Mostrino del computer' : `Personaggio di ${active[picking]?.name.trim() || defaultName(picking)}`}
         value={picking === null ? null : avatars[picking]}
         taken={avatars.filter((_, j) => j !== picking)}
         onPick={(avatar) => {

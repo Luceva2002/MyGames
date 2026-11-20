@@ -1,5 +1,5 @@
 import { Fragment, type ReactNode } from 'react';
-import { G, Path } from 'react-native-svg';
+import { G, Path, Text as SvgText } from 'react-native-svg';
 import { INK, type Part } from './shapes';
 
 /**
@@ -13,6 +13,13 @@ export function drawParts(parts: Part[], scale: number, key = 'p'): ReactNode[] 
     if (p.group) {
       const t = `translate(${p.x ?? 0} ${p.y ?? 0}) scale(${p.s ?? 1})${p.r ? ` rotate(${p.r} 50 50)` : ''}`;
       return <G key={k} transform={t}>{drawParts(p.group, scale * (p.s ?? 1), k)}</G>;
+    }
+    if (p.t !== undefined) {
+      return (
+        <SvgText key={k} x={p.tx} y={(p.ty ?? 0) + (p.ts ?? 10) * 0.36} fontSize={p.ts} fontFamily="Fredoka_700Bold" textAnchor="middle" fill={p.fill ?? INK}>
+          {p.t}
+        </SvgText>
+      );
     }
     if (p.detail) {
       return p.stroke ? (

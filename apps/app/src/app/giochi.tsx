@@ -5,12 +5,12 @@ import { catalog, getGame, playerCounts, type CatalogEntry, type GameMeta } from
 import { setPendingMatch } from '../session/local';
 import { defaultName, loadNames } from '../session/names';
 import { quickRoom, useOnline } from '../session/online';
-import { GAME_ART } from '../ui/art';
+import { GameArt } from '../ui/GameArt';
 import { useIsTable } from '../ui/device';
 import { GameGrid, GameIcon, useIconSize } from '../ui/GameIcon';
 import { focusRing, RoundButton, Screen, Sheet, SheetOption, T, tap } from '../ui/kit';
 import { getSettings } from '../ui/settings';
-import { colors } from '../ui/theme';
+import { shellColors as colors } from '../ui/theme';
 
 type Mode = 'bots' | 'two' | 'many' | 'all';
 
@@ -37,7 +37,6 @@ const startMany = (meta: GameMeta) => router.push({ pathname: '/game/[id]', para
 function HowToPlay({ entry, onClose, isTable }: { entry: CatalogEntry | null; onClose: () => void; isTable: boolean }) {
   const online = useOnline();
   const m = entry?.meta;
-  const art = m ? GAME_ART[m.id] : null;
   const go = (fn: () => void) => () => {
     onClose();
     fn();
@@ -47,7 +46,7 @@ function HowToPlay({ entry, onClose, isTable }: { entry: CatalogEntry | null; on
       {m && (
         <>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-            {art ? <Image source={art} style={styles.sheetArt} accessibilityIgnoresInvertColors /> : null}
+            {m ? <GameArt id={m.id} size={68} /> : null}
             <View style={{ flex: 1 }}>
               <T size={24} weight="900" style={{ lineHeight: 28 }}>
                 {m.name}
@@ -154,7 +153,7 @@ export default function Games() {
           }}
           style={(state) => [styles.again, { transform: [{ translateY: state.pressed ? 3 : 0 }] }]}
         >
-          {GAME_ART[last.id] ? <Image source={GAME_ART[last.id]} style={styles.againArt} accessibilityIgnoresInvertColors /> : null}
+          <GameArt id={last.id} size={46} />
           <T size={20} weight="900" color={colors.onAccent} style={{ flex: 1 }} lines={1}>
             Rigioca a {last.name}
           </T>

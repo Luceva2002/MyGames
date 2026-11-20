@@ -2,7 +2,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
 import { CharacterAvatar } from '../ui/avatars';
 import { focusRing, RoundButton, Screen, T, tap } from '../ui/kit';
-import { colors } from '../ui/theme';
+import { shellColors as colors } from '../ui/theme';
 
 function Choice({ mode, label, children, text }: { mode: 'bots' | 'two' | 'many'; label: string; children: React.ReactNode; text: string }) {
   return (
@@ -53,7 +53,7 @@ export default function Offline() {
       <T size={30} weight="900" center>
         Con chi giochi?
       </T>
-      <Choice mode="bots" label="Contro i bot" text="Tu contro le maschere">
+      <Choice mode="bots" label="Contro i bot" text="Tu contro i mostrini">
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
           <CharacterAvatar id="bobo" size={62} />
           <View style={{ flexDirection: 'row' }}>

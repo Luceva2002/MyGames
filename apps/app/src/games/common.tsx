@@ -8,6 +8,7 @@ import { Row, T } from '../ui/kit';
 import { SeatAvatar } from '../ui/avatars';
 import { useIsTv } from '../ui/settings';
 import { colors, seatColor } from '../ui/theme';
+import { useMorbidoFelt } from '../ui/tables';
 
 export interface BoardProps<V = any, M = any> {
   view: V;
@@ -135,20 +136,21 @@ export function OpponentHand({ seat, cards, deck = 'it', width, max = 10, drawFr
 /** Un avversario seduto dall'altro lato del tavolo: icona, nome e punti in una pillola, sotto le sue carte coperte. */
 export function TableSeat({ info, compact }: { info: SeatInfo; compact?: boolean }) {
   const { seat, name, active, score, scoreLabel, cards, deck = 'it', drawFrom } = info;
+  const m = useMorbidoFelt();
   const label = `${name}${score !== undefined ? `, ${score} ${scoreLabel ?? ''}` : ''}${cards !== undefined ? `, ${cards} carte` : ''}${active ? ', è il suo turno' : ''}`;
   const hand = cards !== undefined && cards > 0 ? <OpponentHand seat={seat} cards={cards} deck={deck} width={compact ? 18 : 30} max={compact ? 7 : 10} drawFrom={drawFrom} /> : null;
   if (compact) {
     // Sul telefono, con più avversari, stanno tutti su una riga: icona col punteggio, nome, carte in piccolo.
     return (
       <View style={{ flex: 1, maxWidth: 104, minWidth: 0, alignItems: 'center', gap: 4 }} accessibilityLabel={label}>
-        <View style={[styles.seatPill, styles.seatPillCompact]}>
+        <View style={[styles.seatPill, styles.seatPillCompact, m && pillM(active)]}>
           <SeatAvatar seat={seat} name={name} size={24} />
           <View style={{ flexShrink: 1, minWidth: 0 }}>
-            <T size={10} weight="800" lines={1} color={active ? seatColor(seat) : '#ffffffdd'}>
+            <T size={10} weight="800" lines={1} color={m ? INK : active ? seatColor(seat) : '#ffffffdd'}>
               {active ? `▶ ${name}` : name}
             </T>
             {score !== undefined && (
-              <T size={13} weight="800" color={colors.text} lines={1}>
+              <T size={13} weight="800" color={m ? INK : colors.text} lines={1}>
                 {score}
               </T>
             )}
@@ -160,19 +162,19 @@ export function TableSeat({ info, compact }: { info: SeatInfo; compact?: boolean
   }
   return (
     <View style={{ alignItems: 'flex-start', gap: 6 }} accessibilityLabel={label}>
-      <View style={styles.seatPill}>
+      <View style={[styles.seatPill, m && pillM(active)]}>
         <SeatAvatar seat={seat} name={name} size={30} />
         <View style={{ flexShrink: 1 }}>
-          <T size={12} weight="800" lines={1} color={active ? seatColor(seat) : '#ffffffdd'}>
+          <T size={12} weight="800" lines={1} color={m ? INK : active ? seatColor(seat) : '#ffffffdd'}>
             {active ? `▶ ${name}` : name}
           </T>
           {score !== undefined && (
             <Row gap={4} style={{ alignItems: 'baseline' }}>
-              <T size={16} weight="800" color={colors.text}>
+              <T size={16} weight="800" color={m ? INK : colors.text}>
                 {score}
               </T>
               {scoreLabel ? (
-                <T size={11} color="#ffffffaa" lines={1}>
+                <T size={11} color={m ? MUTED_M : '#ffffffaa'} lines={1}>
                   {scoreLabel}
                 </T>
               ) : null}
@@ -220,6 +222,7 @@ export const MENU_GAP = 64;
  */
 export function MyCorner({ info, note, style, wideOnly }: { info: SeatInfo | null; note?: string; style?: object; wideOnly?: boolean }) {
   const { width } = useWindowDimensions();
+  const m = useMorbidoFelt();
   if (!info || (wideOnly && width < 600)) return null;
   const narrow = width < 600;
   return (
@@ -232,19 +235,19 @@ export function MyCorner({ info, note, style, wideOnly }: { info: SeatInfo | nul
         </View>
       ) : null}
       <Pulse active={info.active}>
-        <View style={[styles.seatPill, narrow && { paddingRight: 10 }]} accessibilityLabel={`Tu${info.active ? ', tocca a te' : ''}, ${info.score ?? ''} ${info.scoreLabel ?? ''}`}>
+        <View style={[styles.seatPill, narrow && { paddingRight: 10 }, m && pillM(info.active)]} accessibilityLabel={`Tu${info.active ? ', tocca a te' : ''}, ${info.score ?? ''} ${info.scoreLabel ?? ''}`}>
           <SeatAvatar seat={info.seat} name={info.name} size={narrow ? 26 : 30} />
           <View>
-            <T size={11} weight="800" color={info.active ? colors.accent : '#ffffffaa'}>
+            <T size={11} weight="800" color={m ? INK : info.active ? colors.accent : '#ffffffaa'}>
               {info.active ? '▶ Tocca a te' : 'Tu'}
             </T>
             {info.score !== undefined && (
               <Row gap={4} style={{ alignItems: 'baseline' }}>
-                <T size={narrow ? 14 : 16} weight="800" color={colors.text}>
+                <T size={narrow ? 14 : 16} weight="800" color={m ? INK : colors.text}>
                   {info.score}
                 </T>
                 {info.scoreLabel && !narrow ? (
-                  <T size={11} color="#ffffffaa">
+                  <T size={11} color={m ? MUTED_M : '#ffffffaa'}>
                     {info.scoreLabel}
                   </T>
                 ) : null}
@@ -259,15 +262,16 @@ export function MyCorner({ info, note, style, wideOnly }: { info: SeatInfo | nul
 
 /** Versione compatta del mio posto (icona e punti), per le colonne strette sul telefono. */
 export function MyChip({ info }: { info: SeatInfo }) {
+  const m = useMorbidoFelt();
   return (
     <Pulse active={info.active}>
-      <View style={styles.myChip} accessibilityLabel={`Tu${info.active ? ', tocca a te' : ''}, ${info.score ?? ''} ${info.scoreLabel ?? ''}`}>
+      <View style={[styles.myChip, m && pillM(info.active)]} accessibilityLabel={`Tu${info.active ? ', tocca a te' : ''}, ${info.score ?? ''} ${info.scoreLabel ?? ''}`}>
         <SeatAvatar seat={info.seat} name={info.name} size={30} />
-        <T size={15} weight="800" color={colors.text}>
+        <T size={15} weight="800" color={m ? INK : colors.text}>
           {info.score ?? ''}
         </T>
         {info.active && (
-          <T size={9} weight="800" color={colors.accent}>
+          <T size={9} weight="800" color={m ? INK : colors.accent}>
             ▶ Tu
           </T>
         )}
@@ -457,6 +461,11 @@ export function turnText(myTurn: boolean, names: string[], turn: Seat, me: Seat 
   if (turn === me) return 'Aspetta…';
   return `Tocca a ${names[turn]}`;
 }
+
+/** Sul tavolo Morbido i posti sono bollini bianchi col contorno scuro; chi deve giocare ha il fondo giallo. */
+const INK = '#2A2D34';
+const MUTED_M = '#5B635D';
+const pillM = (active: boolean) => ({ backgroundColor: active ? '#FFD24A' : '#FFFFFF', borderWidth: 2, borderColor: INK, boxShadow: `0px 2px 0px ${INK}` });
 
 const styles = StyleSheet.create({
   stickerWrap: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' },

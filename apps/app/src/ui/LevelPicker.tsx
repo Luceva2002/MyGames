@@ -2,7 +2,7 @@ import { Pressable, View } from 'react-native';
 import { BOT_LEVELS, type BotLevel } from '@giochi/engine';
 import { T, tap } from './kit';
 import { getSettings, setSettings, useSettings } from './settings';
-import { colors } from './theme';
+import { shellColors as colors } from './theme';
 
 /**
  * Bravura del computer in tre tocchi. Senza `value` vale per le partite su questo dispositivo e
@@ -26,7 +26,7 @@ export function LevelPicker({ value, onChange }: { value?: BotLevel; onChange?: 
               if (onChange) onChange(l.id);
               else setSettings({ ...getSettings(), botLevel: l.id });
             }}
-            style={{ flex: 1, alignItems: 'center', paddingVertical: 7, borderRadius: 999, borderWidth: 2.5, borderColor: on ? colors.line : '#FFFFFF33', backgroundColor: on ? colors.accent3 : 'transparent' }}
+            style={{ flex: 1, alignItems: 'center', paddingVertical: 7, borderRadius: 999, borderWidth: 2.5, borderColor: on ? colors.line : colors.dim, backgroundColor: on ? colors.accent3 : 'transparent' }}
           >
             <T size={13} weight="900" color={on ? colors.onAccent : colors.text}>
               {l.label}

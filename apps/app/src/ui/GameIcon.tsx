@@ -1,9 +1,9 @@
 import type { ReactNode } from 'react';
-import { Image, Pressable, useWindowDimensions, View } from 'react-native';
+import { Pressable, useWindowDimensions, View } from 'react-native';
 import type { GameMeta } from '@giochi/engine';
-import { GAME_ART } from './art';
+import { GameArt } from './GameArt';
 import { focusRing, T, tap } from './kit';
-import { colors, OUTLINE, radius } from './theme';
+import { usePalette } from './theme';
 
 const GAP = 10;
 
@@ -21,7 +21,7 @@ export function GameGrid({ children }: { children: ReactNode }) {
 
 /** Un gioco come l'icona di un'app: copertina quadrata arrotondata e nome sotto, fuori dal bordo. */
 export function GameIcon({ meta, size, onPress, selected, dim, caption }: { meta: GameMeta; size: number; onPress: () => void; selected?: boolean; dim?: boolean; caption?: string }) {
-  const art = GAME_ART[meta.id];
+  const { colors } = usePalette();
   return (
     <Pressable
       accessibilityRole="button"
@@ -36,8 +36,9 @@ export function GameIcon({ meta, size, onPress, selected, dim, caption }: { meta
         return [{ width: size, alignItems: 'center', gap: 4, transform: [{ translateY: st.pressed ? 2 : 0 }] }, focusRing(st.focused ?? false)];
       }}
     >
-      <View style={{ width: size, height: size, borderRadius: radius.m, borderWidth: OUTLINE, borderColor: selected ? colors.accent : colors.line, overflow: 'hidden', backgroundColor: meta.color, opacity: dim ? 0.45 : 1 }}>
-        {art ? <Image source={art} style={{ width: '100%', height: '100%' }} accessibilityIgnoresInvertColors /> : null}
+      {/* Scelto: un anello giallo attorno all'icona, che resta sempre uguale. */}
+      <View style={{ width: size, height: size, borderRadius: size * 0.27, padding: selected ? 3 : 0, backgroundColor: selected ? colors.accent : 'transparent', opacity: dim ? 0.45 : 1 }}>
+        <GameArt id={meta.id} size={selected ? size - 6 : size} />
       </View>
       <T size={12} weight="800" center color={dim ? colors.muted : colors.text} style={{ lineHeight: 14 }}>
         {caption ?? meta.name}

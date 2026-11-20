@@ -103,7 +103,7 @@ export function ScopaBoard({ view, me, names, myTurn, onMove }: BoardProps<Scopa
     scoreLabel: `punti · prese ${view.capturedCounts[seat]}${view.scope[seat] ? ` · 🧹${view.scope[seat]}` : ''}`,
   });
   return (
-    <TableBg table="teal">
+    <TableBg table="morbido">
       <DropZone id="table" style={{ flex: 1 }} radius={22} inset={-10} accepts={(p) => myTurn && p.kind === 'hand'} onDrop={(p) => dropCard(p.ids[0])}>
       <Felt>
         <TableTop seats={othersOf(view.players, me).map(info)} />

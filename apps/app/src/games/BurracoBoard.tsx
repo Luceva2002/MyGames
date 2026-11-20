@@ -55,7 +55,7 @@ export function BurracoBoard({ view, me, names, myTurn, onMove }: BoardProps<Bur
   const meldsOf = (team: number) => view.melds.filter((m) => m.team === team);
   const info = (seat: Seat): SeatInfo => ({ seat, name: names[seat] + (me !== null && seat !== me && view.players === 4 && teamOf(seat, 4) === myTeam ? ' 🤝' : ''), active: view.turn === seat, cards: view.handCounts[seat], deck: 'fr', drawFrom: view.last?.includes('scart') ? 'discard' : 'deck', score: view.teamScores[teamOf(seat, view.players)], scoreLabel: view.pozzettoTaken[teamOf(seat, view.players)] ? 'punti · pozzetto ✓' : 'punti' });
   return (
-    <TableBg table="teal">
+    <TableBg table="morbido">
       <CardTable
         me={me === null ? null : info(me)}
         top={<TableTop seats={othersOf(view.players, me).map(info)} />}

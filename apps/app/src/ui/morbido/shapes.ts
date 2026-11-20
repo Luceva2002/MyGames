@@ -22,6 +22,11 @@ export interface Part {
   y?: number;
   s?: number;
   r?: number;
+  /** Testo (un numero, una lettera) centrato in (tx, ty), alto `ts`. */
+  t?: string;
+  tx?: number;
+  ty?: number;
+  ts?: number;
 }
 
 export const circ = (cx: number, cy: number, r: number) => `M${cx - r} ${cy} A${r} ${r} 0 1 0 ${cx + r} ${cy} A${r} ${r} 0 1 0 ${cx - r} ${cy} Z`;

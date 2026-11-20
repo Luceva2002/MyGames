@@ -141,7 +141,7 @@ export function BriscolaBoard({ view, me, names, myTurn, onMove }: BoardProps<Br
   const deckSpot = useDeckSpot();
   const binfo = (seat: Seat): SeatInfo => ({ seat, name: names[seat] + partnerMark(view.players, me, seat), active: view.turn === seat, cards: view.handCounts[seat], score: view.capturedPoints[seat], scoreLabel: 'punti' });
   return (
-    <TableBg table="teal">
+    <TableBg table="morbido">
       <TableDrop enabled={myTurn} onCard={(id) => onMove({ card: id })}>
       <Felt>
         <TableTop seats={othersOf(view.players, me).map(binfo)} />
@@ -195,7 +195,7 @@ export function TresetteBoard({ view, me, names, myTurn, onMove }: BoardProps<Tr
     );
   }
   return (
-    <TableBg table="teal">
+    <TableBg table="morbido">
       <TableDrop enabled={myTurn} onCard={(id) => onMove({ type: 'play', card: id })}>
       <Felt>
         <TableTop seats={othersOf(view.players, me).map(tinfo)} />
