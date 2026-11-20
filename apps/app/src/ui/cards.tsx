@@ -1,7 +1,8 @@
 import { createContext, memo, useContext, useState, type ReactNode } from 'react';
 import { Image, Modal, Pressable, StyleSheet, Text, useWindowDimensions, View, type StyleProp, type ViewStyle } from 'react-native';
-import { CARD_BACKS, CARD_FACES } from './deckArt';
-import { BigIndex, CardCorners, NumeralFace } from './suits';
+import { CARD_BACKS } from './deckArt';
+import { INK } from './morbido/shapes';
+import { BackFace, BigIndex, FigureFace, NumeralFace } from './suits';
 import Svg, { Circle, G, Path, Rect, Text as SvgText } from 'react-native-svg';
 import { cardName, type Card } from '@giochi/engine';
 import { tapAllowed } from './drag';
@@ -11,19 +12,6 @@ import { colors, font } from './theme';
 /** Proporzioni reali dei mazzi: piacentine più strette, francesi più larghe. */
 export function cardRatio(deck: Card['deck']): number {
   return deck === 'it' ? 1.8 : deck === 'fr' ? 1.45 : 1.55;
-}
-
-/** Figura coi personaggi: l'immagine riempie la carta, bollino e seme li aggiunge CardCorners. */
-function FigureFace({ card, w, h }: { card: Card; w: number; h: number }) {
-  const key = card.suit === 'j' ? `fr-j${Number(card.id.slice(-1)) % 2}` : `${card.deck}-${card.suit}${card.rank}`;
-  return (
-    <>
-      {/* Il personaggio sta un po' più al centro, così gli indici negli angoli restano liberi. */}
-      <View style={[StyleSheet.absoluteFill, { backgroundColor: '#FDFAE8' }]} />
-      <Image source={CARD_FACES[key]} style={{ position: 'absolute', left: w * 0.07, top: h * 0.07, width: w * 0.86, height: h * 0.86 }} resizeMode="stretch" />
-      <CardCorners card={card} w={w} />
-    </>
-  );
 }
 
 /** I quattro colori di UNO nella palette di Tavolata (carta nera per i jolly). */
@@ -173,16 +161,17 @@ export const PlayingCard = memo(function PlayingCard({ card, width, selected, di
   const zoom = (zoomable ?? !blocked) && zoomCtx ? () => zoomCtx(card) : undefined;
   const zoomHold = zoomable !== false && zoomCtx ? () => zoomCtx(card) : undefined;
   const height = width * cardRatio(card.deck);
-  const radius = width * 0.1;
-  // Numerali disegnati in codice; figure e Jolly sono immagini coi personaggi.
+  const radius = width * 0.09;
+  // Tutto disegnato in codice: numerali, figure coi mostrini e Jolly con Briscola.
   const numeral = (card.deck === 'it' && card.rank <= 7) || (card.deck === 'fr' && card.suit !== 'j' && card.rank <= 10);
   const face = (
     <View style={[{ width, height }, dimmed && { opacity: 0.62 }, style]}>
       <View
         accessibilityLabel={cardName(card)}
         style={[
-          styles.card,
+          card.deck === 'uno' ? styles.card : styles.morbido,
           { width, height, borderRadius: radius },
+          card.deck !== 'uno' && { borderWidth: edge(width) },
           card.deck === 'uno' && { backgroundColor: 'transparent' },
           selected && styles.selected,
         ]}
@@ -249,9 +238,16 @@ export function CardGhost({ cards, width }: { cards: Card[]; width: number }) {
 
 export function CardBack({ width, style, deck = 'it' }: { width: number; style?: StyleProp<ViewStyle>; deck?: 'it' | 'fr' | 'uno' }) {
   const height = width * cardRatio(deck);
+  if (deck !== 'uno') {
+    return (
+      <View accessibilityLabel="Carta coperta" style={[styles.morbido, { width, height, borderRadius: width * 0.09, borderWidth: edge(width) }, width < 30 && { boxShadow: 'none' }, style]}>
+        <BackFace w={width} h={height} />
+      </View>
+    );
+  }
   return (
     <View accessibilityLabel="Carta coperta" style={[styles.card, { width, height, borderRadius: width * 0.1, borderWidth: Math.max(1, Math.min(3, width / 14)) }, width < 30 && { boxShadow: 'none' }, style]}>
-      <Image source={CARD_BACKS[deck]} style={{ position: 'absolute', left: 0, top: 0, width, height }} resizeMode="cover" />
+      <Image source={CARD_BACKS.uno} style={{ position: 'absolute', left: 0, top: 0, width, height }} resizeMode="cover" />
     </View>
   );
 }
@@ -274,10 +270,20 @@ export function DeckPile({ count, width, deck = 'it' }: { count: number; width: 
   );
 }
 
+/** Contorno della carta Morbido: lo stesso tratto dei semi, mai più sottile di un pixel e mezzo. */
+const edge = (w: number) => Math.max(1.2, Math.min(3, w * 0.022));
+
 const styles = StyleSheet.create({
+  // Carta Morbido: bianca, contorno scuro morbido, ombra leggera (stile approvato il 20/11/2026).
+  morbido: {
+    backgroundColor: '#FFFFFF',
+    borderColor: INK,
+    overflow: 'hidden',
+    boxShadow: '0px 2px 3px rgba(0,0,0,0.3)',
+  },
   zoomScrim: { flex: 1, backgroundColor: 'rgba(10,3,25,0.82)', alignItems: 'center', justifyContent: 'center', gap: 16 },
   zoomLabel: { color: '#fff', fontSize: 20, fontWeight: '900' },
-  // Cornice alla Balatro: crema, contorno spesso, ombra piena più una morbida (spec §4).
+  // Carte di UNO, ancora nello stile di prima fino al loro lotto: crema, contorno spesso, ombra piena.
   card: {
     backgroundColor: '#FFFDF6',
     borderWidth: 3,

@@ -1,4 +1,5 @@
 import { BagelFatOne_400Regular } from '@expo-google-fonts/bagel-fat-one';
+import { Fredoka_600SemiBold } from '@expo-google-fonts/fredoka';
 import { Nunito_500Medium, Nunito_800ExtraBold, useFonts } from '@expo-google-fonts/nunito';
 import { DarkTheme, Stack, ThemeProvider } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -13,7 +14,7 @@ export default function RootLayout() {
   // Chi apre il sito sveglia subito il server delle stanze (dorme dopo 15 minuti senza visite).
   useWakeServer();
   // Font del Carnevale: Bagel Fat One per titoli e punteggi, Nunito per testi e bottoni.
-  const [loaded] = useFonts({ BagelFatOne_400Regular, Nunito_500Medium, Nunito_800ExtraBold });
+  const [loaded] = useFonts({ BagelFatOne_400Regular, Fredoka_600SemiBold, Nunito_500Medium, Nunito_800ExtraBold });
   if (!loaded) return <View style={{ flex: 1, backgroundColor: colors.bg }} />;
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

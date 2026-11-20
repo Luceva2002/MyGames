@@ -1,6 +1,6 @@
 /**
- * I computer sono maschere della commedia dell'arte e del carnevale (stile "Carnevale semplice").
- * Il nome è quello che compare al tavolo; l'app ci associa il ritratto a figura intera.
+ * I computer sono i mostrini di Tavolata (stile Morbido): creature tonde, una per colore.
+ * Il nome è quello che compare al tavolo; l'app li disegna in codice (ui/morbido).
  */
 export interface BotCharacter {
   id: string;
@@ -9,27 +9,42 @@ export interface BotCharacter {
   level: 'facile' | 'medio' | 'difficile' | 'imprevedibile';
 }
 
-/** Le 10 maschere scelte da Luca. Fanno da computer e da avatar. */
+/** I 12 mostrini scelti da Luca il 20/11/2026, tre per difficoltà. Fanno da computer e da avatar. */
 export const BOT_CHARACTERS: BotCharacter[] = [
-  { id: 'pulcinella', name: 'Pulcinella', trait: 'Pigro ma fortunato', level: 'facile' },
-  { id: 'colombina', name: 'Colombina', trait: 'Calcola tutto', level: 'medio' },
-  { id: 'giullare', name: 'Giullare', trait: 'Gioca per lo spettacolo, rischia', level: 'imprevedibile' },
-  { id: 'arlecchina', name: 'Arlecchina', trait: 'Veloce e sfacciata', level: 'medio' },
-  { id: 'arlecchino', name: 'Arlecchino', trait: 'Elegante, ti legge le carte in faccia', level: 'difficile' },
-  { id: 'pantalone', name: 'Pantalone', trait: 'Avaro, non spreca mai una carta buona', level: 'difficile' },
-  { id: 'medico', name: 'Medico', trait: 'Silenzioso, aspetta il momento giusto', level: 'medio' },
-  { id: 'forzuto', name: 'Forzuto', trait: 'Tutto istinto, gioca forte', level: 'facile' },
-  { id: 'capitano', name: 'Capitano', trait: 'Spaccone, attacca sempre', level: 'imprevedibile' },
-  { id: 'rosaura', name: 'Rosaura', trait: 'Elegante, aspetta la carta perfetta', level: 'difficile' },
+  { id: 'bobo', name: 'Bobo', trait: 'Guarda solo le sue carte', level: 'facile' },
+  { id: 'ugo', name: 'Ugo', trait: 'Abbraccia tutti, anche le carte sbagliate', level: 'facile' },
+  { id: 'lulu', name: 'Lulù', trait: 'Porta fortuna, a lei soprattutto', level: 'facile' },
+  { id: 'zuzu', name: 'Zuzu', trait: 'Sente le carte prima di vederle', level: 'medio' },
+  { id: 'pim', name: 'Pim', trait: 'Piccolo, veloce, sfacciato', level: 'medio' },
+  { id: 'bolla', name: 'Bolla', trait: 'Leggera, galleggia fino alla fine', level: 'medio' },
+  { id: 'gnaf', name: 'Gnaf', trait: 'Brontola ma gioca benissimo', level: 'difficile' },
+  { id: 'tic', name: 'Tic', trait: 'Rigido, segue le regole', level: 'difficile' },
+  { id: 'trio', name: 'Trio', trait: 'Vede tutto, anche quello che nascondi', level: 'difficile' },
+  { id: 'lola', name: 'Lola', trait: 'Sogna e gioca a caso', level: 'imprevedibile' },
+  { id: 'mimi', name: 'Mimì', trait: 'Sparisce e ricompare con la carta giusta', level: 'imprevedibile' },
+  { id: 'fio', name: 'Fiò', trait: 'Si accende subito, gioca fortissimo', level: 'imprevedibile' },
 ];
 
-/** Ritrova una maschera dal suo id (per l'avatar scelto da chi gioca). */
-export const characterById = (id: string | null | undefined) => BOT_CHARACTERS.find((b) => b.id === id);
+/**
+ * Le maschere di prima, salvate nelle impostazioni o mandate da un'app non aggiornata:
+ * ognuna diventa il mostrino con la stessa difficoltà, così nessuno resta senza avatar.
+ */
+export const LEGACY_CHARACTERS: Record<string, string> = {
+  pulcinella: 'bobo', forzuto: 'ugo', colombina: 'zuzu', arlecchina: 'pim', medico: 'bolla',
+  rosaura: 'gnaf', pantalone: 'tic', arlecchino: 'trio', capitano: 'lola', giullare: 'fio',
+};
+
+/** Ritrova un mostrino dal suo id (per l'avatar scelto da chi gioca), anche dal nome di una vecchia maschera. */
+export const characterById = (id: string | null | undefined) => {
+  const real = id ? LEGACY_CHARACTERS[id] ?? id : id;
+  return BOT_CHARACTERS.find((b) => b.id === real);
+};
 
 /** Sceglie `n` maschere diverse a caso, così ogni partita ha facce nuove. */
 export function pickBots(n: number, random: () => number = Math.random, exclude: (string | null | undefined)[] = []): BotCharacter[] {
   // Le maschere già scelte da chi gioca restano a loro: i computer ne prendono altre.
-  const taken = BOT_CHARACTERS.filter((b) => !exclude.includes(b.id));
+  const ex = exclude.map((e) => characterById(e)?.id);
+  const taken = BOT_CHARACTERS.filter((b) => !ex.includes(b.id));
   const pool = taken.length ? [...taken] : [...BOT_CHARACTERS];
   for (let i = pool.length - 1; i > 0; i--) {
     const j = Math.floor(random() * (i + 1));

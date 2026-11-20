@@ -144,10 +144,10 @@ export default function Home() {
         <HomeCover width={contentWidth} height={Math.max(340, Math.min(430, Math.round(height * 0.56)))} settings={settings} skipRoom={linkCode.length === CODE_LENGTH} />
         <View style={{ flexDirection: 'row', gap: 16 }}>
           <BigChoice wide title="Offline" text="Contro i bot, qui su questo schermo." color={colors.accent} onPress={() => router.push({ pathname: '/giochi', params: { mode: 'bots' } })}>
-            <Masks ids={['pulcinella']} size={84} />
+            <Masks ids={['bobo']} size={84} />
           </BigChoice>
           <BigChoice wide title="Multiplayer" text={roomBusy ?? 'Questo schermo è il tavolo.'} color={colors.accent2} onPress={multiplayer}>
-            <Masks ids={['colombina', 'giullare']} size={84} />
+            <Masks ids={['lulu', 'fio']} size={84} />
           </BigChoice>
         </View>
         <View style={{ flexDirection: 'row', gap: 16, alignItems: 'stretch' }}>
@@ -174,10 +174,10 @@ export default function Home() {
         Come giochiamo?
       </T>
       <BigChoice title="Offline" text="Contro i bot o con gli amici, su un telefono." color={colors.accent} onPress={() => router.push('/offline')}>
-        <Masks ids={['pulcinella']} size={76} />
+        <Masks ids={['bobo']} size={76} />
       </BigChoice>
       <BigChoice title="Multiplayer" text={roomBusy ?? 'Una stanza: ognuno entra dal suo telefono.'} color={colors.accent2} onPress={multiplayer}>
-        <Masks ids={['colombina', 'arlecchina', 'giullare']} size={76} />
+        <Masks ids={['lulu', 'pim', 'fio']} size={76} />
       </BigChoice>
       <AllGames />
       <CodeRow code={code} setCode={setCode} go={go} />

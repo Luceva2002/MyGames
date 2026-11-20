@@ -55,11 +55,11 @@ export default function Offline() {
       </T>
       <Choice mode="bots" label="Contro i bot" text="Tu contro le maschere">
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-          <CharacterAvatar id="pulcinella" size={62} />
+          <CharacterAvatar id="bobo" size={62} />
           <View style={{ flexDirection: 'row' }}>
-            <CharacterAvatar id="arlecchino" size={62} />
+            <CharacterAvatar id="trio" size={62} />
             <View style={{ marginLeft: -14 }}>
-              <CharacterAvatar id="pantalone" size={62} />
+              <CharacterAvatar id="tic" size={62} />
             </View>
           </View>
         </View>

@@ -5,6 +5,7 @@
   "dependencies": {
     "@colyseus/sdk": "^0.18.5",
     "@expo-google-fonts/bagel-fat-one": "^0.4.0",
+    "@expo-google-fonts/fredoka": "^0.4.1",
     "@expo-google-fonts/nunito": "^0.4.2",
     "@giochi/engine": "*",
     "@react-native-async-storage/async-storage": "2.2.0",

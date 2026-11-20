@@ -44,6 +44,8 @@ export const seatColor = (seat: number) => seatColors[seat % seatColors.length];
 export const font = {
   display: 'BagelFatOne_400Regular',
   body: 'Nunito_500Medium',
+  /** Fredoka per valori e nomi sulle carte dello stile Morbido. */
+  card: 'Fredoka_600SemiBold',
   bold: 'Nunito_800ExtraBold',
 };
 
