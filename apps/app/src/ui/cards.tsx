@@ -45,7 +45,7 @@ function UnoAction({ rank, fill }: { rank: number; fill: string }) {
 
 /**
  * Carte di UNO nello stile Pop: corpo a colore pieno col contorno sottile, un grande cerchio crema
- * al centro col valore in Bungee (o il simbolo d'azione), indice in alto a sinistra.
+ * al centro col valore nel carattere dei titoli (o il simbolo d'azione), indice in alto a sinistra.
  * I jolly sono carbone col cerchio diviso nei quattro colori.
  */
 function UnoFace({ card, w, h, chosenColor }: { card: Card; w: number; h: number; chosenColor?: string }) {

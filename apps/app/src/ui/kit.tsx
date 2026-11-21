@@ -7,7 +7,7 @@ import { getSettings, TEXT_SCALE, useIsTv, useSettings } from './settings';
 import { SeatAvatar } from './avatars';
 import { colors, DISPLAY_SCALE, font as appFont, SOFT, MIN_TEXT, MIN_TOUCH, OUTLINE, PaletteContext, radius, seatColor, SHELL, TV_MIN_TEXT, TV_SCALE, usePalette } from './theme';
 
-const BUNGEE = appFont.display;
+const PIXEL = appFont.display;
 
 /** Vibrazione leggera al tocco, se attiva nelle impostazioni (P-A11Y-3). */
 export function tap() {
@@ -77,7 +77,7 @@ export function T({ children, style, size = 16, weight = '500', color, center, l
   // I testi "900" sono titoli, punteggi e cartelli, nel carattere più pieno; gli altri pesi usano bold o body.
   const w = String(weight);
   const fontFamily = w === '900' ? font.display : Number(w) >= 700 || w === 'bold' ? font.bold : font.body;
-  const size2 = w === '900' && font.display === BUNGEE ? fontSize * DISPLAY_SCALE : fontSize;
+  const size2 = w === '900' && font.display === PIXEL ? fontSize * DISPLAY_SCALE : fontSize;
   return (
     <Text numberOfLines={lines} style={[{ color: color ?? c.text, fontSize: size2, fontFamily, textAlign: center ? 'center' : undefined }, style]}>
       {children}
