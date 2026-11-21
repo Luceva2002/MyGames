@@ -77,14 +77,19 @@ export const shadow = (y: number) => ({ boxShadow: `0px ${y}px ${y * 3}px rgba(0
 export const seatColors = ['#E69F00', '#56B4E9', '#009E73', '#F0E442', '#CC79A7', '#D55E00', '#9AD0F5', '#C9C9C9', '#E69F00', '#56B4E9'];
 export const seatColor = (seat: number) => seatColors[seat % seatColors.length];
 
-/** Caratteri di tutta l'app, guscio e tavoli: Outfit, più pieno per titoli e punteggi. Fredoka resta sulle carte. */
+/**
+ * Caratteri di tutta l'app (scelti da Luca il 21/11/2026): Bungee, da insegna di sala giochi, per il nome,
+ * i titoli, i bottoni grandi e i punteggi; Figtree per i testi, che restano leggibili. Fredoka resta sulle carte.
+ * Bungee è solo maiuscolo e largo: `T` lo rimpicciolisce un po' (DISPLAY_SCALE).
+ */
 export const font = {
-  display: 'Outfit_800ExtraBold',
-  body: 'Outfit_500Medium',
+  display: 'Bungee_400Regular',
+  body: 'Figtree_500Medium',
   /** Fredoka per valori e nomi sulle carte dello stile Morbido. */
   card: 'Fredoka_600SemiBold',
-  bold: 'Outfit_700Bold',
+  bold: 'Figtree_700Bold',
 };
+export const DISPLAY_SCALE = 0.84;
 export const shellFont: typeof font = font;
 
 /** La tavolozza di dove si trova un componente: il guscio Pop o il tavolo di un gioco. */

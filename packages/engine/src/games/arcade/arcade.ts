@@ -121,13 +121,13 @@ export const frutta = arcadeGame(
 export const razzo = arcadeGame(
   {
     id: 'razzo',
-    name: 'Il razzo di Pulcinella',
+    name: 'Il razzo di Bobo',
     category: 'abilita',
     emoji: '🚀',
     color: '#FFE14D',
     tagline: 'Tieni premuto per volare tra i fuochi d’artificio',
     rules: [
-      'Pulcinella vola appeso a un razzo: tieni premuto lo schermo (o lo spazio) per salire, lascia per scendere.',
+      'Bobo vola appeso a un razzo: tieni premuto lo schermo (o lo spazio) per salire, lascia per scendere.',
       'Evita le girandole di fuoco e i palloncini scoppiettanti.',
       'Prendi gli zecchini d’oro: ognuno vale 10 metri in più.',
       'Più vai avanti, più si va veloci. Il punteggio sono i metri percorsi.',

@@ -1,15 +1,10 @@
 import { createContext, useContext, useId } from 'react';
-import { Text, View, type ImageSourcePropType } from 'react-native';
+import { Text, View } from 'react-native';
 import Svg, { Circle, ClipPath, Defs, G } from 'react-native-svg';
 import { botByName, characterById } from '@giochi/engine';
 import { Place } from './morbido/draw';
 import { MOSTRINI, shade } from './morbido/shapes';
 import { colors, OUTLINE, seatColor } from './theme';
-
-/** Pulcinella resta solo nel Razzo, che passa allo stile nuovo col suo lotto. */
-export const BOT_ART: Record<'pulcinella', ImageSourcePropType> = {
-  pulcinella: require('../../assets/bots/pulcinella.png'),
-};
 
 /** La maschera di ogni posto al tavolo (scelta da chi gioca o del computer), data dalla partita. */
 export const SeatAvatars = createContext<(string | null)[]>([]);

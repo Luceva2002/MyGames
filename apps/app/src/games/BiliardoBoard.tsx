@@ -1,10 +1,10 @@
 import { memo, useEffect, useMemo, useRef, useState } from 'react';
-import { Image, useWindowDimensions, View } from 'react-native';
+import { useWindowDimensions, View } from 'react-native';
 import Svg, { Circle, Defs, G, Line, LinearGradient, Path, RadialGradient, Rect, Stop, Text as SvgText } from 'react-native-svg';
 import { BALL_R, isSolid, isStripe, POCKETS, simulateShot, TABLE_H, TABLE_W, type Ball, type BiliardoMove, type BiliardoState } from '@giochi/engine';
 import { Banner, type BoardProps } from './common';
 import { Chip, Row, SeatDot, T } from '../ui/kit';
-import { TableBg, TABLES } from '../ui/tables';
+import { TableBg } from '../ui/tables';
 import { colors } from '../ui/theme';
 import { useReducedMotion } from '../ui/settings';
 import { sfx } from '../ui/sound';
@@ -189,13 +189,13 @@ const TableFrame = memo(function TableFrame({ tableW, tableH, rail }: { tableW: 
     <Svg width={W} height={H} style={{ position: 'absolute' }}>
       <Defs>
         <LinearGradient id="rim" x1="0" y1="0" x2="0" y2="1">
-          <Stop offset="0" stopColor="#FFE066" />
-          <Stop offset="1" stopColor="#F2B705" />
+          <Stop offset="0" stopColor="#3A3D46" />
+          <Stop offset="1" stopColor="#1E2026" />
         </LinearGradient>
       </Defs>
-      <Rect x={1.5} y={1.5} width={W - 3} height={H - 3} rx={rail * 0.8} fill="url(#rim)" stroke={colors.line} strokeWidth={3} />
+      <Rect x={1.5} y={1.5} width={W - 3} height={H - 3} rx={rail * 0.8} fill="url(#rim)" stroke={colors.line} strokeWidth={1.5} />
       <Rect x={5} y={5} width={W - 10} height={H - 10} rx={rail * 0.65} fill="none" stroke="#FFFFFF" strokeOpacity={0.14} strokeWidth={1.5} />
-      <Rect x={rail - cush} y={rail - cush} width={tableW + cush * 2} height={tableH + cush * 2} fill="#0B4F55" stroke={colors.line} strokeWidth={2} />
+      <Rect x={rail - cush} y={rail - cush} width={tableW + cush * 2} height={tableH + cush * 2} fill="#1D5544" stroke={colors.line} strokeWidth={1} />
       {diamonds.map((d, i) => (
         <Circle key={i} cx={d.x} cy={d.y} r={Math.max(3, rail * 0.17)} fill="#FF2E88" stroke={colors.line} strokeWidth={1.5} />
       ))}
@@ -445,7 +445,7 @@ export function BiliardoBoard({ view, me, names, myTurn, onMove }: BoardProps<Bi
   const M = 0.85 * scale;
 
   return (
-    <TableBg table="billiard" scrim={0.2} style={{ alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 12 }}>
+    <TableBg table="billiard" style={{ alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 12 }}>
       <Row gap={20} wrap style={{ justifyContent: 'center' }}>
         {[0, 1].map((p) => (
           <View key={p} style={{ alignItems: 'center', opacity: view.turn === p ? 1 : 0.7, backgroundColor: '#12052BD9', borderRadius: 14, paddingHorizontal: 12, paddingVertical: 4, borderWidth: 2, borderColor: view.turn === p ? colors.accent : '#FFFFFF22' }}>
@@ -489,8 +489,16 @@ export function BiliardoBoard({ view, me, names, myTurn, onMove }: BoardProps<Bi
           ]}
         >
           <TableFrame tableW={tableW} tableH={tableH} rail={rail} />
-          {/* Il panno è il velluto turchese a rombi del tavolo della casa. */}
-          <Image source={TABLES.teal} style={{ position: 'absolute', left: rail, top: rail, width: tableW, height: tableH }} resizeMode="cover" />
+          {/* Il panno verde Pop, con la luce morbida al centro come gli altri tavoli. */}
+          <Svg width={tableW} height={tableH} style={{ position: 'absolute', left: rail, top: rail }}>
+            <Defs>
+              <RadialGradient id="cloth" cx="50%" cy="50%" r="65%">
+                <Stop offset="0" stopColor="#2F7A5E" />
+                <Stop offset="1" stopColor="#1B4A39" />
+              </RadialGradient>
+            </Defs>
+            <Rect x={0} y={0} width={tableW} height={tableH} fill="url(#cloth)" />
+          </Svg>
           <TableMarks tableW={tableW} tableH={tableH} rail={rail} scale={scale} />
           <Svg width={tableW + M * 2} height={tableH + M * 2} style={{ position: 'absolute', left: rail - M, top: rail - M }}>
             <Defs>

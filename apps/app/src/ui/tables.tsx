@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react';
-import { ImageBackground, StyleSheet, View, type ImageSourcePropType, type StyleProp, type ViewStyle } from 'react-native';
+import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
 import { createContext, useContext } from 'react';
 import { shellColors } from './theme';
@@ -7,13 +7,6 @@ import { shellColors } from './theme';
 /** Vero dentro i tavoli Pop: i posti al tavolo diventano bollini bianchi. */
 export const MorbidoFelt = createContext(false);
 export const useMorbidoFelt = () => useContext(MorbidoFelt);
-
-/** Sfondi in foto: restano solo per Biliardo e Freccette, che hanno ambienti loro. */
-export const TABLES = {
-  teal: require('../../assets/tables/felt-teal.jpg'),
-  pub: require('../../assets/tables/pub.jpg'),
-  billiard: require('../../assets/tables/billiard-room.jpg'),
-} satisfies Record<string, ImageSourcePropType>;
 
 /**
  * I tavoli Pop disegnati in codice: un panno con la luce morbida al centro e un bordo quasi nero,
@@ -30,10 +23,14 @@ const FELTS = {
   night: ['#25214F', '#0F0E24'],
   /** Lupus di giorno. */
   day: ['#2F6E8F', '#173B4F'],
+  /** Freccette: il muro del bar, lampone scuro. */
+  pub: ['#7E2C55', '#3E132B'],
+  /** Biliardo: la sala, carbone; il tavolo verde è disegnato dal gioco. */
+  billiard: ['#2B2E36', '#14151A'],
 } as const;
 
-/** `morbido`, `teal`, `wood`, `night` e `day` sono disegnati in codice; gli altri sono foto. */
-export type TableName = keyof typeof TABLES | keyof typeof FELTS;
+/** Tutti i tavoli sono disegnati in codice. */
+export type TableName = keyof typeof FELTS;
 
 function PopTable({ felt, sky, children, style }: { felt: readonly [string, string]; sky?: 'moon' | 'sun'; children?: ReactNode; style?: StyleProp<ViewStyle> }) {
   const [size, setSize] = useState({ w: 0, h: 0 });
@@ -75,22 +72,6 @@ export function TableBg({ table, children, style, scrim = 0, rounded }: {
   scrim?: number;
   rounded?: boolean;
 }) {
-  if (table in FELTS) {
-    const t = table as keyof typeof FELTS;
-    return <PopTable felt={FELTS[t]} sky={t === 'night' ? 'moon' : t === 'day' ? 'sun' : undefined} style={style}>{children}</PopTable>;
-  }
-  return (
-    <ImageBackground
-      source={TABLES[table as keyof typeof TABLES]}
-      resizeMode="cover"
-      style={[{ flex: 1, overflow: 'hidden' }, rounded && { borderRadius: 18 }, style]}
-      // Senza misure esplicite l'immagine resta grande quanto il file e si vede solo un angolo:
-      // la stiriamo a coprire tutto il riquadro.
-      imageStyle={[{ width: '100%', height: '100%' }, rounded && { borderRadius: 18 }]}
-      accessibilityIgnoresInvertColors
-    >
-      {scrim > 0 && <View pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, backgroundColor: `rgba(0,0,0,${scrim})` }} />}
-      {children}
-    </ImageBackground>
-  );
+  const t = table;
+  return <PopTable felt={FELTS[t]} sky={t === 'night' ? 'moon' : t === 'day' ? 'sun' : undefined} style={style}>{children}</PopTable>;
 }

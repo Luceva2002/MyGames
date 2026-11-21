@@ -2,16 +2,16 @@ import { assert, type Game, type Seat } from '../core/types';
 import { randomInt, shuffle, type HasRng } from '../core/rng';
 
 /**
- * Memory delle maschere: carte coperte a coppie. A turno se ne girano due; se sono uguali si
+ * Memory dei mostrini: carte coperte a coppie. A turno se ne girano due; se sono uguali si
  * tengono e si rigioca, altrimenti si ricoprono e tocca al prossimo. Da soli si cerca di finire
  * con meno mosse possibili; in compagnia vince chi trova più coppie.
  */
-export const MEMORY_FACES = ['arlecchino', 'arlecchina', 'pulcinella', 'giullare', 'colombina', 'pantalone', 'forzuto', 'medico', 'rosaura', 'capitano'] as const;
+export const MEMORY_FACES = ['trio', 'pim', 'bobo', 'fio', 'zuzu', 'tic', 'ugo', 'bolla', 'gnaf', 'lola'] as const;
 export const MEMORY_PAIRS = MEMORY_FACES.length;
 
 export interface MemoryState extends HasRng {
   players: number;
-  /** La maschera di ogni carta (indice in MEMORY_FACES). */
+  /** Il mostrino di ogni carta (indice in MEMORY_FACES). */
   cards: number[];
   /** Chi ha preso ogni carta. */
   taken: (Seat | null)[];
@@ -33,7 +33,7 @@ export type MemoryMove = { flip: number };
 
 export interface MemoryView {
   players: number;
-  /** Per ogni carta: la maschera se è scoperta (presa, appena girata o sbagliata), altrimenti null. */
+  /** Per ogni carta: il mostrino se è scoperto (presa, appena girata o sbagliata), altrimenti null. */
   faces: (number | null)[];
   taken: (Seat | null)[];
   open: number[];
@@ -54,9 +54,9 @@ export const memory: Game<MemoryState, MemoryMove, MemoryView> = {
     maxPlayers: 4,
     emoji: '🎭',
     color: '#FF9F1C',
-    tagline: 'Ritrova le coppie di maschere',
+    tagline: 'Ritrova le coppie di mostrini',
     rules: [
-      'Venti carte coperte, dieci coppie di maschere. Al tuo turno gira due carte.',
+      'Venti carte coperte, dieci coppie di mostrini. Al tuo turno gira due carte.',
       'Se sono uguali le tieni e giochi ancora; se sono diverse si ricoprono e tocca al prossimo.',
       'Ricorda dove stanno: le carte girate le vedono tutti.',
       'Da soli: finisci con meno mosse possibili. In compagnia vince chi trova più coppie.',

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Image, Pressable, ScrollView, StyleSheet, View, type ImageSourcePropType } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { ROLES, type LupusMove, type LupusView, type NightPrompt, type RoleId, type Seat } from '@giochi/engine';
 import type { BoardProps } from './common';
 import { Button, focusRing, Panel, PlayerTag, Row, T, tap } from '../ui/kit';
@@ -7,26 +7,13 @@ import { useIsTv, useReducedMotion } from '../ui/settings';
 import { sfx } from '../ui/sound';
 import Animated, { Easing, FadeIn, runOnJS, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { TableBg } from '../ui/tables';
+import { LupusCard } from '../ui/LupusCards';
 import { colors, MIN_TOUCH, radius, seatColor } from '../ui/theme';
-
-/** Carte dei ruoli in stile tarocchi semplici, nei colori dell'app (Higgsfield). */
-const CARD: Record<RoleId | 'retro', ImageSourcePropType> = {
-  lupo: require('../../assets/lupus/lupo.jpg'),
-  villico: require('../../assets/lupus/villico.jpg'),
-  veggente: require('../../assets/lupus/veggente.jpg'),
-  medium: require('../../assets/lupus/medium.jpg'),
-  guardia: require('../../assets/lupus/guardia.jpg'),
-  indemoniato: require('../../assets/lupus/indemoniato.jpg'),
-  gufo: require('../../assets/lupus/gufo.jpg'),
-  criceto: require('../../assets/lupus/criceto.jpg'),
-  massone: require('../../assets/lupus/massone.jpg'),
-  retro: require('../../assets/lupus/retro.jpg'),
-};
 
 const CAUSE: Record<string, string> = { lupi: 'sbranato dai Lupi', veggente: 'ucciso dallo sguardo della Veggente', rogo: 'mandato al rogo' };
 
 function RoleCard({ role, width }: { role: RoleId | 'retro'; width: number }) {
-  return <Image source={CARD[role]} style={{ width, height: width * 1.5, borderRadius: radius.m }} accessibilityLabel={role === 'retro' ? 'Carta coperta' : `Carta del ruolo ${ROLES[role].name}`} />;
+  return <LupusCard role={role} width={width} />;
 }
 
 /**

@@ -1,6 +1,5 @@
 import { createContext, memo, useContext, useState, type ReactNode } from 'react';
 import { Image, Modal, Pressable, StyleSheet, Text, useWindowDimensions, View, type StyleProp, type ViewStyle } from 'react-native';
-import { CARD_BACKS } from './deckArt';
 import { INK } from './morbido/shapes';
 import { BackFace, BigIndex, FigureFace, NumeralFace } from './suits';
 import Svg, { Circle, G, Path, Rect, Text as SvgText } from 'react-native-svg';
@@ -15,9 +14,9 @@ export function cardRatio(deck: Card['deck']): number {
 }
 
 /** I quattro colori di UNO nella palette di Tavolata (carta nera per i jolly). */
-export const UNO_COLORS: Record<string, string> = { r: '#FF4D6D', g: '#2FCB7A', b: '#3D8BFF', y: '#FFC933', w: '#2A1650' };
+export const UNO_COLORS: Record<string, string> = { r: '#FF4F8B', g: '#1FA67A', b: '#3D7BFF', y: '#FFC933', w: '#1A1C2E' };
 const UNO_INK = colors.line;
-const UNO_CREAM = '#FDFAE8';
+const UNO_CREAM = '#F4F1E8';
 
 /** Simbolo d'azione disegnato in un quadrato 100×100, col tratto nero spesso delle altre carte. */
 function UnoAction({ rank, fill }: { rank: number; fill: string }) {
@@ -45,20 +44,19 @@ function UnoAction({ rank, fill }: { rank: number; fill: string }) {
 }
 
 /**
- * Carte di UNO nello stile di Tavolata: corpo colorato col contorno nero spesso, cucitura crema,
- * rombo da Arlecchino al centro col valore (o il simbolo d'azione), indice in alto a sinistra.
- * I jolly sono neri col rombo diviso nei quattro colori.
+ * Carte di UNO nello stile Pop: corpo a colore pieno col contorno sottile, un grande cerchio crema
+ * al centro col valore in Bungee (o il simbolo d'azione), indice in alto a sinistra.
+ * I jolly sono carbone col cerchio diviso nei quattro colori.
  */
 function UnoFace({ card, w, h, chosenColor }: { card: Card; w: number; h: number; chosenColor?: string }) {
   const wild = card.suit === 'w';
   const fill = UNO_COLORS[card.suit];
-  const sw = Math.max(1.5, w * 0.035);
+  const sw = Math.max(1, w * 0.02);
   const r = w * 0.1;
   const cx = w / 2;
   const cy = h / 2;
-  const dw = w * 0.36;
-  const dh = h * 0.36;
-  const lozenge = `M${cx} ${cy - dh} L${cx + dw} ${cy} L${cx} ${cy + dh} L${cx - dw} ${cy} Z`;
+  const rr = w * 0.36;
+  const quarter = (a: number) => `M${cx} ${cy} L${cx + rr * Math.cos(a)} ${cy + rr * Math.sin(a)} A${rr} ${rr} 0 0 1 ${cx + rr * Math.cos(a + Math.PI / 2)} ${cy + rr * Math.sin(a + Math.PI / 2)} Z`;
   const label = card.rank === 12 ? '+2' : card.rank === 14 ? '+4' : card.rank <= 9 ? String(card.rank) : '';
   const corner = card.rank === 10 ? 'Ø' : card.rank === 11 ? '⇄' : card.rank === 13 ? '★' : label;
   const fs = w * (label.length > 1 ? 0.3 : 0.42);
@@ -67,16 +65,15 @@ function UnoFace({ card, w, h, chosenColor }: { card: Card; w: number; h: number
     <View style={[StyleSheet.absoluteFill, { borderRadius: r, overflow: 'hidden' }]}>
       <Svg width={w} height={h}>
         <Rect x={sw / 2} y={sw / 2} width={w - sw} height={h - sw} rx={r} fill={fill} stroke={UNO_INK} strokeWidth={sw} />
-        <Rect x={w * 0.08} y={w * 0.08} width={w * 0.84} height={h - w * 0.16} rx={r * 0.7} fill="none" stroke={UNO_CREAM} strokeWidth={sw * 0.45} strokeDasharray={`${w * 0.04} ${w * 0.03}`} opacity={0.85} />
         {wild ? (
           <G stroke={UNO_INK} strokeWidth={sw} strokeLinejoin="round">
-            <Path d={`M${cx} ${cy - dh} L${cx + dw} ${cy} L${cx} ${cy} Z`} fill={UNO_COLORS.r} />
-            <Path d={`M${cx + dw} ${cy} L${cx} ${cy + dh} L${cx} ${cy} Z`} fill={UNO_COLORS.b} />
-            <Path d={`M${cx} ${cy + dh} L${cx - dw} ${cy} L${cx} ${cy} Z`} fill={UNO_COLORS.y} />
-            <Path d={`M${cx - dw} ${cy} L${cx} ${cy - dh} L${cx} ${cy} Z`} fill={UNO_COLORS.g} />
+            <Path d={quarter(-Math.PI / 2)} fill={UNO_COLORS.r} />
+            <Path d={quarter(0)} fill={UNO_COLORS.b} />
+            <Path d={quarter(Math.PI / 2)} fill={UNO_COLORS.y} />
+            <Path d={quarter(Math.PI)} fill={UNO_COLORS.g} />
           </G>
         ) : (
-          <Path d={lozenge} fill={UNO_CREAM} stroke={UNO_INK} strokeWidth={sw} strokeLinejoin="round" />
+          <Circle cx={cx} cy={cy} r={rr} fill={UNO_CREAM} />
         )}
         {card.rank === 10 || card.rank === 11 ? (
           <G transform={`translate(${cx - icon / 2} ${cy - icon / 2}) scale(${icon / 100})`}>
@@ -85,7 +82,7 @@ function UnoFace({ card, w, h, chosenColor }: { card: Card; w: number; h: number
         ) : label ? (
           <G>
             {/* Prima il contorno nero, poi il riempimento sopra: il numero resta pieno e ben delineato. */}
-            <SvgText x={cx} y={cy + fs * 0.36} fontSize={fs} fontFamily={font.display} textAnchor="middle" fill={UNO_INK} stroke={UNO_INK} strokeWidth={sw * 1.6} strokeLinejoin="round">
+            <SvgText x={cx} y={cy + fs * 0.36} fontSize={fs} fontFamily={font.display} textAnchor="middle" fill={UNO_INK} stroke={UNO_INK} strokeWidth={sw * 1.2} strokeLinejoin="round">
               {label}
             </SvgText>
             <SvgText x={cx} y={cy + fs * 0.36} fontSize={fs} fontFamily={font.display} textAnchor="middle" fill={wild ? '#fff' : fill}>
@@ -104,6 +101,24 @@ function UnoFace({ card, w, h, chosenColor }: { card: Card; w: number; h: number
         <View style={{ position: 'absolute', bottom: h * 0.06, alignSelf: 'center', width: w * 0.26, height: w * 0.26, borderRadius: w, backgroundColor: UNO_COLORS[chosenColor], borderWidth: 2, borderColor: UNO_INK }} />
       )}
     </View>
+  );
+}
+
+/** Dorso di UNO: carbone con un cerchio diviso nei quattro colori e un anello crema. */
+function UnoBack({ w, h }: { w: number; h: number }) {
+  const cx = w / 2;
+  const cy = h / 2;
+  const rr = w * 0.3;
+  const q = (a: number) => `M${cx} ${cy} L${cx + rr * Math.cos(a)} ${cy + rr * Math.sin(a)} A${rr} ${rr} 0 0 1 ${cx + rr * Math.cos(a + Math.PI / 2)} ${cy + rr * Math.sin(a + Math.PI / 2)} Z`;
+  return (
+    <Svg width={w} height={h} style={StyleSheet.absoluteFill}>
+      <Rect x={0} y={0} width={w} height={h} fill={UNO_COLORS.w} />
+      <Path d={q(-Math.PI / 2)} fill={UNO_COLORS.r} />
+      <Path d={q(0)} fill={UNO_COLORS.b} />
+      <Path d={q(Math.PI / 2)} fill={UNO_COLORS.y} />
+      <Path d={q(Math.PI)} fill={UNO_COLORS.g} />
+      <Circle cx={cx} cy={cy} r={rr + w * 0.05} fill="none" stroke={UNO_CREAM} strokeWidth={Math.max(1, w * 0.025)} />
+    </Svg>
   );
 }
 
@@ -247,7 +262,7 @@ export function CardBack({ width, style, deck = 'it' }: { width: number; style?:
   }
   return (
     <View accessibilityLabel="Carta coperta" style={[styles.card, { width, height, borderRadius: width * 0.1, borderWidth: Math.max(1, Math.min(3, width / 14)) }, width < 30 && { boxShadow: 'none' }, style]}>
-      <Image source={CARD_BACKS.uno} style={{ position: 'absolute', left: 0, top: 0, width, height }} resizeMode="cover" />
+      <UnoBack w={width} h={height} />
     </View>
   );
 }

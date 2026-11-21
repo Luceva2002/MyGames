@@ -115,7 +115,8 @@ export default function Games() {
   const last = mode === 'bots' && !lastMeta?.onlineOnly ? lastMeta : undefined;
 
   const start = (e: CatalogEntry) => {
-    if (mode === 'bots') startVsComputer(e.meta);
+    // I giochi solo tra persone (Mr. White, Lupus) si giocano offline passandosi il telefono.
+    if (mode === 'bots') (e.meta.humansOnly ? startMany(e.meta) : startVsComputer(e.meta));
     else if (mode === 'two') startTwo(e.meta);
     else if (mode === 'many') startMany(e.meta);
     else setPicked(e);
@@ -162,7 +163,7 @@ export default function Games() {
           </T>
         </Pressable>
       )}
-      {mode === 'bots' && grid(all.filter((e) => !e.meta.humansOnly))}
+      {mode === 'bots' && grid(all)}
       {mode === 'two' && (
         <>
           <T size={20} weight="900">

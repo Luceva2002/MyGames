@@ -10,8 +10,9 @@ import { sfx } from '../../ui/sound';
 import { useReducedMotion } from '../../ui/settings';
 import { colors, seatColor } from '../../ui/theme';
 import { Hud, useRecord } from './kit';
+import { BackFace } from '../../ui/suits';
 
-/** Memory delle maschere: venti carte coperte, si girano a due a due. */
+/** Memory dei mostrini: venti carte coperte, si girano a due a due. */
 const MISS_SHOW_MS = 1200;
 
 export function MemoryBoard({ view, me, names, myTurn, onMove }: BoardProps<MemoryView, MemoryMove>) {
@@ -131,19 +132,8 @@ function MemoryCard({ face, owner, solo, justMatched, missed, w, h, disabled, on
         {id ? (
           <CharacterAvatar id={id} size={w * 0.82} />
         ) : (
-          <>
-            {/* Dorso: rombi da Arlecchino e una maschera al centro. */}
-            {[0, 1, 2].map((r) =>
-              [0, 1].map((c) => (
-                <View key={`${r}${c}`} style={{ position: 'absolute', left: c * (w / 2) + w / 4 - w * 0.18, top: r * (h / 3) + h / 6 - w * 0.18, width: w * 0.36, height: w * 0.36, backgroundColor: (r + c) % 2 ? '#FFC933' : '#5B3FE0', transform: [{ rotate: '45deg' }], opacity: 0.5 }} />
-              )),
-            )}
-            <View style={{ width: w * 0.5, height: w * 0.5, borderRadius: w * 0.25, backgroundColor: colors.surface, borderWidth: 1.5, borderColor: colors.line, alignItems: 'center', justifyContent: 'center' }}>
-              <T size={w * 0.26} style={{ lineHeight: w * 0.32 }}>
-                🎭
-              </T>
-            </View>
-          </>
+            /* Dorso: lo stesso delle carte da gioco, a pois col muso di Briscola. */
+            <BackFace w={w} h={h} />
         )}
       </Animated.View>
     </Pressable>

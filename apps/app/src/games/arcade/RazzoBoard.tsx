@@ -1,16 +1,18 @@
 import { useMemo, useRef, useState } from 'react';
-import { Image, PanResponder, View } from 'react-native';
+import { PanResponder, View } from 'react-native';
 import { arcadeRng, type ArcadeMove, type ArcadeView } from '@giochi/engine';
 import { usePaused, type BoardProps } from '../common';
 import { TableBg } from '../../ui/tables';
 import { T } from '../../ui/kit';
-import { BOT_ART } from '../../ui/avatars';
+import Svg from 'react-native-svg';
+import { Place } from '../../ui/morbido/draw';
+import { MOSTRINI } from '../../ui/morbido/shapes';
 import { sfx } from '../../ui/sound';
 import { colors } from '../../ui/theme';
 import { Hud, NO_SELECT, StartCard, useFrame, useKeys, useKeyUp, useRecord } from './kit';
 
 /**
- * Il razzo di Pulcinella: si vola tenendo premuto, si scende lasciando. Girandole di fuoco e
+ * Il razzo di Bobo: si vola tenendo premuto, si scende lasciando. Girandole di fuoco e
  * palloncini scoppiettanti da evitare, zecchini da prendere. Il punteggio sono i metri.
  */
 const PX_PER_M = 28;
@@ -252,9 +254,11 @@ function Game({ seed, active, onMove }: { seed: number; active: boolean; onMove:
             {g.sparks.map((s) => (
               <View key={s.id} pointerEvents="none" style={{ position: 'absolute', left: s.x - 4, top: s.y - 4, width: 8, height: 8, borderRadius: 4, backgroundColor: s.color, opacity: Math.min(1, s.life / 300) }} />
             ))}
-            {/* Pulcinella a cavallo del razzo. */}
+            {/* Bobo a cavallo del razzo. */}
             <View pointerEvents="none" style={{ position: 'absolute', left: px - pr * 1.4, top: g.y - pr * 1.9, width: pr * 2.8, height: pr * 3.2, transform: [{ rotate: `${tilt}deg` }] }}>
-              <Image source={BOT_ART.pulcinella} style={{ position: 'absolute', left: pr * 0.85, top: 0, height: pr * 2.6, width: pr * 2.6 * (256 / 752) }} resizeMode="contain" />
+              <Svg width={pr * 2.2} height={pr * 2.2} viewBox="0 0 100 100" style={{ position: 'absolute', left: pr * 0.3, top: -pr * 0.2 }}>
+                <Place parts={MOSTRINI.bobo.parts} cx={50} cy={50} size={100} />
+              </Svg>
               <T size={pr * 1.7} style={{ position: 'absolute', left: pr * 0.35, top: pr * 1.45, lineHeight: pr * 2, transform: [{ rotate: '45deg' }] }}>
                 🚀
               </T>
@@ -264,7 +268,7 @@ function Game({ seed, active, onMove }: { seed: number; active: boolean; onMove:
         <Hud score={meters()} label="metri" best={best} extra={`🪙 ${g.coins}`} style={{ top: 12, left: 12 }} />
       </View>
       {!started && active && (
-        <StartCard title="Il razzo di Pulcinella" lines={['Tieni premuto per salire, lascia per scendere.', 'Evita girandole e palloncini, prendi gli zecchini. Sul computer: spazio.']} onStart={() => setStarted(true)} />
+        <StartCard title="Il razzo di Bobo" lines={['Tieni premuto per salire, lascia per scendere.', 'Evita girandole e palloncini, prendi gli zecchini. Sul computer: spazio.']} onStart={() => setStarted(true)} />
       )}
     </TableBg>
   );
