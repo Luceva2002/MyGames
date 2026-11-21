@@ -60,8 +60,8 @@ export const shellColors: typeof colors = {
 /** Ombra del guscio Pop: morbida e larga, mai piena. */
 export const SOFT = '0px 8px 22px rgba(0,0,0,0.32)';
 
-/** I colori pieni delle tessere Pop: si alternano nelle icone dei giochi e nei posti. */
-export const POP_TILES = ['#5B3FE0', '#FF4F8B', '#1FA67A', '#3D7BFF', '#FF8A3D', '#2B2E36', '#FFC933', '#33B5F2', '#14B8A6', '#F2545B', '#7ED957', '#C04BE0'] as const;
+/** I colori pieni delle tessere Pop, una sola tonalità per colore: si alternano nelle icone dei giochi. */
+export const POP_TILES = ['#5B3FE0', '#FF4F8B', '#1FA67A', '#3D7BFF', '#FF8A3D', '#2B2E36', '#FFC933'] as const;
 
 /** Colore di ogni categoria: è lo sfondo delle copertine e dei filtri in home (palette brand-alt, SPEC §7 e §9). */
 export const CATEGORY_COLORS = { carte: '#1FA67A', tavolo: '#5B3FE0', dadi: '#FFC933', abilita: '#FF4F8B', party: '#2B2E36' } as const;

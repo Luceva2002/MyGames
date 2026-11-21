@@ -573,11 +573,11 @@ const styles = StyleSheet.create({
   seatGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, justifyContent: 'space-between' },
   seatCard: { alignItems: 'center', gap: 3 },
   invite: { alignItems: 'center', gap: 10, paddingHorizontal: 14, paddingTop: 12, paddingBottom: 14, borderRadius: radius.l, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.cover, boxShadow: SOFT, marginBottom: 6 },
-  code: { color: colors.accent, fontFamily: font.display, fontSize: 38, lineHeight: 44, letterSpacing: 3 },
+  code: { color: colors.accent, fontFamily: font.bold, fontSize: 38, lineHeight: 44, letterSpacing: 3 },
   gameRow: { minHeight: 76, flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 22, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.surface, boxShadow: SOFT, marginBottom: 5 },
   waiting: { minHeight: 66, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 12, borderRadius: radius.l, borderWidth: 1, borderStyle: 'dashed', borderColor: colors.dim },
   strip: { minHeight: 56, flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, borderRadius: 20, backgroundColor: colors.line },
-  stripCode: { color: colors.accent, fontFamily: font.display, fontSize: 24, letterSpacing: 2 },
+  stripCode: { color: colors.accent, fontFamily: font.bold, fontSize: 24, letterSpacing: 2 },
   guestTop: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   reconnect: { position: 'absolute', top: 8, alignSelf: 'center', backgroundColor: colors.accent, borderRadius: 999, paddingHorizontal: 16, paddingVertical: 10 },
 });

@@ -76,5 +76,5 @@ export function Copertina({ width, height, top, action, code, url, count, avatar
 const styles = StyleSheet.create({
   cover: { borderRadius: 30, borderWidth: 1, borderColor: colors.line, overflow: 'hidden', backgroundColor: colors.cover, boxShadow: SOFT, marginBottom: 7 },
   pill: { flexDirection: 'row', alignItems: 'center', gap: 18, alignSelf: 'stretch', padding: 14, paddingRight: 18, borderRadius: 24, backgroundColor: colors.line },
-  code: { color: colors.accent, fontFamily: font.display, letterSpacing: 4 },
+  code: { color: colors.accent, fontFamily: font.bold, letterSpacing: 4 },
 });

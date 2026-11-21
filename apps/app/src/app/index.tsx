@@ -147,7 +147,7 @@ export default function Home() {
             <Masks ids={['bobo']} size={84} />
           </BigChoice>
           <BigChoice wide title="Multiplayer" text={roomBusy ?? 'Questo schermo è il tavolo.'} color={colors.accent2} onPress={multiplayer}>
-            <Masks ids={['lulu', 'fio']} size={84} />
+            <Masks ids={['gnaf', 'fio']} size={84} />
           </BigChoice>
         </View>
         <View style={{ flexDirection: 'row', gap: 16, alignItems: 'stretch' }}>
@@ -177,7 +177,7 @@ export default function Home() {
         <Masks ids={['bobo']} size={76} />
       </BigChoice>
       <BigChoice title="Multiplayer" text={roomBusy ?? 'Una stanza: ognuno entra dal suo telefono.'} color={colors.accent2} onPress={multiplayer}>
-        <Masks ids={['lulu', 'pim', 'fio']} size={76} />
+        <Masks ids={['gnaf', 'fio']} size={76} />
       </BigChoice>
       <AllGames />
       <CodeRow code={code} setCode={setCode} go={go} />

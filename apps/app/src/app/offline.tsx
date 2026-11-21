@@ -57,9 +57,9 @@ export default function Offline() {
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
           <CharacterAvatar id="bobo" size={62} />
           <View style={{ flexDirection: 'row' }}>
-            <CharacterAvatar id="trio" size={62} />
+            <CharacterAvatar id="gnaf" size={62} />
             <View style={{ marginLeft: -14 }}>
-              <CharacterAvatar id="tic" size={62} />
+              <CharacterAvatar id="fio" size={62} />
             </View>
           </View>
         </View>

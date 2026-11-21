@@ -2,7 +2,7 @@ import { Image, View, type ImageSourcePropType } from 'react-native';
 
 /**
  * Le icone dei giochi: le copertine di Tavolata ricolorate nello stile Pop (21/11/2026).
- * I fondi pieni si alternano tra dodici colori Pop (POP_TILES in theme.ts), scelti perché due vicini
+ * I fondi pieni si alternano tra sette colori Pop, uno per tinta (POP_TILES in theme.ts), scelti perché due vicini
  * non siano mai uguali e il fondo non sia del colore del disegno.
  */
 const ART: Record<string, ImageSourcePropType> = {
