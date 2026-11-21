@@ -469,22 +469,22 @@ const pillM = (active: boolean) => ({ backgroundColor: active ? '#FFC933' : 'rgb
 
 const styles = StyleSheet.create({
   stickerWrap: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' },
-  sticker: { backgroundColor: colors.accent2, borderWidth: 3, borderColor: colors.line, borderRadius: 18, paddingHorizontal: 22, paddingVertical: 10, transform: [{ rotate: '-3deg' }], boxShadow: `0px 6px 0px ${colors.line}` },
-  badge: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 6, paddingLeft: 6, paddingRight: 12, borderRadius: 18, borderWidth: 3, borderColor: colors.line, minWidth: 120, backgroundColor: colors.surface, boxShadow: `0px 4px 0px ${colors.line}` },
+  sticker: { backgroundColor: colors.accent2, borderWidth: 1.5, borderColor: colors.line, borderRadius: 18, paddingHorizontal: 22, paddingVertical: 10, transform: [{ rotate: '-3deg' }], boxShadow: `0px 6px 16px rgba(0,0,0,0.35)` },
+  badge: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 6, paddingLeft: 6, paddingRight: 12, borderRadius: 18, borderWidth: 1.5, borderColor: colors.line, minWidth: 120, backgroundColor: colors.surface, boxShadow: `0px 6px 16px rgba(0,0,0,0.35)` },
   opponents: { gap: 8, paddingHorizontal: 8, paddingVertical: 8, flexGrow: 1, justifyContent: 'center' },
   // La mano sale un po' sul bordo del tavolo, come le carte tenute in mano sopra il panno.
   hand: { flexDirection: 'row', justifyContent: 'center', alignItems: 'flex-end', paddingHorizontal: 8, paddingTop: 16, zIndex: 5 },
   feltFrame: { flex: 1, marginHorizontal: 4 },
   felt: { alignItems: 'center', justifyContent: 'flex-start', gap: 10, padding: 8 },
   // I posti al tavolo: pillole scure e trasparenti come la striscia delle mosse, senza bordi.
-  seatPill: { flexDirection: 'row', alignItems: 'center', gap: 7, paddingVertical: 3, paddingLeft: 3, paddingRight: 14, borderRadius: 999, backgroundColor: 'rgba(18,5,43,0.55)' },
+  seatPill: { flexDirection: 'row', alignItems: 'center', gap: 7, paddingVertical: 3, paddingLeft: 3, paddingRight: 14, borderRadius: 999, backgroundColor: 'rgba(13,14,17,0.55)' },
   seatPillCompact: { gap: 4, paddingRight: 8, alignSelf: 'stretch' },
-  cornerNote: { maxWidth: 220, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, backgroundColor: '#12052BCC' },
-  myChip: { alignItems: 'center', gap: 2, padding: 4, borderRadius: 14, backgroundColor: 'rgba(18,5,43,0.55)' },
+  cornerNote: { maxWidth: 220, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, backgroundColor: '#0D0E11CC' },
+  myChip: { alignItems: 'center', gap: 2, padding: 4, borderRadius: 14, backgroundColor: 'rgba(13,14,17,0.55)' },
   goal: { backgroundColor: colors.accent, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 3, borderWidth: 2, borderColor: colors.line, marginTop: 4 },
   slot: { borderWidth: 2, borderStyle: 'dashed', borderColor: 'rgba(255,255,255,0.3)', backgroundColor: 'rgba(0,0,0,0.22)', alignItems: 'center', justifyContent: 'center' },
   slotBadge: { paddingHorizontal: 7, paddingVertical: 1.5, borderRadius: 8, backgroundColor: 'rgba(0,0,0,0.45)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
-  banner: { alignSelf: 'center', paddingHorizontal: 18, paddingVertical: 10, borderRadius: 999, backgroundColor: colors.surface2, marginVertical: 6, borderWidth: 3, borderColor: colors.line, boxShadow: `0px 4px 0px ${colors.line}` },
+  banner: { alignSelf: 'center', paddingHorizontal: 18, paddingVertical: 10, borderRadius: 999, backgroundColor: colors.surface2, marginVertical: 6, borderWidth: 1.5, borderColor: colors.line, boxShadow: `0px 6px 16px rgba(0,0,0,0.35)` },
 });
 
 /**

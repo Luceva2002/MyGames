@@ -15,7 +15,7 @@ export function cardRatio(deck: Card['deck']): number {
 }
 
 /** I quattro colori di UNO nella palette di Tavolata (carta nera per i jolly). */
-export const UNO_COLORS: Record<string, string> = { r: '#FF4D6D', g: '#2FCB7A', b: '#3D8BFF', y: '#FFD23F', w: '#2A1650' };
+export const UNO_COLORS: Record<string, string> = { r: '#FF4D6D', g: '#2FCB7A', b: '#3D8BFF', y: '#FFC933', w: '#2A1650' };
 const UNO_INK = colors.line;
 const UNO_CREAM = '#FDFAE8';
 
@@ -289,7 +289,7 @@ const styles = StyleSheet.create({
     borderWidth: 3,
     borderColor: colors.line,
     overflow: 'hidden',
-    boxShadow: `0px 5px 0px ${colors.line}, 0px 8px 14px rgba(0,0,0,0.35)`,
+    boxShadow: '0px 6px 16px rgba(0,0,0,0.35)',
   },
   // La carta scelta o prendibile: solo il contorno cambia colore, senza ingrossarsi.
   selected: { borderColor: colors.accent },
@@ -303,7 +303,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingHorizontal: 6,
     paddingVertical: 1,
-    boxShadow: `0px 3px 0px ${colors.line}`,
+    boxShadow: `0px 6px 16px rgba(0,0,0,0.35)`,
     zIndex: 10,
   },
 });

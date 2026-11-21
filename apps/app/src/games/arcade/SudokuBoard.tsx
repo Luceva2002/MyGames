@@ -95,7 +95,7 @@ export function SudokuBoard({ view, myTurn, onMove }: BoardProps<SudokuView, Sud
     return (
       <TableBg table="teal">
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-          <View style={{ width: '100%', maxWidth: 340, gap: 12, padding: 22, borderRadius: 26, backgroundColor: colors.surface, borderWidth: 3, borderColor: colors.line, boxShadow: `0px 8px 0px ${colors.line}` }}>
+          <View style={{ width: '100%', maxWidth: 340, gap: 12, padding: 22, borderRadius: 26, backgroundColor: colors.surface, borderWidth: 1.5, borderColor: colors.line, boxShadow: `0px 6px 16px rgba(0,0,0,0.35)` }}>
             <T size={28} weight="900" center>
               Sudoku
             </T>
@@ -129,7 +129,7 @@ export function SudokuBoard({ view, myTurn, onMove }: BoardProps<SudokuView, Sud
           style={{ top: 8, left: 8 }}
         />
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }} onLayout={onLayout}>
-          <View style={{ width: size, height: size, backgroundColor: '#FFFDF5', borderRadius: 12, borderWidth: 3, borderColor: colors.line, overflow: 'hidden', boxShadow: `0px 6px 0px ${colors.line}` }}>
+          <View style={{ width: size, height: size, backgroundColor: '#FFFDF5', borderRadius: 12, borderWidth: 1.5, borderColor: colors.line, overflow: 'hidden', boxShadow: `0px 6px 16px rgba(0,0,0,0.35)` }}>
             {view.values.map((v, i) => {
               const r = Math.floor(i / 9);
               const c = i % 9;
@@ -148,7 +148,7 @@ export function SudokuBoard({ view, myTurn, onMove }: BoardProps<SudokuView, Sud
                   style={{ position: 'absolute', left: c * cs, top: r * cs, width: cs, height: cs, backgroundColor: bg, alignItems: 'center', justifyContent: 'center', borderRightWidth: c === 8 ? 0 : c % 3 === 2 ? 2.5 : 0.5, borderBottomWidth: r === 8 ? 0 : r % 3 === 2 ? 2.5 : 0.5, borderColor: c % 3 === 2 || r % 3 === 2 ? colors.line : '#BBAEDD' }}
                 >
                   {v ? (
-                    <T size={cs * 0.56} weight={view.given[i] ? '900' : '800'} color={view.given[i] ? colors.line : '#6B2BD9'} style={{ lineHeight: cs * 0.7 }}>
+                    <T size={cs * 0.56} weight={view.given[i] ? '900' : '800'} color={view.given[i] ? colors.line : '#5B3FE0'} style={{ lineHeight: cs * 0.7 }}>
                       {v}
                     </T>
                   ) : wrong ? (
@@ -184,7 +184,7 @@ export function SudokuBoard({ view, myTurn, onMove }: BoardProps<SudokuView, Sud
                   accessibilityLabel={pencil ? `Promemoria ${n}` : `Scrivi ${n}`}
                   disabled={done}
                   onPress={() => press(n)}
-                  style={({ pressed }) => ({ flex: 1, height: 52, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: done ? 'rgba(18,5,43,0.4)' : pencil ? colors.surface2 : '#FFFDF5', borderWidth: 3, borderColor: colors.line, transform: [{ translateY: pressed ? 2 : 0 }], boxShadow: `0px ${pressed ? 1 : 4}px 0px ${colors.line}` })}
+                  style={({ pressed }) => ({ flex: 1, height: 52, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: done ? 'rgba(13,14,17,0.4)' : pencil ? colors.surface2 : '#FFFDF5', borderWidth: 1.5, borderColor: colors.line, transform: [{ translateY: pressed ? 2 : 0 }], boxShadow: `0px 6px 16px rgba(0,0,0,0.35)` })}
                 >
                   <T size={pencil ? 18 : 24} weight="900" color={done ? 'transparent' : pencil ? '#fff' : colors.line}>
                     {n}
@@ -225,7 +225,7 @@ function Tool({ icon, label, on, disabled, onPress }: { icon: string; label: str
         tap();
         onPress();
       }}
-      style={({ pressed }) => ({ flex: 1, flexDirection: 'row', gap: 6, height: 46, borderRadius: 999, alignItems: 'center', justifyContent: 'center', backgroundColor: on ? colors.accent : colors.surface, borderWidth: 3, borderColor: colors.line, opacity: disabled ? 0.5 : 1, transform: [{ translateY: pressed ? 2 : 0 }], boxShadow: `0px ${pressed ? 1 : 4}px 0px ${colors.line}` })}
+      style={({ pressed }) => ({ flex: 1, flexDirection: 'row', gap: 6, height: 46, borderRadius: 999, alignItems: 'center', justifyContent: 'center', backgroundColor: on ? colors.accent : colors.surface, borderWidth: 1.5, borderColor: colors.line, opacity: disabled ? 0.5 : 1, transform: [{ translateY: pressed ? 2 : 0 }], boxShadow: `0px 6px 16px rgba(0,0,0,0.35)` })}
     >
       <T size={16}>{icon}</T>
       <T size={14} weight="800" color={on ? colors.onAccent : '#fff'}>

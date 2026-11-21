@@ -453,7 +453,7 @@ const styles = StyleSheet.create({
   choice: { minHeight: MIN_TOUCH + 4, minWidth: 140, paddingHorizontal: 14, justifyContent: 'center', borderRadius: radius.m, borderWidth: 2, borderColor: colors.line, backgroundColor: colors.surface },
   roster: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'center' },
   rosterItem: { padding: 8, borderRadius: radius.m, borderWidth: 2, backgroundColor: colors.surface, minWidth: 120, gap: 2 },
-  notice: { backgroundColor: '#12052BE6', borderRadius: 999, paddingHorizontal: 20, paddingVertical: 10, borderWidth: 2, borderColor: colors.accent },
+  notice: { backgroundColor: '#0D0E11E6', borderRadius: 999, paddingHorizontal: 20, paddingVertical: 10, borderWidth: 2, borderColor: colors.accent },
   chip: { minHeight: MIN_TOUCH, justifyContent: 'center', paddingHorizontal: 14, borderRadius: 999, backgroundColor: colors.surface2 },
   num: { width: 28, height: 28, borderRadius: 14, backgroundColor: colors.surface2, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: colors.line },
   toggle: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: MIN_TOUCH + 8, padding: 12, borderRadius: radius.m, backgroundColor: colors.surface2, borderWidth: 2, borderColor: colors.line },

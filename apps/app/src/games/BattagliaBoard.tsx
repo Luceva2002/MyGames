@@ -7,7 +7,7 @@ import { sfx } from '../ui/sound';
 import { TableBg } from '../ui/tables';
 import { colors, font } from '../ui/theme';
 
-const WATER = '#3A1680';
+const WATER = '#202228';
 const SHIP = '#FFFDF6';
 const LETTERS = 'ABCDEFGHIJ';
 /** Quanto resta in vista il risultato di un colpo prima di passare all'altra griglia. */
@@ -96,7 +96,7 @@ function Sea({ cell, labels, sea, ships, lastCell, onPress, can, active }: {
             </View>
           ))}
           {lastCell !== null && lastCell !== undefined && (
-            <View pointerEvents="none" style={{ position: 'absolute', left: (lastCell % NAVALE_SIZE) * cell - 1, top: Math.floor(lastCell / NAVALE_SIZE) * cell - 1, width: cell + 2, height: cell + 2, borderRadius: 4, borderWidth: 3, borderColor: colors.accent }} />
+            <View pointerEvents="none" style={{ position: 'absolute', left: (lastCell % NAVALE_SIZE) * cell - 1, top: Math.floor(lastCell / NAVALE_SIZE) * cell - 1, width: cell + 2, height: cell + 2, borderRadius: 4, borderWidth: 1.5, borderColor: colors.accent }} />
           )}
         </View>
       </View>

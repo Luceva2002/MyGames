@@ -221,8 +221,8 @@ export function SetteBoard({ view, me, names, myTurn, onMove }: BoardProps<Sette
 }
 
 const styles = StyleSheet.create({
-  seat: { padding: 8, gap: 6, borderRadius: 16, backgroundColor: 'rgba(18,5,43,0.55)', minWidth: 150 },
+  seat: { padding: 8, gap: 6, borderRadius: 16, backgroundColor: 'rgba(13,14,17,0.55)', minWidth: 150 },
   seatCompact: { flexDirection: 'row', alignItems: 'center', gap: 6, padding: 5, minWidth: 0, borderRadius: 12 },
-  meter: { height: 10, borderRadius: 999, backgroundColor: '#12052B88', borderWidth: 2, borderColor: colors.line, overflow: 'hidden' },
-  chip: { width: 58, height: 58, borderRadius: 29, backgroundColor: colors.accent, borderWidth: 4, borderColor: colors.line, borderStyle: 'dashed', alignItems: 'center', justifyContent: 'center', boxShadow: `0px 4px 0px ${colors.line}` },
+  meter: { height: 10, borderRadius: 999, backgroundColor: '#0D0E1188', borderWidth: 2, borderColor: colors.line, overflow: 'hidden' },
+  chip: { width: 58, height: 58, borderRadius: 29, backgroundColor: colors.accent, borderWidth: 1.5, borderColor: colors.line, borderStyle: 'dashed', alignItems: 'center', justifyContent: 'center', boxShadow: `0px 6px 16px rgba(0,0,0,0.35)` },
 });

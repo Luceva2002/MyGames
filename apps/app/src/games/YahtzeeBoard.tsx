@@ -43,9 +43,9 @@ export function Die({ value, size, held, onPress, blank }: { value: number; size
           height: size,
           borderRadius: size * 0.22,
           backgroundColor: '#FFFBEE',
-          borderWidth: 3,
+          borderWidth: 1.5,
           borderColor: held ? colors.accent2 : colors.line,
-          boxShadow: held ? `0px 0px 0px 3px ${colors.accent}, 0px 10px 0px ${colors.line}` : `0px 5px 0px ${colors.line}`,
+          boxShadow: held ? `0px 0px 0px 3px ${colors.accent}, 0px 6px 16px rgba(0,0,0,0.35)` : `0px 6px 16px rgba(0,0,0,0.35)`,
           transform: [{ translateY: held ? -10 : 0 }],
         }}
       >
@@ -323,7 +323,7 @@ function ScoreSheet({ view, names, me, seat, canPick, onPick }: { view: YahtzeeV
 }
 
 const styles = StyleSheet.create({
-  sheet: { alignSelf: 'center', width: '100%', gap: 6, padding: 8, marginHorizontal: 0, borderRadius: 18, backgroundColor: '#12052BD9', borderWidth: 3, borderColor: colors.line },
+  sheet: { alignSelf: 'center', width: '100%', gap: 6, padding: 8, marginHorizontal: 0, borderRadius: 18, backgroundColor: '#0D0E11D9', borderWidth: 1.5, borderColor: colors.line },
   cell: { flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 34, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12, backgroundColor: '#FFFFFF10', borderWidth: 2, borderColor: 'transparent' },
   cellDone: { backgroundColor: '#00000033' },
   cellHot: { backgroundColor: colors.accent, borderColor: colors.line },
@@ -333,10 +333,10 @@ const styles = StyleSheet.create({
   bonusTrack: { height: 8, borderRadius: 999, backgroundColor: '#00000055', overflow: 'hidden' },
   compareBtn: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999, borderWidth: 2, borderColor: colors.line, backgroundColor: colors.surface2 },
   scrim: { flex: 1, backgroundColor: colors.scrim, alignItems: 'center', justifyContent: 'center', padding: 16 },
-  compareCard: { width: '100%', maxWidth: 560, gap: 10, padding: 18, borderRadius: 24, backgroundColor: colors.surface, borderWidth: 3, borderColor: colors.line },
+  compareCard: { width: '100%', maxWidth: 560, gap: 10, padding: 18, borderRadius: 24, backgroundColor: colors.surface, borderWidth: 1.5, borderColor: colors.line },
   compareRow: { borderTopWidth: 1, borderColor: colors.line, minHeight: 32, alignItems: 'center' },
-  player: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 4, paddingLeft: 4, paddingRight: 10, borderRadius: 999, backgroundColor: 'rgba(18,5,43,0.55)' },
+  player: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 4, paddingLeft: 4, paddingRight: 10, borderRadius: 999, backgroundColor: 'rgba(13,14,17,0.55)' },
   holdTag: { paddingHorizontal: 6, paddingVertical: 1, borderRadius: 6, backgroundColor: colors.accent, borderWidth: 1.5, borderColor: colors.line },
-  rolls: { paddingHorizontal: 10, paddingVertical: 8, borderRadius: 999, backgroundColor: '#12052BB3' },
+  rolls: { paddingHorizontal: 10, paddingVertical: 8, borderRadius: 999, backgroundColor: '#0D0E11B3' },
   rollDot: { width: 14, height: 14, borderRadius: 7, borderWidth: 2, borderColor: colors.line, backgroundColor: '#FFFFFF33' },
 });

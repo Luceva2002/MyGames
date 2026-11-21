@@ -16,13 +16,13 @@ import { Hud, NO_SELECT, StartCard, useFrame, useRecord } from './kit';
 const FRUITS: { e: string; juice: string }[] = [
   { e: '🍉', juice: '#FF4D6D' },
   { e: '🍊', juice: '#FF9F1C' },
-  { e: '🍋', juice: '#FFE14D' },
+  { e: '🍋', juice: '#FFC933' },
   { e: '🍎', juice: '#FF3B3B' },
   { e: '🍐', juice: '#C8F560' },
   { e: '🍑', juice: '#FFB38A' },
   { e: '🍇', juice: '#9B5DE5' },
   { e: '🍓', juice: '#FF2E63' },
-  { e: '🍍', juice: '#FFD23F' },
+  { e: '🍍', juice: '#FFC933' },
   { e: '🥝', juice: '#7CF0B0' },
 ];
 const LIVES = 3;
@@ -265,7 +265,7 @@ function Game({ seed, active, onMove }: { seed: number; active: boolean; onMove:
         ))}
         {g.things.map((t) => (
           <View key={t.id} pointerEvents="none" style={{ position: 'absolute', left: t.x - t.r, top: t.y - t.r, width: t.r * 2, height: t.r * 2, alignItems: 'center', justifyContent: 'center', transform: [{ rotate: `${t.rot}deg` }] }}>
-            {t.fruit < 0 && <View style={{ position: 'absolute', width: t.r * 2, height: t.r * 2, borderRadius: t.r, backgroundColor: 'rgba(255,46,136,0.35)', borderWidth: 3, borderColor: colors.accent2 }} />}
+            {t.fruit < 0 && <View style={{ position: 'absolute', width: t.r * 2, height: t.r * 2, borderRadius: t.r, backgroundColor: 'rgba(255,46,136,0.35)', borderWidth: 1.5, borderColor: colors.accent2 }} />}
             <T size={t.r * 1.7} style={{ lineHeight: t.r * 2, textAlign: 'center' }}>
               {t.fruit < 0 ? '🧨' : FRUITS[t.fruit].e}
             </T>
@@ -279,7 +279,7 @@ function Game({ seed, active, onMove }: { seed: number; active: boolean; onMove:
         )}
         {g.pops.map((p) => (
           <View key={p.id} pointerEvents="none" style={{ position: 'absolute', left: p.x - 110, top: p.y - 20, width: 220, alignItems: 'center', opacity: Math.min(1, p.life / 400) }}>
-            <T size={p.text === '✕' ? 34 : 24} weight="900" color={p.text === '✕' ? colors.accent2 : colors.accent} style={{ textShadowColor: colors.line, textShadowOffset: { width: 0, height: 3 }, textShadowRadius: 0 }}>
+            <T size={p.text === '✕' ? 34 : 24} weight="900" color={p.text === '✕' ? colors.accent2 : colors.accent}>
               {p.text}
             </T>
           </View>

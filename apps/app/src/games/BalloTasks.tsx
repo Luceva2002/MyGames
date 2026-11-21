@@ -26,7 +26,7 @@ function shuffled<A>(items: A[], rand: () => number) {
 }
 
 const box = { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8 } as const;
-const big = (size: number, bg: string) => ({ width: size, height: size, borderRadius: size * 0.24, borderWidth: 3, borderColor: colors.line, backgroundColor: bg, alignItems: 'center', justifyContent: 'center' }) as const;
+const big = (size: number, bg: string) => ({ width: size, height: size, borderRadius: size * 0.24, borderWidth: 1.5, borderColor: colors.line, backgroundColor: bg, alignItems: 'center', justifyContent: 'center' }) as const;
 
 function Maschere({ seed, width, onDone }: { seed: number; width: number; onDone: () => void }) {
   const order = useMemo(() => shuffled([1, 2, 3, 4, 5, 6], seeded(seed)), [seed]);
@@ -65,9 +65,9 @@ function Maschere({ seed, width, onDone }: { seed: number; width: number; onDone
 }
 
 const SEQ_COLORS = [
-  { id: 'magenta', bg: '#FF2E88', mark: '♥' },
-  { id: 'giallo', bg: '#FFE14D', mark: '★' },
-  { id: 'turchese', bg: '#19D3C5', mark: '◆' },
+  { id: 'magenta', bg: '#FF4F8B', mark: '♥' },
+  { id: 'giallo', bg: '#FFC933', mark: '★' },
+  { id: 'turchese', bg: '#2EC4B6', mark: '◆' },
   { id: 'bianco', bg: '#FFFDF6', mark: '●' },
 ];
 
@@ -157,7 +157,7 @@ function Vino({ seed, width, onDone }: { seed: number; width: number; onDone: ()
   const h = Math.min(170, width * 0.55);
   return (
     <View style={{ gap: 8, alignItems: 'center' }}>
-      <View accessibilityLabel={`Vino ${Math.round(level)}, tacca ${target}`} style={{ width: 100, height: h, borderWidth: 3, borderColor: colors.line, borderRadius: 14, backgroundColor: '#FFFDF6', overflow: 'hidden' }}>
+      <View accessibilityLabel={`Vino ${Math.round(level)}, tacca ${target}`} style={{ width: 100, height: h, borderWidth: 1.5, borderColor: colors.line, borderRadius: 14, backgroundColor: '#FFFDF6', overflow: 'hidden' }}>
         <View style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: `${level}%`, backgroundColor: colors.accent2 }} />
         <View style={{ position: 'absolute', left: 0, right: 0, bottom: `${target - BAND}%`, height: `${BAND * 2}%`, borderTopWidth: 3, borderBottomWidth: 3, borderColor: colors.line, backgroundColor: 'rgba(255,225,77,0.55)' }} />
       </View>
@@ -220,7 +220,7 @@ export function BalloTaskCard({ task, width, onDone }: { task: BalloTask; width:
   };
   const inner = width - 28;
   return (
-    <View style={{ width, gap: 10, padding: 11, borderRadius: 22, backgroundColor: colors.surface, borderWidth: 3, borderColor: colors.line }}>
+    <View style={{ width, gap: 10, padding: 11, borderRadius: 22, backgroundColor: colors.surface, borderWidth: 1.5, borderColor: colors.line }}>
       <T size={17} weight="900" center>
         {TITLES[task.kind]}
       </T>

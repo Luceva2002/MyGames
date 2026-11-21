@@ -347,6 +347,6 @@ const styles = StyleSheet.create({
   phone: { padding: 16, gap: 16, alignItems: 'center', flexGrow: 1 },
   choice: { minHeight: MIN_TOUCH + 4, minWidth: 140, paddingHorizontal: 14, justifyContent: 'center', borderRadius: radius.m, borderWidth: 2, borderColor: colors.line, backgroundColor: colors.surface },
   rosterItem: { padding: 8, borderRadius: radius.m, borderWidth: 2, backgroundColor: colors.surface, minWidth: 120, gap: 2 },
-  notice: { backgroundColor: '#12052BE6', borderRadius: 999, paddingHorizontal: 20, paddingVertical: 10, borderWidth: 2, borderColor: colors.accent },
+  notice: { backgroundColor: '#0D0E11E6', borderRadius: 999, paddingHorizontal: 20, paddingVertical: 10, borderWidth: 2, borderColor: colors.accent },
   roleChip: { minHeight: MIN_TOUCH, justifyContent: 'center', paddingHorizontal: 14, borderRadius: 999, backgroundColor: colors.surface2 },
 });

@@ -130,7 +130,7 @@ export function PadButton({ icon, label, onPress, onPressIn, size = 64, color = 
       onPress={onPress}
       onPressIn={onPressIn}
       hitSlop={6}
-      style={({ pressed }) => [styles.pad, { width: size, height: size, borderRadius: size / 2, backgroundColor: color, transform: [{ translateY: pressed ? 3 : 0 }], boxShadow: `0px ${pressed ? 2 : 5}px 0px ${colors.line}` }]}
+      style={({ pressed }) => [styles.pad, { width: size, height: size, borderRadius: size / 2, backgroundColor: color, transform: [{ translateY: pressed ? 3 : 0 }], boxShadow: `0px 6px 16px rgba(0,0,0,0.35)` }]}
     >
       <T size={size * 0.42} weight="900" color={color === colors.accent ? colors.onAccent : '#fff'} style={{ lineHeight: size * 0.5 }}>
         {icon}
@@ -149,9 +149,9 @@ export function swipeDir(dx: number, dy: number, min = 24): Dir | null {
 
 const styles = StyleSheet.create({
   hud: { position: 'absolute', zIndex: 20, gap: 6, alignItems: 'flex-start' },
-  hudPill: { flexDirection: 'row', alignItems: 'baseline', gap: 6, paddingHorizontal: 12, paddingVertical: 4, borderRadius: 999, backgroundColor: 'rgba(18,5,43,0.78)', borderWidth: 2, borderColor: colors.line },
+  hudPill: { flexDirection: 'row', alignItems: 'baseline', gap: 6, paddingHorizontal: 12, paddingVertical: 4, borderRadius: 999, backgroundColor: 'rgba(13,14,17,0.78)', borderWidth: 2, borderColor: colors.line },
   hudSmall: { paddingVertical: 3 },
-  cover: { position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, zIndex: 30, alignItems: 'center', justifyContent: 'center', padding: 20, backgroundColor: 'rgba(18,5,43,0.45)' },
-  card: { width: '100%', maxWidth: 360, gap: 10, padding: 22, borderRadius: 26, backgroundColor: colors.surface, borderWidth: 3, borderColor: colors.line, boxShadow: `0px 8px 0px ${colors.line}` },
-  pad: { alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: colors.line },
+  cover: { position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, zIndex: 30, alignItems: 'center', justifyContent: 'center', padding: 20, backgroundColor: 'rgba(13,14,17,0.45)' },
+  card: { width: '100%', maxWidth: 360, gap: 10, padding: 22, borderRadius: 26, backgroundColor: colors.surface, borderWidth: 1.5, borderColor: colors.line, boxShadow: `0px 6px 16px rgba(0,0,0,0.35)` },
+  pad: { alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: colors.line },
 });

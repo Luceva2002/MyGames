@@ -18,17 +18,17 @@ const SLIDE_MS = 110;
 const TILE: Record<number, { bg: string; fg: string }> = {
   2: { bg: '#FFFFFF', fg: colors.line },
   4: { bg: '#FFF1B8', fg: colors.line },
-  8: { bg: '#19D3C5', fg: colors.line },
+  8: { bg: '#2EC4B6', fg: colors.line },
   16: { bg: '#56B4E9', fg: colors.line },
   32: { bg: '#B57BFF', fg: '#fff' },
-  64: { bg: '#FF2E88', fg: '#fff' },
-  128: { bg: '#FFE14D', fg: colors.line },
+  64: { bg: '#FF4F8B', fg: '#fff' },
+  128: { bg: '#FFC933', fg: colors.line },
   256: { bg: '#FF9F1C', fg: colors.line },
   512: { bg: '#7CF0B0', fg: colors.line },
   1024: { bg: '#E0457B', fg: '#fff' },
-  2048: { bg: '#FFD23F', fg: colors.line },
+  2048: { bg: '#FFC933', fg: colors.line },
 };
-const tileColor = (v: number) => TILE[v] ?? { bg: '#12052B', fg: colors.accent };
+const tileColor = (v: number) => TILE[v] ?? { bg: '#0D0E11', fg: colors.accent };
 
 export function RaddoppiaBoard({ view, myTurn, onMove }: BoardProps<RaddoppiaView, RaddoppiaMove>) {
   const { best, submit } = useRecord('raddoppia');
@@ -87,7 +87,7 @@ export function RaddoppiaBoard({ view, myTurn, onMove }: BoardProps<RaddoppiaVie
       <View style={[{ flex: 1, paddingTop: 64, padding: 10 }, NO_SELECT]} {...responder.panHandlers}>
         <Hud score={view.score} best={best !== null ? Math.max(best, view.over ? view.score : 0) : null} extra={`tessera ${view.best}`} style={{ top: 8, left: 8 }} />
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 14 }} onLayout={onLayout}>
-          <View style={{ width: size, height: size, borderRadius: 20, backgroundColor: 'rgba(18,5,43,0.78)', borderWidth: 3, borderColor: colors.line, boxShadow: `0px 6px 0px ${colors.line}` }}>
+          <View style={{ width: size, height: size, borderRadius: 20, backgroundColor: 'rgba(13,14,17,0.78)', borderWidth: 1.5, borderColor: colors.line, boxShadow: `0px 6px 16px rgba(0,0,0,0.35)` }}>
             {Array.from({ length: N * N }, (_, i) => (
               <View key={i} style={{ position: 'absolute', left: GAP + (i % N) * (cell + GAP), top: GAP + Math.floor(i / N) * (cell + GAP), width: cell, height: cell, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.07)' }} />
             ))}
@@ -130,7 +130,7 @@ function Tile({ tile, cell, ghost, merged, spawned, moveKey, reduced }: { tile: 
     <Animated.View
       pointerEvents="none"
       style={[
-        { position: 'absolute', left: 0, top: 0, width: cell, height: cell, borderRadius: 12, backgroundColor: c.bg, borderWidth: 3, borderColor: colors.line, alignItems: 'center', justifyContent: 'center', zIndex: ghost ? 0 : 1, boxShadow: `0px 4px 0px ${colors.line}` },
+        { position: 'absolute', left: 0, top: 0, width: cell, height: cell, borderRadius: 12, backgroundColor: c.bg, borderWidth: 1.5, borderColor: colors.line, alignItems: 'center', justifyContent: 'center', zIndex: ghost ? 0 : 1, boxShadow: `0px 6px 16px rgba(0,0,0,0.35)` },
         anim,
       ]}
     >

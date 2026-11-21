@@ -72,7 +72,7 @@ export function T({ children, style, size = 16, weight = '500', color, center, l
 }) {
   const fontSize = useTextSize(size);
   const { colors: c, font } = usePalette();
-  // I testi "900" sono titoli, punteggi e cartelli: Outfit nel guscio, Bagel Fat One sui tavoli di prima. Il resto è Outfit nel guscio e Nunito sui tavoli.
+  // I testi "900" sono titoli, punteggi e cartelli, nel carattere più pieno; gli altri pesi usano bold o body.
   const w = String(weight);
   const fontFamily = w === '900' ? font.display : Number(w) >= 700 || w === 'bold' ? font.bold : font.body;
   return (
@@ -189,7 +189,7 @@ export function PlayerTag({ seat, name, size = 15, active, suffix }: { seat: num
 export function Panel({ children, style }: { children: ReactNode; style?: StyleProp<ViewStyle> }) {
   const hc = useSettings().highContrast;
   const { colors: c, shell } = usePalette();
-  return <View style={[styles.panel, { backgroundColor: c.surface, borderColor: c.line, boxShadow: shell ? SOFT : `0px 6px 0px ${c.line}` }, shell && { borderWidth: 1, borderRadius: 22 }, hc && { borderColor: c.muted }, style]}>{children}</View>;
+  return <View style={[styles.panel, { backgroundColor: c.surface, borderColor: c.line, boxShadow: shell ? SOFT : `0px 6px 16px rgba(0,0,0,0.35)` }, shell && { borderWidth: 1, borderRadius: 22 }, hc && { borderColor: c.muted }, style]}>{children}</View>;
 }
 
 export function Row({ children, gap = 8, style, wrap }: { children: ReactNode; gap?: number; style?: StyleProp<ViewStyle>; wrap?: boolean }) {
@@ -273,7 +273,7 @@ export function Confirm({ visible, title, message, confirmLabel, onConfirm, onCa
 }
 
 /** Ombra piena verso il basso, del colore del contorno. */
-const shadowOf = (line: string, y: number) => ({ boxShadow: `0px ${y}px 0px ${line}` }) as const;
+const shadowOf = (_line: string, y: number) => ({ boxShadow: `0px ${y}px ${y * 3}px rgba(0,0,0,0.35)` }) as const;
 /** Finestre del guscio Pop: superficie scura, filo sottile, ombra morbida. */
 const sheetShell: ViewStyle = { backgroundColor: SHELL.colors.surface, borderColor: SHELL.colors.line, borderWidth: 1, boxShadow: '0px 18px 48px rgba(0,0,0,0.5)' };
 
@@ -286,9 +286,9 @@ const styles = StyleSheet.create({
   buttonSmall: { minHeight: MIN_TOUCH, paddingVertical: 10, paddingHorizontal: 16 },
   round: { width: MIN_TOUCH, height: MIN_TOUCH, flexShrink: 0, borderRadius: MIN_TOUCH / 2, borderWidth: OUTLINE, borderColor: colors.line, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
   chip: { minHeight: MIN_TOUCH - 4, justifyContent: 'center', paddingVertical: 8, paddingHorizontal: 16, borderRadius: 999, borderWidth: OUTLINE, borderColor: colors.line, backgroundColor: colors.surface },
-  panel: { backgroundColor: colors.surface, borderRadius: radius.l, padding: 16, gap: 12, borderWidth: OUTLINE, borderColor: colors.line, boxShadow: `0px 6px 0px ${colors.line}`, marginBottom: 6 },
-  sheet: { width: '100%', maxWidth: 460, gap: 10, padding: 18, borderRadius: 28, backgroundColor: colors.surface, borderWidth: OUTLINE, borderColor: colors.line, boxShadow: `0px 8px 0px ${colors.line}` },
-  sheetOption: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 64, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 18, borderWidth: OUTLINE, borderColor: colors.line, backgroundColor: colors.surface2, boxShadow: `0px 4px 0px ${colors.line}` },
+  panel: { backgroundColor: colors.surface, borderRadius: radius.l, padding: 16, gap: 12, borderWidth: OUTLINE, borderColor: colors.line, boxShadow: `0px 6px 16px rgba(0,0,0,0.35)`, marginBottom: 6 },
+  sheet: { width: '100%', maxWidth: 460, gap: 10, padding: 18, borderRadius: 28, backgroundColor: colors.surface, borderWidth: OUTLINE, borderColor: colors.line, boxShadow: `0px 6px 16px rgba(0,0,0,0.35)` },
+  sheetOption: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 64, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 18, borderWidth: OUTLINE, borderColor: colors.line, backgroundColor: colors.surface2, boxShadow: `0px 6px 16px rgba(0,0,0,0.35)` },
   scrim: { flex: 1, backgroundColor: colors.scrim, alignItems: 'center', justifyContent: 'center', padding: 16 },
-  dialog: { backgroundColor: colors.surface, borderRadius: radius.l, padding: 24, gap: 14, width: '100%', maxWidth: 420, borderWidth: OUTLINE, borderColor: colors.line, boxShadow: `0px 8px 0px ${colors.line}` },
+  dialog: { backgroundColor: colors.surface, borderRadius: radius.l, padding: 24, gap: 14, width: '100%', maxWidth: 420, borderWidth: OUTLINE, borderColor: colors.line, boxShadow: `0px 6px 16px rgba(0,0,0,0.35)` },
 });

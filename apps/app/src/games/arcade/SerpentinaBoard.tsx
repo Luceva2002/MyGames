@@ -13,8 +13,8 @@ import { type Dir, Hud, NO_SELECT, StartCard, swipeDir, useKeys, useRecord } fro
  * Si guida scorrendo il dito; sbattere contro il bordo o contro se stessa fa finire la partita.
  */
 const COLS = 12;
-const STRIPES = ['#FF2E88', '#FFE14D', '#19D3C5', '#B57BFF'];
-const CONFETTI = ['#FF2E88', '#FFE14D', '#19D3C5', '#FFFFFF', '#B57BFF', '#FF9F1C'];
+const STRIPES = ['#FF4F8B', '#FFC933', '#2EC4B6', '#B57BFF'];
+const CONFETTI = ['#FF4F8B', '#FFC933', '#2EC4B6', '#FFFFFF', '#B57BFF', '#FF9F1C'];
 const STEP: Record<Dir, [number, number]> = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
 const OPPOSITE: Record<Dir, Dir> = { up: 'down', down: 'up', left: 'right', right: 'left' };
 const GOLD_MS = 6000;
@@ -176,7 +176,7 @@ function Field({ seed, active, onMove, ROWS }: { seed: number; active: boolean; 
       <View style={[{ flex: 1, paddingTop: 64, paddingHorizontal: 8, paddingBottom: 8 }, NO_SELECT]} {...responder.panHandlers}>
         <Hud score={g.score} best={best} extra={`lunga ${g.body.length}`} style={{ top: 8, left: 8 }} />
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }} onLayout={onLayout}>
-          <View style={{ width: cell * COLS + 6, height: cell * ROWS + 6, borderRadius: 12, borderWidth: 3, borderColor: g.crash ? colors.accent2 : colors.line, backgroundColor: 'rgba(18,5,43,0.72)', overflow: 'hidden' }}>
+          <View style={{ width: cell * COLS + 6, height: cell * ROWS + 6, borderRadius: 12, borderWidth: 1.5, borderColor: g.crash ? colors.accent2 : colors.line, backgroundColor: 'rgba(13,14,17,0.72)', overflow: 'hidden' }}>
             {/* Scacchiera appena accennata. */}
             {Array.from({ length: ROWS }, (_, r) =>
               Array.from({ length: COLS }, (_, c) =>

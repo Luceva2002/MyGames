@@ -40,7 +40,7 @@ function PartyBar({ bar, goal, seconds, label }: { bar: number; goal: number; se
           </T>
         )}
       </View>
-      <View accessibilityLabel={`Barra della festa ${pct} per cento`} style={{ height: 20, borderRadius: 10, borderWidth: 3, borderColor: colors.line, backgroundColor: colors.surface, overflow: 'hidden' }}>
+      <View accessibilityLabel={`Barra della festa ${pct} per cento`} style={{ height: 20, borderRadius: 10, borderWidth: 1.5, borderColor: colors.line, backgroundColor: colors.surface, overflow: 'hidden' }}>
         <View style={{ width: `${pct}%`, height: '100%', backgroundColor: colors.accent2 }} />
       </View>
     </View>
@@ -54,7 +54,7 @@ function Guests({ names, out, traitors }: { names: string[]; out: boolean[]; tra
   return (
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 6 }}>
       {names.map((n, p) => (
-        <View key={p} style={{ flexDirection: 'row', alignItems: 'center', gap: 5, paddingVertical: 3, paddingLeft: 3, paddingRight: 10, borderRadius: 999, backgroundColor: 'rgba(18,5,43,0.6)', opacity: out[p] ? 0.55 : 1, maxWidth: '48%' }}>
+        <View key={p} style={{ flexDirection: 'row', alignItems: 'center', gap: 5, paddingVertical: 3, paddingLeft: 3, paddingRight: 10, borderRadius: 999, backgroundColor: 'rgba(13,14,17,0.6)', opacity: out[p] ? 0.55 : 1, maxWidth: '48%' }}>
           <SeatAvatar seat={p} name={n} size={size} />
           <T size={12} weight="800" lines={1} style={{ flexShrink: 1, textDecorationLine: out[p] ? 'line-through' : 'none' }} color={traitors?.includes(p) ? colors.accent : colors.text}>
             {n}
@@ -86,7 +86,7 @@ function RoleCard({ view, me, names, onSeen }: { view: BalloView; me: Seat; name
           sfx('card');
         }}
         onPressOut={() => setHeld(false)}
-        style={{ width: 280, minHeight: 280, borderRadius: 26, borderWidth: 3, borderColor: colors.line, backgroundColor: !held ? colors.brand : traitor ? colors.accent2 : colors.accent, alignItems: 'center', justifyContent: 'center', padding: 18, gap: 10, boxShadow: `0px 6px 0px ${colors.line}` }}
+        style={{ width: 280, minHeight: 280, borderRadius: 26, borderWidth: 1.5, borderColor: colors.line, backgroundColor: !held ? colors.brand : traitor ? colors.accent2 : colors.accent, alignItems: 'center', justifyContent: 'center', padding: 18, gap: 10, boxShadow: `0px 6px 16px rgba(0,0,0,0.35)` }}
       >
         <T size={56}>{!held ? '🎭' : traitor ? '🗡️' : '🥂'}</T>
         {held ? (
@@ -163,7 +163,7 @@ function TraitorActions({ view, names, me, onMove }: { view: BalloView; names: s
   if (view.out[me]) return null;
   if (picking) {
     return (
-      <View style={{ gap: 6, padding: 8, borderRadius: 18, backgroundColor: colors.accent2, borderWidth: 3, borderColor: colors.line, alignSelf: 'stretch' }}>
+      <View style={{ gap: 6, padding: 8, borderRadius: 18, backgroundColor: colors.accent2, borderWidth: 1.5, borderColor: colors.line, alignSelf: 'stretch' }}>
         <T size={14} weight="900" center>
           Chi smascheri?
         </T>
@@ -270,7 +270,7 @@ function Voto({ view, me, names, onMove }: { view: BalloView; me: Seat | null; n
               tap();
               setSel(p);
             }}
-            style={{ width: '48%', minHeight: 56, flexDirection: 'row', alignItems: 'center', gap: 6, padding: 5, borderRadius: 16, borderWidth: 3, borderColor: sel === p ? colors.accent : colors.line, backgroundColor: sel === p ? colors.surface2 : colors.surface }}
+            style={{ width: '48%', minHeight: 56, flexDirection: 'row', alignItems: 'center', gap: 6, padding: 5, borderRadius: 16, borderWidth: 1.5, borderColor: sel === p ? colors.accent : colors.line, backgroundColor: sel === p ? colors.surface2 : colors.surface }}
           >
             <SeatAvatar seat={p} name={names[p]} size={38} />
             <T size={13} weight="800" lines={1} style={{ flexShrink: 1 }}>

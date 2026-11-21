@@ -75,7 +75,7 @@ export function PuntiLineeBoard({ view, me, names, myTurn, onMove }: BoardProps<
         )}
         <View onLayout={onLayout} style={{ flex: 1, alignSelf: 'stretch', alignItems: 'center', justifyContent: 'center' }}>
           {side > 0 && (
-            <View style={{ width: side, height: side, borderRadius: 22, backgroundColor: colors.surface, borderWidth: 3, borderColor: colors.line, boxSizing: 'content-box' } as object}>
+            <View style={{ width: side, height: side, borderRadius: 22, backgroundColor: colors.surface, borderWidth: 1.5, borderColor: colors.line, boxSizing: 'content-box' } as object}>
               {view.boxes.map((owner, b) =>
                 owner === null ? null : (
                   <PopIn key={b} style={{ position: 'absolute', left: pos(b % n) + 2, top: pos(Math.floor(b / n)) + 2, width: gap - 4, height: gap - 4 }} pointerEvents="none">
@@ -98,7 +98,7 @@ export function PuntiLineeBoard({ view, me, names, myTurn, onMove }: BoardProps<
                 }),
               )}
               {Array.from({ length: dots * dots }, (_, i) => (
-                <View key={i} pointerEvents="none" style={{ position: 'absolute', zIndex: 3, left: pos(i % dots) - dot / 2, top: pos(Math.floor(i / dots)) - dot / 2, width: dot, height: dot, borderRadius: dot, backgroundColor: '#FFFDF6', borderWidth: 3, borderColor: colors.line }} />
+                <View key={i} pointerEvents="none" style={{ position: 'absolute', zIndex: 3, left: pos(i % dots) - dot / 2, top: pos(Math.floor(i / dots)) - dot / 2, width: dot, height: dot, borderRadius: dot, backgroundColor: '#FFFDF6', borderWidth: 1.5, borderColor: colors.line }} />
               ))}
             </View>
           )}

@@ -22,13 +22,13 @@ interface PieceDef {
 }
 
 const PIECES: PieceDef[] = [
-  { shape: [[1, 1, 1, 1]], color: '#19D3C5' },
-  { shape: [[1, 1], [1, 1]], color: '#FFE14D' },
+  { shape: [[1, 1, 1, 1]], color: '#2EC4B6' },
+  { shape: [[1, 1], [1, 1]], color: '#FFC933' },
   { shape: [[0, 1, 0], [1, 1, 1]], color: '#B57BFF' },
   { shape: [[1, 0, 0], [1, 1, 1]], color: '#56B4E9' },
   { shape: [[0, 0, 1], [1, 1, 1]], color: '#FF9F1C' },
   { shape: [[0, 1, 1], [1, 1, 0]], color: '#7CF0B0' },
-  { shape: [[1, 1, 0], [0, 1, 1]], color: '#FF2E88' },
+  { shape: [[1, 1, 0], [0, 1, 1]], color: '#FF4F8B' },
 ];
 /** I coriandoli piccoli, da tre. */
 const SMALL: PieceDef[] = [
@@ -276,7 +276,7 @@ function Game({ seed, active, onMove }: { seed: number; active: boolean; onMove:
           {g.next && <NextPiece def={g.next} />}
         </View>
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }} onLayout={onLayout}>
-          <View {...responder.panHandlers} style={{ ...NO_SELECT, width: cell * W + 6, height: cell * H + 6, borderRadius: 10, borderWidth: 3, borderColor: colors.line, backgroundColor: 'rgba(18,5,43,0.72)', overflow: 'hidden' }}>
+          <View {...responder.panHandlers} style={{ ...NO_SELECT, width: cell * W + 6, height: cell * H + 6, borderRadius: 10, borderWidth: 1.5, borderColor: colors.line, backgroundColor: 'rgba(13,14,17,0.72)', overflow: 'hidden' }}>
             {/* Righe guida leggere, per mirare. */}
             {Array.from({ length: W - 1 }, (_, i) => (
               <View key={i} pointerEvents="none" style={{ position: 'absolute', left: (i + 1) * cell, top: 0, bottom: 0, width: 1, backgroundColor: 'rgba(255,255,255,0.05)' }} />
@@ -323,7 +323,7 @@ function NextPiece({ def }: { def: PieceDef }) {
       <T size={11} weight="800" color="#fff">
         Prossimo
       </T>
-      <View style={{ padding: 5, borderRadius: 10, backgroundColor: 'rgba(18,5,43,0.78)', borderWidth: 2, borderColor: colors.line }}>
+      <View style={{ padding: 5, borderRadius: 10, backgroundColor: 'rgba(13,14,17,0.78)', borderWidth: 2, borderColor: colors.line }}>
         <View style={{ width: def.shape[0].length * s, height: def.shape.length * s }}>
           {def.shape.flatMap((row, r) => row.map((v, c) => (v ? <Block key={`${r}${c}`} x={c * s} y={r * s} size={s} color={def.color} /> : null)))}
         </View>

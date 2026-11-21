@@ -213,13 +213,13 @@ function Game({ seed, active, onMove }: { seed: number; active: boolean; onMove:
         {size.w > 0 && (
           <>
             {/* Il selciato che scorre: dà la sensazione di velocità. */}
-            <View pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, top: ground, bottom: 0, backgroundColor: 'rgba(18,5,43,0.72)', borderTopWidth: 3, borderColor: colors.accent, overflow: 'hidden' }}>
+            <View pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, top: ground, bottom: 0, backgroundColor: 'rgba(13,14,17,0.72)', borderTopWidth: 3, borderColor: colors.accent, overflow: 'hidden' }}>
               {Array.from({ length: Math.ceil(size.w / 60) + 2 }, (_, i) => (
                 <View key={i} style={{ position: 'absolute', left: i * 60 - stripe, top: 8, width: 30, height: 6, borderRadius: 3, backgroundColor: 'rgba(255,225,77,0.45)' }} />
               ))}
             </View>
             {g.coinList.map((c) => (
-              <View key={c.id} pointerEvents="none" style={{ position: 'absolute', left: c.x - 11, top: c.y - 11, width: 22, height: 22, borderRadius: 11, backgroundColor: '#FFD23F', borderWidth: 2.5, borderColor: colors.line, alignItems: 'center', justifyContent: 'center' }}>
+              <View key={c.id} pointerEvents="none" style={{ position: 'absolute', left: c.x - 11, top: c.y - 11, width: 22, height: 22, borderRadius: 11, backgroundColor: '#FFC933', borderWidth: 2.5, borderColor: colors.line, alignItems: 'center', justifyContent: 'center' }}>
                 <View style={{ width: 8, height: 8, borderRadius: 4, borderWidth: 2, borderColor: '#B8860B' }} />
               </View>
             ))}
@@ -230,7 +230,7 @@ function Game({ seed, active, onMove }: { seed: number; active: boolean; onMove:
                     <View style={{ position: 'absolute', left: 0, right: 0, top: 3, height: 4, backgroundColor: '#FFF2A8', opacity: 0.6 + 0.4 * Math.sin(g.time / 60) }} />
                   </View>
                   {[0, 1].map((k) => (
-                    <View key={k} style={{ position: 'absolute', [k ? 'right' : 'left']: -6, top: -6, width: 30, height: 30, borderRadius: 15, backgroundColor: colors.accent2, borderWidth: 3, borderColor: colors.line, alignItems: 'center', justifyContent: 'center', transform: [{ rotate: `${g.time / 3}deg` }] }}>
+                    <View key={k} style={{ position: 'absolute', [k ? 'right' : 'left']: -6, top: -6, width: 30, height: 30, borderRadius: 15, backgroundColor: colors.accent2, borderWidth: 1.5, borderColor: colors.line, alignItems: 'center', justifyContent: 'center', transform: [{ rotate: `${g.time / 3}deg` }] }}>
                       <T size={16} weight="900" color={colors.accent} style={{ lineHeight: 18 }}>
                         ✷
                       </T>
@@ -239,7 +239,7 @@ function Game({ seed, active, onMove }: { seed: number; active: boolean; onMove:
                 </View>
               ) : (
                 <View key={o.id} pointerEvents="none" style={{ position: 'absolute', left: o.x - o.r, top: o.y - o.r * 1.1, width: o.r * 2, height: o.r * 2.6, alignItems: 'center' }}>
-                  <View style={{ width: o.r * 2, height: o.r * 2.2, borderRadius: o.r, backgroundColor: colors.accent2, borderWidth: 3, borderColor: colors.line }}>
+                  <View style={{ width: o.r * 2, height: o.r * 2.2, borderRadius: o.r, backgroundColor: colors.accent2, borderWidth: 1.5, borderColor: colors.line }}>
                     <View style={{ position: 'absolute', left: o.r * 0.4, top: o.r * 0.35, width: o.r * 0.45, height: o.r * 0.6, borderRadius: o.r * 0.3, backgroundColor: 'rgba(255,255,255,0.55)' }} />
                   </View>
                   <View style={{ width: 2, height: o.r * 0.5, backgroundColor: colors.line }} />

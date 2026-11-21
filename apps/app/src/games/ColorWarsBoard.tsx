@@ -31,7 +31,7 @@ function Cell({ cell, size, boom, last, can, onPress }: { cell: CwCell | null; s
         width: size,
         height: size,
         borderRadius: size * 0.2,
-        borderWidth: 3,
+        borderWidth: 1.5,
         borderColor: boom ? colors.text : can ? colors.accent : colors.line,
         backgroundColor: boom ? colors.accent2 : cell ? seatColor(cell.o) : pressed ? colors.surface2 : colors.surface,
         transform: [{ translateY: pressed ? 2 : 0 }],
@@ -47,7 +47,7 @@ function Cell({ cell, size, boom, last, can, onPress }: { cell: CwCell | null; s
       {dots.map(([x, y], i) => (
         <View key={i} style={{ position: 'absolute', left: x * (size - 6) - pip / 2, top: y * (size - 6) - pip / 2, width: pip, height: pip, borderRadius: pip, backgroundColor: colors.line }} />
       ))}
-      {last && !boom ? <View style={{ position: 'absolute', left: -3, top: -3, right: -3, bottom: -3, borderRadius: size * 0.2, borderWidth: 3, borderColor: colors.text }} /> : null}
+      {last && !boom ? <View style={{ position: 'absolute', left: -3, top: -3, right: -3, bottom: -3, borderRadius: size * 0.2, borderWidth: 1.5, borderColor: colors.text }} /> : null}
     </Pressable>
   );
 }

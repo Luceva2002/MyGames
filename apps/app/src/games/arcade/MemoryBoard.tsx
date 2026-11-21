@@ -122,7 +122,7 @@ function MemoryCard({ face, owner, solo, justMatched, missed, w, h, disabled, on
     <Pressable accessibilityRole="button" accessibilityLabel={id ? `Carta scoperta: ${id}` : 'Carta coperta'} disabled={disabled} onPress={onPress} style={({ pressed }) => ({ transform: [{ translateY: pressed && !disabled ? 2 : 0 }] })}>
       <Animated.View
         style={[
-          { width: w, height: h, borderRadius: Math.max(10, w * 0.14), borderWidth: 3, borderColor: border, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', boxShadow: `0px 4px 0px ${colors.line}` },
+          { width: w, height: h, borderRadius: Math.max(10, w * 0.14), borderWidth: 1.5, borderColor: border, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', boxShadow: `0px 6px 16px rgba(0,0,0,0.35)` },
           id ? { backgroundColor: avatarBg(id) } : { backgroundColor: colors.accent2 },
           owner !== null && { opacity: 0.85 },
           anim,
@@ -135,10 +135,10 @@ function MemoryCard({ face, owner, solo, justMatched, missed, w, h, disabled, on
             {/* Dorso: rombi da Arlecchino e una maschera al centro. */}
             {[0, 1, 2].map((r) =>
               [0, 1].map((c) => (
-                <View key={`${r}${c}`} style={{ position: 'absolute', left: c * (w / 2) + w / 4 - w * 0.18, top: r * (h / 3) + h / 6 - w * 0.18, width: w * 0.36, height: w * 0.36, backgroundColor: (r + c) % 2 ? '#FFE14D' : '#6B2BD9', transform: [{ rotate: '45deg' }], opacity: 0.5 }} />
+                <View key={`${r}${c}`} style={{ position: 'absolute', left: c * (w / 2) + w / 4 - w * 0.18, top: r * (h / 3) + h / 6 - w * 0.18, width: w * 0.36, height: w * 0.36, backgroundColor: (r + c) % 2 ? '#FFC933' : '#5B3FE0', transform: [{ rotate: '45deg' }], opacity: 0.5 }} />
               )),
             )}
-            <View style={{ width: w * 0.5, height: w * 0.5, borderRadius: w * 0.25, backgroundColor: colors.surface, borderWidth: 3, borderColor: colors.line, alignItems: 'center', justifyContent: 'center' }}>
+            <View style={{ width: w * 0.5, height: w * 0.5, borderRadius: w * 0.25, backgroundColor: colors.surface, borderWidth: 1.5, borderColor: colors.line, alignItems: 'center', justifyContent: 'center' }}>
               <T size={w * 0.26} style={{ lineHeight: w * 0.32 }}>
                 🎭
               </T>

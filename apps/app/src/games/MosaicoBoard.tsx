@@ -183,7 +183,7 @@ export function MosaicoBoard({ view, me, names, myTurn, onMove }: BoardProps<Mos
                 onPress={() => choose(piece)}
                 accessibilityRole="button"
                 accessibilityLabel={`Pezzo da ${MOSAICO_PIECES[piece].length} quadretti${on ? ', scelto' : ''}`}
-                style={{ width: tile, height: tile, borderRadius: 9, alignItems: 'center', justifyContent: 'center', backgroundColor: on ? colors.accent : 'rgba(18,5,43,0.6)', borderWidth: 2, borderColor: on ? colors.line : 'transparent', opacity: myTurn && !can ? 0.35 : 1 }}
+                style={{ width: tile, height: tile, borderRadius: 9, alignItems: 'center', justifyContent: 'center', backgroundColor: on ? colors.accent : 'rgba(13,14,17,0.6)', borderWidth: 2, borderColor: on ? colors.line : 'transparent', opacity: myTurn && !can ? 0.35 : 1 }}
               >
                 <Mini shape={mosaicoShape(piece, 0, false)} cell={mini} color={on ? colors.onAccent : seatColor(me)} />
               </Pressable>
