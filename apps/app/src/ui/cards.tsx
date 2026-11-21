@@ -177,7 +177,7 @@ export const PlayingCard = memo(function PlayingCard({ card, width, selected, di
   const zoomHold = zoomable !== false && zoomCtx ? () => zoomCtx(card) : undefined;
   const height = width * cardRatio(card.deck);
   const radius = width * 0.09;
-  // Tutto disegnato in codice: numerali, figure coi mostrini e Jolly con Briscola.
+  // Tutto disegnato in codice: numerali, figure coi mostrini e Jolly con Fiò.
   const numeral = (card.deck === 'it' && card.rank <= 7) || (card.deck === 'fr' && card.suit !== 'j' && card.rank <= 10);
   const face = (
     <View style={[{ width, height }, dimmed && { opacity: 0.62 }, style]}>

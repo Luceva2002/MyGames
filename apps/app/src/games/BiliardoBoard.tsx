@@ -197,7 +197,7 @@ const TableFrame = memo(function TableFrame({ tableW, tableH, rail }: { tableW: 
       <Rect x={5} y={5} width={W - 10} height={H - 10} rx={rail * 0.65} fill="none" stroke="#FFFFFF" strokeOpacity={0.14} strokeWidth={1.5} />
       <Rect x={rail - cush} y={rail - cush} width={tableW + cush * 2} height={tableH + cush * 2} fill="#1D5544" stroke={colors.line} strokeWidth={1} />
       {diamonds.map((d, i) => (
-        <Circle key={i} cx={d.x} cy={d.y} r={Math.max(3, rail * 0.17)} fill="#FF2E88" stroke={colors.line} strokeWidth={1.5} />
+        <Circle key={i} cx={d.x} cy={d.y} r={Math.max(3, rail * 0.17)} fill="#F4F1E8" stroke={colors.line} strokeWidth={1.5} />
       ))}
     </Svg>
   );
@@ -226,7 +226,7 @@ const TableMarks = memo(function TableMarks({ tableW, tableH, rail, scale }: { t
       <Circle cx={rail + 1.5 * scale} cy={rail + 0.5 * scale} r={2} fill="#FFFFFF" opacity={0.3} />
       {POCKETS.map((p, i) => (
         <G key={i}>
-          <Circle cx={rail + p.x * scale} cy={rail + p.y * scale} r={p.r * scale + 2} fill="#12052B" stroke={colors.line} strokeWidth={2} />
+          <Circle cx={rail + p.x * scale} cy={rail + p.y * scale} r={p.r * scale + 2} fill="#0D0E11" stroke={colors.line} strokeWidth={2} />
           <Circle cx={rail + p.x * scale} cy={rail + p.y * scale} r={p.r * scale} fill="url(#hole)" />
         </G>
       ))}
@@ -252,7 +252,8 @@ export function BiliardoBoard({ view, me, names, myTurn, onMove }: BoardProps<Bi
   // Sul telefono in verticale il tavolo si gira per lungo: molto più grande, con la testa in alto.
   const portrait = height > width * 1.2;
   // Spazio per i nomi in alto e per la forza del tiro in basso; il resto è tutto tavolo.
-  const room = height - 210 - rail * 2;
+  // Il tavolo Pop ha il suo bordo: servono una cinquantina di pixel in più, o la scritta sotto tocca le sponde.
+  const room = height - 262 - rail * 2;
   const tableW = portrait
     ? Math.min((width - 24 - rail * 2) * (TABLE_W / TABLE_H), room)
     : Math.min(width - 24 - rail * 2, room * (TABLE_W / TABLE_H), 1000);
@@ -448,7 +449,7 @@ export function BiliardoBoard({ view, me, names, myTurn, onMove }: BoardProps<Bi
     <TableBg table="billiard" style={{ alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 12 }}>
       <Row gap={20} wrap style={{ justifyContent: 'center' }}>
         {[0, 1].map((p) => (
-          <View key={p} style={{ alignItems: 'center', opacity: view.turn === p ? 1 : 0.7, backgroundColor: '#12052BD9', borderRadius: 14, paddingHorizontal: 12, paddingVertical: 4, borderWidth: 2, borderColor: view.turn === p ? colors.accent : '#FFFFFF22' }}>
+          <View key={p} style={{ alignItems: 'center', opacity: view.turn === p ? 1 : 0.7, backgroundColor: '#0D0E11D9', borderRadius: 14, paddingHorizontal: 12, paddingVertical: 4, borderWidth: 1, borderColor: view.turn === p ? colors.accent : '#FFFFFF22' }}>
             <Row gap={6}>
               <SeatDot seat={p} />
               <T weight="900">{names[p]}</T>
@@ -460,7 +461,7 @@ export function BiliardoBoard({ view, me, names, myTurn, onMove }: BoardProps<Bi
         ))}
       </Row>
       <View
-        style={{ width: portrait ? outH : outW, height: portrait ? outW : outH, borderRadius: rail, boxShadow: `0px 6px 0px ${colors.line}`, zIndex: 2 }}
+        style={{ width: portrait ? outH : outW, height: portrait ? outW : outH, borderRadius: rail, boxShadow: '0px 10px 26px rgba(0,0,0,0.45)', zIndex: 2 }}
         onStartShouldSetResponder={() => canAct}
         onMoveShouldSetResponder={() => canAct}
         onResponderTerminationRequest={() => false}

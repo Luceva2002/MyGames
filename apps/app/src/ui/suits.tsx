@@ -3,13 +3,13 @@ import { StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, ClipPath, Defs, G, Pattern, Rect, Text as SvgText } from 'react-native-svg';
 import type { Card } from '@giochi/engine';
 import { Place } from './morbido/draw';
-import { CAT, INK, PAL, figureParts, figureTint, frColor, frSuit, itSuit, itTilt, type Part, type Role } from './morbido/shapes';
+import { INK, MOSTRINI, PAL, figureParts, figureTint, frColor, frSuit, itSuit, itTilt, type Part, type Role } from './morbido/shapes';
 import { font } from './theme';
 
 /**
  * Carte dello stile Morbido (approvato il 20/11/2026), tutte disegnate in codice: carta bianca col
  * contorno scuro morbido, semi pieni contornati, valore e seme solo in alto a sinistra (le carte
- * stanno sempre dritte). Le figure sono i mostrini in costume, il Jolly è Briscola la gatta.
+ * stanno sempre dritte). Le figure sono i mostrini in costume, il Jolly è Fiò.
  */
 
 /** Il seme di una carta, nel suo quadrato 100×100. */
@@ -99,7 +99,7 @@ export const FigureFace = memo(function FigureFace({ card, w, h }: { card: Card;
       </Defs>
       <Rect x={8} y={8} width={84} height={H - 16} rx={6} fill={tint} />
       <G clipPath={`url(#${clip})`}>
-        {joker ? <Place parts={CAT} cx={50} cy={H - 57} size={98} /> : <Place parts={figureParts(deck, card.suit, role)} cx={50} cy={deck === 'it' ? H - 91 : H - 65} size={deck === 'it' ? 100 : 98} />}
+        {joker ? <Place parts={MOSTRINI.fio.parts} cx={50} cy={H - 57} size={92} /> : <Place parts={figureParts(deck, card.suit, role)} cx={50} cy={deck === 'it' ? H - 91 : H - 65} size={deck === 'it' ? 100 : 98} />}
         {band && <Rect x={8} y={H - 34} width={84} height={26} fill="#FFFFFF" opacity={0.92} />}
       </G>
       <Rect x={8} y={8} width={84} height={H - 16} rx={6} fill="none" stroke={INK} strokeWidth={1.4} />
@@ -114,7 +114,7 @@ export const FigureFace = memo(function FigureFace({ card, w, h }: { card: Card;
   );
 });
 
-/** Dorso: rosso a pois, al centro il muso di Briscola in un tondo. */
+/** Dorso: rosso a pois, al centro Bobo in un tondo. */
 export const BackFace = memo(function BackFace({ w, h }: { w: number; h: number }) {
   const H = unitH(w, h);
   const dots = useSvgId('dots');
@@ -137,7 +137,7 @@ export const BackFace = memo(function BackFace({ w, h }: { w: number; h: number 
       <Circle cx={50} cy={H / 2} r={19} fill="#FFF1CF" />
       {w >= 30 && (
         <G clipPath={`url(#${clip})`}>
-          <Place parts={CAT} cx={50} cy={H / 2 + 6} size={46} />
+          <Place parts={MOSTRINI.bobo.parts} cx={50} cy={H / 2 + 2} size={44} />
         </G>
       )}
       <Circle cx={50} cy={H / 2} r={19} fill="none" stroke={INK} strokeWidth={1.8} />

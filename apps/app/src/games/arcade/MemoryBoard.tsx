@@ -132,7 +132,7 @@ function MemoryCard({ face, owner, solo, justMatched, missed, w, h, disabled, on
         {id ? (
           <CharacterAvatar id={id} size={w * 0.82} />
         ) : (
-            /* Dorso: lo stesso delle carte da gioco, a pois col muso di Briscola. */
+            /* Dorso: lo stesso delle carte da gioco, a pois con Bobo. */
             <BackFace w={w} h={h} />
         )}
       </Animated.View>

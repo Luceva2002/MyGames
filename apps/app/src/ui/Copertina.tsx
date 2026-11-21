@@ -26,7 +26,8 @@ export function Copertina({ width, height, top, action, code, url, count, avatar
 }) {
   // Il QR lascia posto a quello che sta sopra e ai margini del riquadro.
   const qr = Math.round(Math.min(height * 0.56, height - 170));
-  const codeSize = Math.round(Math.max(48, height * 0.17));
+  // Silkscreen è largo: il codice resta più piccolo, così le quattro lettere entrano sempre intere.
+  const codeSize = Math.round(Math.max(34, Math.min(height * 0.12, 60)));
   const inside = height - 2;
   // I mostrini hanno una colonna tutta loro a destra, così il riquadro del QR non li copre mai.
   const masksWidth = Math.round(Math.min(width * 0.46, inside * 1.33));
@@ -45,7 +46,7 @@ export function Copertina({ width, height, top, action, code, url, count, avatar
               <T size={16} weight="800" color="#D5DAD6">
                 Inquadra o scrivi il codice
               </T>
-              <Text accessibilityLabel={`Codice stanza ${code.split('').join(' ')}`} numberOfLines={1} style={[styles.code, { fontSize: codeSize, lineHeight: Math.round(codeSize * 1.1) }]}>
+              <Text accessibilityLabel={`Codice stanza ${code.split('').join(' ')}`} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.5} style={[styles.code, { fontSize: codeSize, lineHeight: Math.round(codeSize * 1.1) }]}>
                 {code}
               </Text>
               <T size={26} weight="900" color="#FFFFFF">
@@ -76,5 +77,5 @@ export function Copertina({ width, height, top, action, code, url, count, avatar
 const styles = StyleSheet.create({
   cover: { borderRadius: 30, borderWidth: 1, borderColor: colors.line, overflow: 'hidden', backgroundColor: colors.cover, boxShadow: SOFT, marginBottom: 7 },
   pill: { flexDirection: 'row', alignItems: 'center', gap: 18, alignSelf: 'stretch', padding: 14, paddingRight: 18, borderRadius: 24, backgroundColor: colors.line },
-  code: { color: colors.accent, fontFamily: font.bold, letterSpacing: 4 },
+  code: { color: colors.accent, fontFamily: font.display, letterSpacing: 2 },
 });

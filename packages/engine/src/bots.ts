@@ -9,29 +9,35 @@ export interface BotCharacter {
   level: 'facile' | 'medio' | 'difficile' | 'imprevedibile';
 }
 
-/** I 12 mostrini scelti da Luca il 20/11/2026, tre per difficoltà. Fanno da computer e da avatar. */
+/**
+ * I 12 mostrini, tre per difficoltà. Bobo, Gnaf e Fiò sono quelli che Luca ha tenuto il 21/11/2026;
+ * gli altri nove sono nuovi, nello stesso spirito: creature con un carattere deciso. Fanno da computer e da avatar.
+ */
 export const BOT_CHARACTERS: BotCharacter[] = [
   { id: 'bobo', name: 'Bobo', trait: 'Guarda solo le sue carte', level: 'facile' },
-  { id: 'ugo', name: 'Ugo', trait: 'Abbraccia tutti, anche le carte sbagliate', level: 'facile' },
-  { id: 'lulu', name: 'Lulù', trait: 'Porta fortuna, a lei soprattutto', level: 'facile' },
-  { id: 'zuzu', name: 'Zuzu', trait: 'Sente le carte prima di vederle', level: 'medio' },
-  { id: 'pim', name: 'Pim', trait: 'Piccolo, veloce, sfacciato', level: 'medio' },
-  { id: 'bolla', name: 'Bolla', trait: 'Leggera, galleggia fino alla fine', level: 'medio' },
+  { id: 'rocco', name: 'Rocco', trait: 'Duro come un sasso, si muove piano', level: 'facile' },
+  { id: 'otto', name: 'Otto', trait: 'Otto braccia, ma ne usa una sola', level: 'facile' },
+  { id: 'zap', name: 'Zap', trait: 'Gioca in un lampo, a volte troppo', level: 'medio' },
+  { id: 'gelo', name: 'Gelo', trait: 'Freddo e calmo, non si scompone', level: 'medio' },
+  { id: 'spino', name: 'Spino', trait: 'Pungente: non ti lascia passare niente', level: 'medio' },
   { id: 'gnaf', name: 'Gnaf', trait: 'Brontola ma gioca benissimo', level: 'difficile' },
-  { id: 'tic', name: 'Tic', trait: 'Rigido, segue le regole', level: 'difficile' },
-  { id: 'trio', name: 'Trio', trait: 'Vede tutto, anche quello che nascondi', level: 'difficile' },
-  { id: 'lola', name: 'Lola', trait: 'Sogna e gioca a caso', level: 'imprevedibile' },
-  { id: 'mimi', name: 'Mimì', trait: 'Sparisce e ricompare con la carta giusta', level: 'imprevedibile' },
+  { id: 'bit', name: 'Bit', trait: 'Fa i conti più veloce di tutti', level: 'difficile' },
+  { id: 'ombra', name: 'Ombra', trait: 'Ti segue e ricorda ogni carta', level: 'difficile' },
+  { id: 'dado', name: 'Dado', trait: 'Si affida alla sorte', level: 'imprevedibile' },
+  { id: 'morso', name: 'Morso', trait: 'Ha fame di punti, morde tutto', level: 'imprevedibile' },
   { id: 'fio', name: 'Fiò', trait: 'Si accende subito, gioca fortissimo', level: 'imprevedibile' },
 ];
 
 /**
- * Le maschere di prima, salvate nelle impostazioni o mandate da un'app non aggiornata:
- * ognuna diventa il mostrino con la stessa difficoltà, così nessuno resta senza avatar.
+ * Le maschere e i mostrini di prima, salvati nelle impostazioni o mandati da un'app non aggiornata:
+ * ognuno diventa il mostrino nuovo con la stessa difficoltà, così nessuno resta senza avatar.
  */
 export const LEGACY_CHARACTERS: Record<string, string> = {
-  pulcinella: 'bobo', forzuto: 'ugo', colombina: 'zuzu', arlecchina: 'pim', medico: 'bolla',
-  rosaura: 'gnaf', pantalone: 'tic', arlecchino: 'trio', capitano: 'lola', giullare: 'fio',
+  // Le maschere del Carnevale.
+  pulcinella: 'bobo', forzuto: 'rocco', colombina: 'zap', arlecchina: 'gelo', medico: 'spino',
+  rosaura: 'gnaf', pantalone: 'bit', arlecchino: 'ombra', capitano: 'dado', giullare: 'fio',
+  // I mostrini del 20/11/2026 che non sono rimasti.
+  ugo: 'rocco', lulu: 'otto', zuzu: 'zap', pim: 'gelo', bolla: 'spino', tic: 'bit', trio: 'ombra', lola: 'dado', mimi: 'morso',
 };
 
 /** Ritrova un mostrino dal suo id (per l'avatar scelto da chi gioca), anche dal nome di una vecchia maschera. */

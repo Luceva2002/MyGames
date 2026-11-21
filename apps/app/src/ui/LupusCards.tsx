@@ -14,13 +14,13 @@ const CREAM = '#F4F1E8';
 const ROLE_CARD: Record<RoleId, { name: string; num: string; who: string[]; color: string }> = {
   lupo: { name: 'Il Lupo', num: 'I', who: ['gnaf'], color: '#FF4F8B' },
   villico: { name: 'Il Villico', num: 'II', who: ['bobo'], color: '#1FA67A' },
-  veggente: { name: 'La Veggente', num: 'III', who: ['lola'], color: '#5B3FE0' },
-  medium: { name: 'Il Medium', num: 'IV', who: ['mimi'], color: '#2EC4B6' },
-  guardia: { name: 'La Guardia', num: 'V', who: ['ugo'], color: '#3D7BFF' },
-  indemoniato: { name: "L'Indemoniato", num: 'VI', who: ['fio'], color: '#FF8A3D' },
-  gufo: { name: 'Il Gufo', num: 'VII', who: ['trio'], color: '#FFC933' },
-  criceto: { name: 'Il Criceto Mannaro', num: 'VIII', who: ['pim'], color: '#B07CFF' },
-  massone: { name: 'I Massoni', num: 'IX', who: ['tic', 'zuzu'], color: '#7A5CFF' },
+  veggente: { name: 'La Veggente', num: 'III', who: ['ombra'], color: '#FFC933' },
+  medium: { name: 'Il Medium', num: 'IV', who: ['gelo'], color: '#5B3FE0' },
+  guardia: { name: 'La Guardia', num: 'V', who: ['rocco'], color: '#3D7BFF' },
+  indemoniato: { name: "L'Indemoniato", num: 'VI', who: ['fio'], color: '#2B2E36' },
+  gufo: { name: 'Il Gufo', num: 'VII', who: ['bit'], color: '#FF4F8B' },
+  criceto: { name: 'Il Criceto Mannaro', num: 'VIII', who: ['dado'], color: '#B07CFF' },
+  massone: { name: 'I Massoni', num: 'IX', who: ['otto', 'spino'], color: '#2EC4B6' },
 };
 
 /** Stelline a quattro punte, sempre negli stessi posti. */

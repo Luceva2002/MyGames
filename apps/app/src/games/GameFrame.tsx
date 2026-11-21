@@ -16,7 +16,7 @@ import { setSettings, TvContext, useIsTv, useSettings } from '../ui/settings';
 import { SOFT, PaletteContext, radius, seatColor, SHELL, shellColors as colors, TABLE } from '../ui/theme';
 import Svg from 'react-native-svg';
 import { Place } from '../ui/morbido/draw';
-import { CAT } from '../ui/morbido/shapes';
+import { MOSTRINI } from '../ui/morbido/shapes';
 
 /** I giochi senza il tavolo col bordo dorato: lo sfondo arriva fino al bordo dello schermo. */
 const NO_RIM = new Set(['freccette', 'biliardo', 'lupus', 'mrwhite', 'frutta', 'razzo']);
@@ -189,10 +189,10 @@ export function GameFrame({ meta, view, me, names, avatars, myTurn, active, onMo
                   ))}
                 </View>
               ) : me !== null && result.winners.includes(me) ? (
-                // Hai vinto tu: festeggia Briscola, la gatta di casa.
+                // Hai vinto tu: festeggia Fiò.
                 <View style={styles.winCat}>
-                  <Svg width={130} height={130} viewBox="0 0 100 100" accessibilityLabel="Briscola festeggia">
-                    <Place parts={CAT} cx={50} cy={52} size={96} />
+                  <Svg width={130} height={130} viewBox="0 0 100 100" accessibilityLabel="Fiò festeggia">
+                    <Place parts={MOSTRINI.fio.parts} cx={50} cy={52} size={92} />
                   </Svg>
                 </View>
               ) : (
@@ -366,13 +366,18 @@ function TurnPill({ active, names, me, myTurn }: { active: Seat[]; names: string
 /**
  * Cosa ha appena fatto un avversario, in una riga sola sul bordo del tavolo: icona, nome e mossa ("Pulcinella gioca 7 di denari e prende 2 carte"). Le mie mosse non si ripetono.
  */
+/** Di quanto scende la striscia delle mosse nei giochi con la riga in alto più alta. */
+const STRIP_LOW: Record<string, number> = { setteemezzo: 90, battaglia: 50 };
+
 function ActionStrip({ gameId, action, me, names }: { gameId: string; action: LastAction | null; me: Seat | null; names: string[] }) {
   const inset = useTableInset(gameId);
   const { width } = useWindowDimensions();
   const tv = useIsTv();
   // Sta dentro il panno, mai sopra il bordo: sul telefono sotto la riga in alto, sugli schermi larghi
   // su quella riga, fra i posti e il menu. Senza tavolo o sulla TV sta in basso: in alto c'è chi gioca.
-  const place = NO_RIM.has(gameId) || tv ? { left: inset, right: inset, bottom: inset } : width < 600 ? { left: inset, right: inset, top: inset + 52 } : { left: inset + 200, right: inset + 200, top: inset + 12 };
+  // Dove la riga in alto è più alta (i posti di Sette e mezzo, il titolo della Battaglia) la striscia scende sotto.
+  const low = STRIP_LOW[gameId] ?? 0;
+  const place = NO_RIM.has(gameId) || tv ? { left: inset, right: inset, bottom: inset } : width < 600 ? { left: inset, right: inset, top: inset + 52 + low } : { left: inset + 200, right: inset + 200, top: inset + 12 + low };
   if (!action || action.seat === me) return null;
   const text = action.text.replace(/%v(\d+)/g, (_, n) => (Number(n) === me ? 'te' : names[Number(n)] ?? ''));
   return (
