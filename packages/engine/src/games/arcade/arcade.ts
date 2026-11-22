@@ -2,7 +2,7 @@ import { assert, type Game, type GameMeta } from '../../core/types';
 import { randomInt, type HasRng } from '../../core/rng';
 
 /**
- * I giochi d'azione da soli (blocchi, serpentina, frutta, razzo): la partita gira tutta sul
+ * I giochi d'azione da soli (blocchi, snake, frutta, razzo): la partita gira tutta sul
  * dispositivo, a 60 fotogrammi al secondo, e al motore arriva solo il punteggio finale. Così il
  * gioco resta fluido anche in una stanza online, e riepilogo, rivincita e menu sono quelli di sempre.
  */
@@ -83,16 +83,17 @@ export const coriandoli = arcadeGame(
 export const serpentina = arcadeGame(
   {
     id: 'serpentina',
-    name: 'Serpentina',
+    // L'id resta 'serpentina' per non perdere record e partite salvate; il nome è Snake dal 22/11/2026.
+    name: 'Snake',
     category: 'abilita',
-    emoji: '🎏',
-    color: '#FFE14D',
-    tagline: 'Mangia i confetti e allunga la stella filante',
+    emoji: '🐍',
+    color: '#4FA663',
+    tagline: 'Mangia le mele e allunga il serpente',
     rules: [
-      'Guidi una stella filante che non si ferma mai: scorri col dito (o usa le frecce) per cambiare direzione.',
-      'Ogni confetto la allunga di un pezzo e vale un punto; ogni tanto compare una caramella d’oro da 5 che sparisce presto.',
-      'Più è lunga, più va veloce.',
-      'Se sbatti contro il bordo o contro te stessa, la partita finisce.',
+      'Guidi un serpente che non si ferma mai: scorri col dito (o usa le frecce) per cambiare direzione.',
+      'Ogni mela lo allunga di un pezzo e vale un punto; ogni tanto compare una mela d’oro da 5 che sparisce presto.',
+      'Più è lungo, più va veloce.',
+      'Se sbatti contro il bordo o contro te stesso, la partita finisce.',
     ],
     minutes: 3,
   },

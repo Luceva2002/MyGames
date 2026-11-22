@@ -8,7 +8,7 @@ import { sfx } from '../../ui/sound';
 import { type Dir, Hud, NO_SELECT, StartCard, swipeDir, useKeys, useRecord } from './kit';
 
 /**
- * Serpentina: un serpente verde che avanza da solo su una griglia; le mele rosse lo allungano, quella d'oro vale cinque.
+ * Snake (id serpentina): un serpente verde che avanza da solo su una griglia; le mele rosse lo allungano, quella d'oro vale cinque.
  * Si guida scorrendo il dito; sbattere contro il bordo o contro se stesso fa finire la partita.
  * Disegnato come l'icona, nello stile Inchiostro: contorno nero e colori veri.
  */
@@ -194,7 +194,7 @@ function Field({ seed, active, onMove, ROWS }: { seed: number; active: boolean; 
         </View>
       </View>
       {!started && active && (
-        <StartCard title="Serpentina" lines={['Scorri col dito per girare: su, giù, sinistra, destra.', 'Sul computer: frecce o W A S D.']} onStart={() => setStarted(true)} />
+        <StartCard title="Snake" lines={['Scorri col dito per girare: su, giù, sinistra, destra.', 'Sul computer: frecce o W A S D.']} onStart={() => setStarted(true)} />
       )}
     </TableBg>
   );
