@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { MostriniHero } from './MostriniHero';
+import { HERO_RATIO, MostriniHero } from './MostriniHero';
 import { CharacterAvatar } from './avatars';
 import { T } from './kit';
 import { QrCode } from './QrCode';
@@ -29,9 +29,9 @@ export function Copertina({ width, height, top, action, code, url, count, avatar
   // Silkscreen è largo: il codice resta più piccolo, così le quattro lettere entrano sempre intere.
   const codeSize = Math.round(Math.max(34, Math.min(height * 0.12, 60)));
   const inside = height - 2;
-  // I mostrini hanno una colonna tutta loro a destra, così il riquadro del QR non li copre mai.
-  const masksWidth = Math.round(Math.min(width * 0.46, inside * 1.33));
-  const artHeight = Math.round(Math.min(inside - 16, (masksWidth * 3) / 4));
+  // La scena del poker ha una colonna tutta sua a destra, così il riquadro del QR non la copre mai.
+  const masksWidth = Math.round(Math.min(width * 0.47, (inside - 8) * HERO_RATIO));
+  const artHeight = Math.round(Math.min(inside - 8, masksWidth / HERO_RATIO));
   return (
     <View style={[styles.cover, { height }]}>
       <View style={{ position: 'absolute', right: 14, top: 0, bottom: 0, width: masksWidth, overflow: 'hidden', justifyContent: 'center' }}>
