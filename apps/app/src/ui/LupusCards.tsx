@@ -16,11 +16,11 @@ const ROLE_CARD: Record<RoleId, { name: string; num: string; who: string[]; colo
   villico: { name: 'Il Villico', num: 'II', who: ['bobo'], color: '#1FA67A' },
   veggente: { name: 'La Veggente', num: 'III', who: ['ombra'], color: '#FFC933' },
   medium: { name: 'Il Medium', num: 'IV', who: ['gelo'], color: '#5B3FE0' },
-  guardia: { name: 'La Guardia', num: 'V', who: ['rocco'], color: '#3D7BFF' },
+  guardia: { name: 'La Guardia', num: 'V', who: ['zap'], color: '#3D7BFF' },
   indemoniato: { name: "L'Indemoniato", num: 'VI', who: ['fio'], color: '#2B2E36' },
   gufo: { name: 'Il Gufo', num: 'VII', who: ['bit'], color: '#FF4F8B' },
   criceto: { name: 'Il Criceto Mannaro', num: 'VIII', who: ['dado'], color: '#B07CFF' },
-  massone: { name: 'I Massoni', num: 'IX', who: ['otto', 'spino'], color: '#2EC4B6' },
+  massone: { name: 'I Massoni', num: 'IX', who: ['otto', 'morso'], color: '#2EC4B6' },
 };
 
 /** Stelline a quattro punte, sempre negli stessi posti. */

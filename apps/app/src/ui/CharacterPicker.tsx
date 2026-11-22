@@ -1,16 +1,17 @@
 import { useEffect, useState } from 'react';
 import { Modal, Pressable, ScrollView, TextInput, View } from 'react-native';
-import { BOT_CHARACTERS } from '@giochi/engine';
+import { BOT_CHARACTERS, characterById } from '@giochi/engine';
 import { CharacterAvatar } from './avatars';
 import { Button, focusRing, T, tap } from './kit';
 import { shellColors as colors } from './theme';
 
-/** Griglia delle 16 maschere: chi gioca sceglie la sua, che appare al tavolo e nei punteggi. */
+/** Griglia dei 10 mostrini: chi gioca sceglie il suo, che appare al tavolo e nei punteggi. */
 export function CharacterPicker({ value, onChange, size = 64, disabled = [] }: { value: string | null; onChange: (id: string | null) => void; size?: number; disabled?: string[] }) {
   return (
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
       {BOT_CHARACTERS.map((c) => {
-        const selected = value === c.id;
+        // Anche un mostrino tolto (Rocco, Spino) resta segnato come quello che l'ha sostituito.
+        const selected = characterById(value)?.id === c.id;
         const off = disabled.includes(c.id);
         return (
           <Pressable

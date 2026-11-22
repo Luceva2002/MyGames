@@ -3,7 +3,7 @@ import { Text, View } from 'react-native';
 import Svg, { Circle, ClipPath, Defs, G } from 'react-native-svg';
 import { botByName, characterById } from '@giochi/engine';
 import { Place } from './morbido/draw';
-import { MOSTRINI, shade } from './morbido/shapes';
+import { MOSTRINI } from './morbido/shapes';
 import { colors, OUTLINE, seatColor } from './theme';
 
 /** La maschera di ogni posto al tavolo (scelta da chi gioca o del computer), data dalla partita. */
@@ -24,7 +24,7 @@ export function SeatAvatar({ seat, name, size }: { seat: number; name: string; s
 /** Il colore di fondo di ogni mostrino: si riconoscono a colpo d'occhio anche piccoli, nei punteggi e al tavolo. */
 export const avatarBg = (id: string) => {
   const ch = characterById(id);
-  return ch ? shade(MOSTRINI[ch.id].tone, 1.65) : colors.brand;
+  return ch ? MOSTRINI[ch.id].tone : colors.brand;
 };
 
 /** Tondo col mostrino, scelto per id (anche il nome di una vecchia maschera). */
@@ -53,7 +53,7 @@ export function CharacterAvatar({ id, size, seat }: { id: string; size: number; 
           </ClipPath>
         </Defs>
         <G clipPath={`url(#${clip})`}>
-          <Place parts={MOSTRINI[ch.id].parts} cx={50} cy={58} size={112} />
+          <Place parts={MOSTRINI[ch.id].parts} cx={50} cy={53} size={104} />
         </G>
       </Svg>
     </View>

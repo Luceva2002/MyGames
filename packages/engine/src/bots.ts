@@ -1,6 +1,6 @@
 /**
- * I computer sono i mostrini di Tavolata (stile Morbido): creature tonde, una per colore.
- * Il nome è quello che compare al tavolo; l'app li disegna in codice (ui/morbido).
+ * I computer sono i mostrini di Tavolata: dieci creature, una per elemento.
+ * Il nome è quello che compare al tavolo; l'app li mostra con le loro immagini (assets/mostrini).
  */
 export interface BotCharacter {
   id: string;
@@ -10,34 +10,34 @@ export interface BotCharacter {
 }
 
 /**
- * I 12 mostrini, tre per difficoltà. Bobo, Gnaf e Fiò sono quelli che Luca ha tenuto il 21/11/2026;
- * gli altri nove sono nuovi, nello stesso spirito: creature con un carattere deciso. Fanno da computer e da avatar.
+ * I 10 mostrini, uno per elemento (22/11/2026): Luca ha tolto Rocco e Spino e ha scelto i disegni nuovi.
+ * Fanno da computer e da avatar.
  */
 export const BOT_CHARACTERS: BotCharacter[] = [
-  { id: 'bobo', name: 'Bobo', trait: 'Guarda solo le sue carte', level: 'facile' },
-  { id: 'rocco', name: 'Rocco', trait: 'Duro come un sasso, si muove piano', level: 'facile' },
-  { id: 'otto', name: 'Otto', trait: 'Otto braccia, ma ne usa una sola', level: 'facile' },
-  { id: 'zap', name: 'Zap', trait: 'Gioca in un lampo, a volte troppo', level: 'medio' },
-  { id: 'gelo', name: 'Gelo', trait: 'Freddo e calmo, non si scompone', level: 'medio' },
-  { id: 'spino', name: 'Spino', trait: 'Pungente: non ti lascia passare niente', level: 'medio' },
-  { id: 'gnaf', name: 'Gnaf', trait: 'Brontola ma gioca benissimo', level: 'difficile' },
+  { id: 'bobo', name: 'Bobo', trait: 'Una goccia d\'acqua: guarda solo le sue carte', level: 'facile' },
+  { id: 'otto', name: 'Otto', trait: 'Pittore a inchiostro, si distrae a disegnare', level: 'facile' },
+  { id: 'zap', name: 'Zap', trait: 'Un cane fulmine: gioca in un lampo, a volte troppo', level: 'medio' },
+  { id: 'gelo', name: 'Gelo', trait: 'Di ghiaccio: freddo e calmo, non si scompone', level: 'medio' },
+  { id: 'gnaf', name: 'Gnaf', trait: 'Fatto di terra e muschio: brontola ma gioca benissimo', level: 'difficile' },
   { id: 'bit', name: 'Bit', trait: 'Fa i conti più veloce di tutti', level: 'difficile' },
-  { id: 'ombra', name: 'Ombra', trait: 'Ti segue e ricorda ogni carta', level: 'difficile' },
-  { id: 'dado', name: 'Dado', trait: 'Si affida alla sorte', level: 'imprevedibile' },
-  { id: 'morso', name: 'Morso', trait: 'Ha fame di punti, morde tutto', level: 'imprevedibile' },
-  { id: 'fio', name: 'Fiò', trait: 'Si accende subito, gioca fortissimo', level: 'imprevedibile' },
+  { id: 'ombra', name: 'Ombra', trait: 'Viene dal buio: ti segue e ricorda ogni carta', level: 'difficile' },
+  { id: 'dado', name: 'Dado', trait: 'Il coniglio fortunato: si affida alla sorte', level: 'imprevedibile' },
+  { id: 'morso', name: 'Morso', trait: 'Pianta carnivora: ha fame di punti, morde tutto', level: 'imprevedibile' },
+  { id: 'fio', name: 'Fiò', trait: 'Una fiammella: si accende subito, gioca fortissimo', level: 'imprevedibile' },
 ];
 
 /**
  * Le maschere e i mostrini di prima, salvati nelle impostazioni o mandati da un'app non aggiornata:
- * ognuno diventa il mostrino nuovo con la stessa difficoltà, così nessuno resta senza avatar.
+ * ognuno diventa uno dei mostrini di adesso, così nessuno resta senza avatar.
  */
 export const LEGACY_CHARACTERS: Record<string, string> = {
   // Le maschere del Carnevale.
-  pulcinella: 'bobo', forzuto: 'rocco', colombina: 'zap', arlecchina: 'gelo', medico: 'spino',
+  pulcinella: 'bobo', forzuto: 'gnaf', colombina: 'zap', arlecchina: 'gelo', medico: 'gelo',
   rosaura: 'gnaf', pantalone: 'bit', arlecchino: 'ombra', capitano: 'dado', giullare: 'fio',
   // I mostrini del 20/11/2026 che non sono rimasti.
-  ugo: 'rocco', lulu: 'otto', zuzu: 'zap', pim: 'gelo', bolla: 'spino', tic: 'bit', trio: 'ombra', lola: 'dado', mimi: 'morso',
+  ugo: 'gnaf', lulu: 'otto', zuzu: 'zap', pim: 'gelo', bolla: 'gelo', tic: 'bit', trio: 'ombra', lola: 'dado', mimi: 'morso',
+  // Rocco e Spino, tolti il 22/11/2026.
+  rocco: 'gnaf', spino: 'gelo',
 };
 
 /** Ritrova un mostrino dal suo id (per l'avatar scelto da chi gioca), anche dal nome di una vecchia maschera. */

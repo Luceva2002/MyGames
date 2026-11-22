@@ -6,7 +6,7 @@ import { randomInt, shuffle, type HasRng } from '../core/rng';
  * tengono e si rigioca, altrimenti si ricoprono e tocca al prossimo. Da soli si cerca di finire
  * con meno mosse possibili; in compagnia vince chi trova più coppie.
  */
-export const MEMORY_FACES = ['ombra', 'gelo', 'bobo', 'fio', 'zap', 'bit', 'rocco', 'spino', 'gnaf', 'dado'] as const;
+export const MEMORY_FACES = ['ombra', 'gelo', 'bobo', 'fio', 'zap', 'bit', 'otto', 'morso', 'gnaf', 'dado'] as const;
 export const MEMORY_PAIRS = MEMORY_FACES.length;
 
 export interface MemoryState extends HasRng {

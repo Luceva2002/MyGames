@@ -56,7 +56,7 @@ export default function Offline() {
       </T>
       <Choice mode="bots" label="Contro i bot" text="Tu contro i mostrini" color={FIRE.sky}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-          <CharacterAvatar id="bobo" size={62} />
+          <CharacterAvatar id="zap" size={62} />
           <View style={{ flexDirection: 'row' }}>
             <CharacterAvatar id="gnaf" size={62} />
             <View style={{ marginLeft: -14 }}>

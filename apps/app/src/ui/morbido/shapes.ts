@@ -27,6 +27,8 @@ export interface Part {
   tx?: number;
   ty?: number;
   ts?: number;
+  /** Immagine di un mostrino (per id), messa in (x, y) con lato `s`. */
+  img?: string;
 }
 
 export const circ = (cx: number, cy: number, r: number) => `M${cx - r} ${cy} A${r} ${r} 0 1 0 ${cx + r} ${cy} A${r} ${r} 0 1 0 ${cx - r} ${cy} Z`;
@@ -73,96 +75,35 @@ export const itMain = (s: string) => ({ d: PAL.gold, c: PAL.red, s: PAL.blue, b:
 /** I bastoni stanno inclinati, come nelle napoletane. */
 export const itTilt = (s: string) => (s === 'b' ? -18 : 0);
 
-// ---------- tratti del viso ----------
-const E = (x: number, y: number, r = 2.8): Part[] => [{ d: circ(x, y, r), fill: INK, detail: true }, { d: circ(x + r * 0.38, y - r * 0.38, r * 0.34), fill: '#FFFFFF', detail: true }];
-const CH = (x: number, y: number, r = 4.2): Part[] => [{ d: circ(x, y, r), fill: PAL.cheek, detail: true, op: 0.5 }];
-const SM = (x: number, y: number, w = 5, c = INK): Part => ({ d: `M${x - w} ${y} Q${x} ${y + w * 0.8} ${x + w} ${y}`, stroke: c, w: 1.2, detail: true });
-
 // ---------- i mostrini ----------
-/** Le punte di Spino: quattordici, attorno a un cerchio. */
-const SPIKES = (() => {
-  const n = 14;
-  const pts = Array.from({ length: n * 2 }, (_, i) => {
-    const r = i % 2 ? 24 : 34;
-    const a = (i / (n * 2)) * Math.PI * 2 - Math.PI / 2;
-    return `${(50 + Math.cos(a) * r).toFixed(1)} ${(60 + Math.sin(a) * r * 0.92).toFixed(1)}`;
-  });
-  return `M${pts.join(' L')} Z`;
-})();
-
-
 export interface Mostrino {
-  /** Il colore del mostrino: fondo dell'avatar e corpo. */
+  /** Il colore del fondo della sua tessera: fondo dell'avatar e colore delle mani nei costumi. */
   tone: string;
-  /** Dove poggia la corona (in alto sulla testa). */
+  /** Dove comincia la testa (in alto), per la corona e i cappelli delle figure. */
   top: number;
+  /** Il centro della testa in orizzontale (non sempre al centro del disegno). */
+  hx: number;
   parts: Part[];
 }
 
-const m = (tone: string, top: number, parts: (t: string) => Part[]): Mostrino => ({ tone, top, parts: parts(tone) });
+/**
+ * I dieci mostrini del 22/11/2026, uno per elemento, scelti da Luca come immagine (assets/mostrini):
+ * stanno nel riquadro 10..90 del quadrato 100×100, coi piedi in basso.
+ */
+const m = (id: string, tone: string, top: number, hx = 50): Mostrino => ({ tone, top, hx, parts: [{ img: id, x: 10, y: 12, s: 80 }] });
 
 export const MOSTRINI: Record<string, Mostrino> = {
-  bobo: m('#3E7BD6', 27, (t) => [{ d: 'M22 72 C18 46 30 27 50 27 C70 27 82 46 78 72 C76 86 62 90 50 90 C38 90 24 86 22 72 Z', fill: t }, { d: circ(50, 52, 11), fill: '#FFFFFF' }, ...E(51, 53, 5), SM(50, 70, 6), ...CH(32, 66), ...CH(68, 66)]),
-  // Zap, il fulmine: arrabbiato e velocissimo.
-  zap: m('#FFC933', 14, (t) => [
-    { d: 'M58 12 L26 56 Q24 60 28 60 H44 L36 90 Q35 94 39 91 L76 46 Q78 42 74 42 H58 L66 16 Q67 11 58 12 Z', fill: t },
-    ...E(42, 50, 2.6), ...E(56, 50, 2.6), { d: 'M37 44 L46 47 M61 44 L52 47', stroke: INK, w: 1.6, detail: true }, { d: 'M42 57 Q47 61 52 57', stroke: INK, w: 1.3, detail: true },
-  ]),
-  // Gelo, la scheggia di ghiaccio: assonnato, batte i denti.
-  gelo: m('#9ADCF7', 16, (t) => [
-    { d: 'M50 14 Q53 14 55 17 L76 44 Q78 47 77 50 L66 86 Q65 90 61 90 H39 Q35 90 34 86 L23 50 Q22 47 24 44 L45 17 Q47 14 50 14 Z', fill: t },
-    { d: 'M36 42 L45 29', stroke: '#FFFFFF', w: 2.6, detail: true }, ...E(42, 58), ...E(58, 58), { d: 'M37 53 Q42 51 47 53 M53 53 Q58 51 63 53', stroke: INK, w: 1.4, detail: true },
-    { d: 'M42 70 L45 67 L48 70 L51 67 L54 70 L57 67', stroke: INK, w: 1.2, detail: true },
-  ]),
-  gnaf: m('#3FA66B', 34, (t) => [{ d: 'M30 40 L24 18 L42 32 Z', fill: '#FFF4E6' }, { d: 'M70 40 L76 18 L58 32 Z', fill: '#FFF4E6' }, { d: ell(50, 62, 32, 26), fill: t }, ...E(40, 56), ...E(60, 56), { d: 'M38 44 L46 48 M62 44 L54 48', stroke: INK, w: 1.6, detail: true }, { d: 'M42 70 Q50 66 58 70', stroke: INK, w: 1.3, detail: true }, { d: 'M45 69 L46 73 L48 69 Z', fill: '#FFFFFF' }]),
-  // Rocco, il sasso: sopracciglia pesanti, una crepa in testa.
-  rocco: m('#8A8F9C', 32, (t) => [
-    { d: 'M18 86 C14 72 20 58 30 52 C30 40 42 32 54 34 C66 30 80 40 80 54 C88 62 88 78 82 86 Z', fill: t },
-    { d: 'M62 38 L58 44 L63 48', stroke: shade(t, 0.6), w: 1.3, detail: true }, { d: 'M33 55 L48 59 M67 55 L52 59', stroke: INK, w: 2.4, detail: true },
-    ...E(42, 64, 2.5), ...E(58, 64, 2.5), { d: 'M44 75 H56', stroke: INK, w: 1.5, detail: true },
-  ]),
-  // Spino, il riccio viola: tutto punte e una zanna.
-  spino: m('#7A5CFF', 24, (t) => [{ d: SPIKES, fill: t }, ...E(42, 58), ...E(58, 58), { d: 'M43 67 Q50 72 57 67', stroke: INK, w: 1.3, detail: true }, { d: 'M47 68.5 L48.5 73 L50.5 69.5 Z', fill: '#FFFFFF', detail: true }]),
-  // Ombra: occhi gialli che brillano al buio.
-  ombra: m('#4B3C7A', 22, (t) => [
-    { d: 'M22 90 C22 62 24 40 32 30 L36 22 L42 30 C46 28 54 28 58 30 L64 22 L68 30 C76 40 78 62 78 90 L70 82 L62 90 L56 80 L50 90 L44 80 L38 90 L30 82 Z', fill: t },
-    { d: 'M34 52 L48 56 L46 61 L35 58 Z', fill: '#FFC933', detail: true }, { d: 'M66 52 L52 56 L54 61 L65 58 Z', fill: '#FFC933', detail: true },
-    { d: 'M40 70 L44 73 L48 70 L52 73 L56 70 L60 73', stroke: '#FFFFFF', w: 1.3, detail: true },
-  ]),
-  // Otto, il polpo: occhioni e un mezzo sorriso furbo.
-  otto: m('#FF4F8B', 24, (t) => [
-    { d: 'M26 58 C22 72 18 80 24 86 C28 88 32 82 32 74 C34 66 36 62 36 58 Z', fill: t }, { d: 'M38 58 C36 72 36 84 42 88 C46 88 46 80 46 72 V58 Z', fill: t },
-    { d: 'M54 58 V72 C54 80 54 88 58 88 C64 84 64 72 62 58 Z', fill: t }, { d: 'M64 58 C64 62 66 66 68 74 C68 82 72 88 76 86 C82 80 78 72 74 58 Z', fill: t },
-    { d: 'M24 62 C24 38 36 24 50 24 C64 24 76 38 76 62 Z', fill: t }, ...E(42, 46, 3.4), ...E(58, 46, 3.4), { d: 'M44 55 Q50 58 56 53', stroke: INK, w: 1.3, detail: true },
-  ]),
-  // Morso: tutto bocca e denti.
-  morso: m('#E5484D', 28, (t) => [
-    { d: 'M20 66 C18 42 32 28 50 28 C68 28 82 42 80 66 C78 84 64 90 50 90 C36 90 22 84 20 66 Z', fill: t },
-    { d: 'M28 56 Q50 52 72 56 Q70 84 50 84 Q30 84 28 56 Z', fill: INK, detail: true }, { d: ell(50, 77, 9, 4.5), fill: '#FF8FA3', detail: true },
-    { d: 'M31 56 L35 63 L39 55.2 L43 63 L47 54.8 L51 63 L55 54.8 L59 63 L63 55.2 L67 62 L70 56 Z', fill: '#FFFFFF', detail: true },
-    ...E(40, 43, 2.6), ...E(60, 43, 2.6), { d: 'M35 36 L45 38 M55 37 Q60 33 65 36', stroke: INK, w: 1.5, detail: true },
-  ]),
-  // Bit, il robottino da sala giochi: occhi a pixel sullo schermo.
-  bit: m('#2EC4B6', 18, (t) => [
-    { d: 'M50 32 V21', stroke: INK, w: 2, detail: true }, { d: circ(50, 18, 4.2), fill: '#FF4F8B' },
-    { d: 'M18 50 H24 V64 H18 Z', fill: shade(t, 0.7) }, { d: 'M76 50 H82 V64 H76 Z', fill: shade(t, 0.7) },
-    { d: 'M24 40 Q24 32 32 32 H68 Q76 32 76 40 V80 Q76 88 68 88 H32 Q24 88 24 80 Z', fill: t },
-    { d: 'M34 42 H66 Q68 42 68 44 V70 Q68 72 66 72 H34 Q32 72 32 70 V44 Q32 42 34 42 Z', fill: '#17181C', detail: true },
-    { d: 'M38 50 H44 V56 H38 Z M56 50 H62 V56 H56 Z', fill: '#7ED957', detail: true }, { d: 'M40 62 H44 V64 H56 V62 H60 V66 H40 Z', fill: '#7ED957', detail: true },
-  ]),
-  // Dado: i pallini agli angoli e l'occhiolino.
-  dado: m('#F4F1E8', 26, (t) => [
-    { d: 'M24 34 Q24 26 32 26 H68 Q76 26 76 34 V82 Q76 90 68 90 H32 Q24 90 24 82 Z', fill: t },
-    ...[[33, 35], [67, 35], [33, 81], [67, 81]].map(([x, y]) => ({ d: circ(x, y, 3.4), fill: '#E5484D', detail: true })),
-    ...E(42, 56), { d: 'M54 56 Q58 53 62 56', stroke: INK, w: 1.5, detail: true }, { d: 'M42 66 Q50 74 58 66', stroke: INK, w: 1.3, detail: true },
-  ]),
-  fio: m('#FF8A65', 30, (t) => [
-    { d: 'M50 16 C54 30 66 30 64 44 C70 40 72 34 70 28 C82 40 84 60 78 72 C72 86 62 90 50 90 C38 90 28 86 22 72 C16 58 22 44 30 38 C30 46 34 50 38 50 C34 36 42 26 50 16 Z', fill: t },
-    { d: 'M50 54 C56 60 62 66 60 76 C58 84 42 84 40 76 C38 66 44 60 50 54 Z', fill: '#FFD24A', detail: true }, ...E(42, 60), ...E(58, 60), { d: 'M45 68 Q50 72 55 68', stroke: INK, w: 1.2, detail: true },
-  ]),
+  bobo: m('bobo', '#56B1E0', 36, 59), // acqua
+  otto: m('otto', '#E592A7', 34), // inchiostro
+  zap: m('zap', '#F2BD4D', 33, 64), // fulmine
+  gelo: m('gelo', '#8CD3EE', 44), // ghiaccio
+  gnaf: m('gnaf', '#4FA663', 36), // terra
+  ombra: m('ombra', '#7660A7', 31), // buio
+  bit: m('bit', '#3AC3B9', 38), // elettronica
+  dado: m('dado', '#F7F2DF', 46), // fortuna
+  morso: m('morso', '#DB3A45', 34, 57), // pianta carnivora
+  fio: m('fio', '#F07F3B', 46), // fuoco
 };
-
-
 
 // ---------- costumi delle figure ----------
 const mitt = (x: number, y: number, skin: string): Part => ({ d: `M${x - 6} ${y} C${x - 6} ${y - 6} ${x + 6} ${y - 6} ${x + 6} ${y} C${x + 6} ${y + 6} ${x - 6} ${y + 6} ${x - 6} ${y} Z`, fill: skin });
@@ -188,8 +129,8 @@ export type Role = 'K' | 'Q' | 'J' | 'H';
 
 /** Chi interpreta ogni figura (scelte nella pagina dei mostrini). */
 export const FIGURES: Record<'fr' | 'it', Record<string, Record<string, string>>> = {
-  fr: { K: { h: 'bobo', d: 'gnaf', c: 'bit', s: 'rocco' }, Q: { h: 'otto', d: 'gelo', c: 'dado', s: 'zap' }, J: { h: 'fio', d: 'spino', c: 'ombra', s: 'morso' } },
-  it: { K: { d: 'gnaf', c: 'bobo', s: 'bit', b: 'rocco' }, H: { d: 'gelo', c: 'otto', s: 'zap', b: 'dado' }, J: { d: 'spino', c: 'fio', s: 'ombra', b: 'morso' } },
+  fr: { K: { h: 'bobo', d: 'gnaf', c: 'bit', s: 'ombra' }, Q: { h: 'otto', d: 'gelo', c: 'dado', s: 'zap' }, J: { h: 'fio', d: 'morso', c: 'otto', s: 'gelo' } },
+  it: { K: { d: 'gnaf', c: 'bobo', s: 'bit', b: 'ombra' }, H: { d: 'gelo', c: 'otto', s: 'zap', b: 'dado' }, J: { d: 'zap', c: 'fio', s: 'ombra', b: 'morso' } },
 };
 
 /** Il mostrino vestito da figura, col suo seme in mano. */
@@ -198,10 +139,12 @@ export function figureParts(deck: 'fr' | 'it', suit: string, role: Role): Part[]
   const c = MOSTRINI[id];
   const pip = deck === 'it' ? itSuit(suit) : frSuit(suit);
   const col = deck === 'it' ? itMain(suit) : suit === 'h' || suit === 'd' ? PAL.red : PAL.blue;
-  if (role === 'K') return [...mantle(col), ...c.parts, ...crownAt(c.top), ...(deck === 'it' ? holds(c.tone, pip) : scepter(c.tone, pip))];
-  if (role === 'Q') return [...c.parts, ...tiaraAt(c.top), ...flower(c.tone, pip)];
-  if (role === 'J') return [...c.parts, ...capAt(c.top), ...(deck === 'it' ? holds(c.tone, pip) : shield(col, pip))];
-  return [{ group: [...c.parts, ...capAt(c.top), ...holds(c.tone, pip, { x: 62, y: 70, s: 0.2 })], x: 17, y: 4, s: 0.84 }, { group: HORSE(col), x: -8, y: 38, s: 0.62 }];
+  // Corona e cappelli vanno sul centro della testa di ognuno.
+  const on = (p: Part[]): Part => ({ group: p, x: c.hx - 50 });
+  if (role === 'K') return [...mantle(col), ...c.parts, on(crownAt(c.top)), ...(deck === 'it' ? holds(c.tone, pip) : scepter(c.tone, pip))];
+  if (role === 'Q') return [...c.parts, on(tiaraAt(c.top)), ...flower(c.tone, pip)];
+  if (role === 'J') return [...c.parts, on(capAt(c.top)), ...(deck === 'it' ? holds(c.tone, pip) : shield(col, pip))];
+  return [{ group: [...c.parts, on(capAt(c.top)), ...holds(c.tone, pip, { x: 62, y: 70, s: 0.2 })], x: 17, y: 4, s: 0.84 }, { group: HORSE(col), x: -8, y: 38, s: 0.62 }];
 }
 /** Colore della finestra della figura: tinta chiara del seme. */
 export const figureTint = (deck: 'fr' | 'it', suit: string) => (deck === 'it' ? shade(itMain(suit), 1.8) : shade(suit === 'h' || suit === 'd' ? PAL.red : '#8A93A6', 1.82));
