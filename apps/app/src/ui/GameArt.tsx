@@ -1,9 +1,9 @@
 import { Image, View, type ImageSourcePropType } from 'react-native';
 
 /**
- * Le icone dei giochi: le copertine di Tavolata ricolorate nello stile Pop (21/11/2026).
- * I fondi pieni si alternano tra sette colori Pop, uno per tinta (POP_TILES in theme.ts), scelti perché due vicini
- * non siano mai uguali e il fondo non sia del colore del disegno.
+ * Le icone dei giochi in stile adesivo (22/11/2026): un disegno con contorno scuro, ombra e luce e il bordo crema
+ * fustellato, su un riquadro quasi nero dentro una cornice colorata. La cornice non è mai del colore principale del disegno.
+ * Disegnate in SVG ed esportate come immagini 480×480.
  */
 const ART: Record<string, ImageSourcePropType> = {
   scopa: require('../../assets/games/scopa.jpg'),
