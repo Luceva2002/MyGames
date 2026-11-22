@@ -16,7 +16,7 @@ import { CharacterPickerModal } from '../../ui/CharacterPicker';
 import { PopIn } from '../../ui/motion';
 import { sfx } from '../../ui/sound';
 import { getSettings, setSettings } from '../../ui/settings';
-import { Button, Confirm, focusRing, RoundButton, Row, Screen, T, tap } from '../../ui/kit';
+import { Button, Confirm, focusRing, RoundButton, Row, Screen, T, tap, useTextSize } from '../../ui/kit';
 import { QrCode } from '../../ui/QrCode';
 import { TvContext } from '../../ui/settings';
 import { SOFT, shellColors as colors, shellFont as font, radius } from '../../ui/theme';
@@ -461,9 +461,11 @@ function StartButton({ game, total, allowed, canStart, onChoose, fill }: { game?
 
 /** Codice e conto in una striscia, dove il QR non c'è. */
 function CodeStrip({ code, total, flat }: { code: string; total: number; flat?: boolean }) {
+  // Il codice cresce col testo (anche su PC e TV), così si legge da lontano come il resto della striscia.
+  const codeSize = useTextSize(28);
   return (
     <View style={[styles.strip, flat && { flex: 1 }]}>
-      <Text accessibilityLabel={`Codice stanza ${code.split('').join(' ')}`} style={styles.stripCode}>
+      <Text accessibilityLabel={`Codice stanza ${code.split('').join(' ')}`} style={[styles.stripCode, { fontSize: codeSize, letterSpacing: codeSize * 0.18 }]}>
         {code}
       </Text>
       <T size={15} weight="800" style={{ flex: 1, textAlign: 'right' }}>
