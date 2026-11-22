@@ -1,6 +1,6 @@
 import { Fredoka_600SemiBold, Fredoka_700Bold } from '@expo-google-fonts/fredoka';
 import { Silkscreen_700Bold } from '@expo-google-fonts/silkscreen';
-import { Figtree_500Medium, Figtree_700Bold, useFonts } from '@expo-google-fonts/figtree';
+import { Outfit_500Medium, Outfit_700Bold, Outfit_800ExtraBold, useFonts } from '@expo-google-fonts/outfit';
 import { DarkTheme, Stack, ThemeProvider } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { View } from 'react-native';
@@ -13,8 +13,8 @@ const theme = { ...DarkTheme, colors: { ...DarkTheme.colors, background: colors.
 export default function RootLayout() {
   // Chi apre il sito sveglia subito il server delle stanze (dorme dopo 15 minuti senza visite).
   useWakeServer();
-  // Silkscreen per titoli e punteggi, Figtree per i testi, Fredoka per le carte.
-  const [loaded] = useFonts({ Fredoka_600SemiBold, Fredoka_700Bold, Silkscreen_700Bold, Figtree_500Medium, Figtree_700Bold });
+  // Silkscreen per titoli e punteggi, Outfit per i testi come su Fireship, Fredoka per le carte.
+  const [loaded] = useFonts({ Fredoka_600SemiBold, Fredoka_700Bold, Silkscreen_700Bold, Outfit_500Medium, Outfit_700Bold, Outfit_800ExtraBold });
   if (!loaded) return <View style={{ flex: 1, backgroundColor: colors.bg }} />;
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

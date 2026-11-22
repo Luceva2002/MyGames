@@ -1,20 +1,25 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { PanResponder, View } from 'react-native';
+import Svg, { Circle, Ellipse, G, Path, Rect } from 'react-native-svg';
 import { arcadeRng, type ArcadeMove, type ArcadeView } from '@giochi/engine';
 import { useFit, usePaused, type BoardProps } from '../common';
 import { TableBg } from '../../ui/tables';
-import { T } from '../../ui/kit';
 import { sfx } from '../../ui/sound';
-import { colors } from '../../ui/theme';
 import { type Dir, Hud, NO_SELECT, StartCard, swipeDir, useKeys, useRecord } from './kit';
 
 /**
- * Serpentina: una stella filante che avanza da sola su una griglia; i confetti la allungano.
- * Si guida scorrendo il dito; sbattere contro il bordo o contro se stessa fa finire la partita.
+ * Serpentina: un serpente verde che avanza da solo su una griglia; le mele rosse lo allungano, quella d'oro vale cinque.
+ * Si guida scorrendo il dito; sbattere contro il bordo o contro se stesso fa finire la partita.
+ * Disegnato come l'icona, nello stile Inchiostro: contorno nero e colori veri.
  */
 const COLS = 12;
-const STRIPES = ['#FF4F8B', '#FFC933', '#2EC4B6', '#B57BFF'];
-const CONFETTI = ['#FF4F8B', '#FFC933', '#2EC4B6', '#FFFFFF', '#B57BFF', '#FF9F1C'];
+const INK = '#141414';
+const SNAKE = '#4FA663';
+const BELLY = '#8BCB7A';
+const APPLE = '#DB3A45';
+const GOLD = '#F2BD4D';
+const LEAF = '#4FA663';
+const STEM = '#7A4A26';
 const STEP: Record<Dir, [number, number]> = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
 const OPPOSITE: Record<Dir, Dir> = { up: 'down', down: 'up', left: 'right', right: 'left' };
 const GOLD_MS = 6000;
@@ -62,7 +67,7 @@ function Field({ seed, active, onMove, ROWS }: { seed: number; active: boolean; 
     ] as [number, number][],
     dir: 'right' as Dir,
     queue: [] as Dir[],
-    food: { x: 10, y: mid, color: CONFETTI[0] },
+    food: { x: 10, y: mid },
     gold: null as { x: number; y: number; left: number } | null,
     eaten: 0,
     score: 0,
@@ -106,7 +111,7 @@ function Field({ seed, active, onMove, ROWS }: { seed: number; active: boolean; 
       g.eaten++;
       g.grow += 1;
       sfx('pick');
-      g.food = { ...freeCell(), color: CONFETTI[g.eaten % CONFETTI.length] };
+      g.food = freeCell();
       if (!g.gold && g.eaten % 6 === 0) g.gold = { ...freeCell(), left: GOLD_MS };
     }
     if (g.gold) {
@@ -176,45 +181,15 @@ function Field({ seed, active, onMove, ROWS }: { seed: number; active: boolean; 
       <View style={[{ flex: 1, paddingTop: 64, paddingHorizontal: 8, paddingBottom: 8 }, NO_SELECT]} {...responder.panHandlers}>
         <Hud score={g.score} best={best} extra={`lunga ${g.body.length}`} style={{ top: 8, left: 8 }} />
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }} onLayout={onLayout}>
-          <View style={{ width: cell * COLS + 6, height: cell * ROWS + 6, borderRadius: 12, borderWidth: 1.5, borderColor: g.crash ? colors.accent2 : colors.line, backgroundColor: 'rgba(13,14,17,0.72)', overflow: 'hidden' }}>
-            {/* Scacchiera appena accennata. */}
-            {Array.from({ length: ROWS }, (_, r) =>
-              Array.from({ length: COLS }, (_, c) =>
-                (r + c) % 2 ? null : <View key={`${r}-${c}`} pointerEvents="none" style={{ position: 'absolute', left: c * cell, top: r * cell, width: cell, height: cell, backgroundColor: 'rgba(255,255,255,0.035)' }} />,
-              ),
-            )}
-            <View pointerEvents="none" style={{ position: 'absolute', left: g.food.x * cell + cell * 0.2, top: g.food.y * cell + cell * 0.2, width: cell * 0.6, height: cell * 0.6, borderRadius: cell * 0.3, backgroundColor: g.food.color, borderWidth: 2, borderColor: colors.line }} />
-            {g.gold && !goldBlink && (
-              <View pointerEvents="none" style={{ position: 'absolute', left: g.gold.x * cell, top: g.gold.y * cell, width: cell, height: cell, alignItems: 'center', justifyContent: 'center' }}>
-                <T size={cell * 0.8} style={{ lineHeight: cell }}>
-                  🍬
-                </T>
-              </View>
-            )}
-            {g.body.map(([x, y], i) => {
-              const head = i === 0;
-              const inset = head ? 0 : cell * 0.1;
-              return (
-                <View
-                  key={i}
-                  pointerEvents="none"
-                  style={{
-                    position: 'absolute',
-                    left: x * cell + inset,
-                    top: y * cell + inset,
-                    width: cell - inset * 2,
-                    height: cell - inset * 2,
-                    borderRadius: head ? cell * 0.35 : cell * 0.22,
-                    backgroundColor: head ? colors.accent : STRIPES[i % STRIPES.length],
-                    borderWidth: 2,
-                    borderColor: colors.line,
-                    zIndex: head ? 2 : 1,
-                  }}
-                >
-                  {head && <Eyes dir={g.dir} size={cell} dead={g.crash} />}
-                </View>
-              );
-            })}
+          <View style={{ width: cell * COLS + 6, height: cell * ROWS + 6, borderRadius: 12, borderWidth: 3, borderColor: g.crash ? APPLE : INK, backgroundColor: '#201F21', overflow: 'hidden' }}>
+            <Svg width={cell * COLS} height={cell * ROWS} style={{ margin: 0 }} pointerEvents="none">
+              {/* Prato appena accennato a scacchi. */}
+              {Array.from({ length: ROWS }, (_, r) => Array.from({ length: COLS }, (_, c) => ((r + c) % 2 ? null : <Rect key={`${r}-${c}`} x={c * cell} y={r * cell} width={cell} height={cell} fill="#FFFFFF" opacity={0.035} />)))}
+              <Apple x={g.food.x} y={g.food.y} cell={cell} color={APPLE} />
+              {g.gold && !goldBlink && <Apple x={g.gold.x} y={g.gold.y} cell={cell} color={GOLD} />}
+              {/* Una copia nuova a ogni passo: il corpo cambia sul posto e il React Compiler terrebbe il disegno vecchio. */}
+              <Snake body={g.body.map(([x, y]) => [x, y] as [number, number])} cell={cell} dir={g.dir} dead={g.crash} />
+            </Svg>
           </View>
         </View>
       </View>
@@ -225,21 +200,51 @@ function Field({ seed, active, onMove, ROWS }: { seed: number; active: boolean; 
   );
 }
 
-function Eyes({ dir, size, dead }: { dir: Dir; size: number; dead: boolean }) {
-  const e = Math.max(3, size * 0.2);
-  const vertical = dir === 'up' || dir === 'down';
-  const pos = (k: 0 | 1) => {
-    const a = size * 0.18 + k * size * 0.38;
-    const b = dir === 'up' || dir === 'left' ? size * 0.18 : size * 0.42;
-    return vertical ? { left: a, top: b } : { left: b, top: a };
-  };
+/** Il serpente: un tubo verde col contorno nero che passa per il centro delle caselle, la pancia a puntini e la testa con gli occhi. */
+function Snake({ body, cell, dir, dead }: { body: [number, number][]; cell: number; dir: Dir; dead: boolean }) {
+  const c = (v: number) => v * cell + cell / 2;
+  const d = body.map(([x, y], i) => `${i ? 'L' : 'M'}${c(x)} ${c(y)}`).join(' ');
+  const w = cell * 0.66;
+  const line = Math.max(2, cell * 0.1);
+  const [hx, hy] = body[0];
+  const [dx, dy] = STEP[dir];
+  const ox = -dy, oy = dx; // di lato rispetto alla direzione
+  const eye = (k: 1 | -1) => ({ x: c(hx) + dx * cell * 0.12 + ox * k * cell * 0.2, y: c(hy) + dy * cell * 0.12 + oy * k * cell * 0.2 });
+  const tip = { x: c(hx) + dx * cell * 0.42, y: c(hy) + dy * cell * 0.42 };
   return (
-    <>
-      {([0, 1] as const).map((k) => (
-        <View key={k} style={{ position: 'absolute', ...pos(k), width: e, height: e, borderRadius: e / 2, backgroundColor: dead ? 'transparent' : colors.line, alignItems: 'center', justifyContent: 'center' }}>
-          {dead && <T size={e * 1.4} weight="900" color={colors.line} style={{ lineHeight: e * 1.4 }}>×</T>}
-        </View>
-      ))}
-    </>
+    <G>
+      {body.length > 1 && <Path d={d} stroke={INK} strokeWidth={w + line * 2} strokeLinecap="round" strokeLinejoin="round" fill="none" />}
+      {body.length > 1 && <Path d={d} stroke={SNAKE} strokeWidth={w} strokeLinecap="round" strokeLinejoin="round" fill="none" />}
+      {body.slice(1).map(([x, y], i) => (i % 2 ? null : <Circle key={i} cx={c(x)} cy={c(y)} r={cell * 0.1} fill={BELLY} />))}
+      {!dead && <Path d={`M${tip.x} ${tip.y} l${dx * cell * 0.22} ${dy * cell * 0.22}`} stroke={APPLE} strokeWidth={Math.max(1.5, cell * 0.08)} strokeLinecap="round" />}
+      <Circle cx={c(hx)} cy={c(hy)} r={cell * 0.46} fill={SNAKE} stroke={INK} strokeWidth={line} />
+      {([1, -1] as const).map((k) => {
+        const e = eye(k);
+        return dead ? (
+          <Path key={k} d={`M${e.x - cell * 0.09} ${e.y - cell * 0.09} L${e.x + cell * 0.09} ${e.y + cell * 0.09} M${e.x + cell * 0.09} ${e.y - cell * 0.09} L${e.x - cell * 0.09} ${e.y + cell * 0.09}`} stroke={INK} strokeWidth={Math.max(1.5, cell * 0.07)} strokeLinecap="round" />
+        ) : (
+          <G key={k}>
+            <Circle cx={e.x} cy={e.y} r={cell * 0.13} fill="#FFFFFF" stroke={INK} strokeWidth={Math.max(1, cell * 0.05)} />
+            <Circle cx={e.x + dx * cell * 0.04} cy={e.y + dy * cell * 0.04} r={cell * 0.065} fill={INK} />
+          </G>
+        );
+      })}
+    </G>
+  );
+}
+
+/** Una mela col contorno nero, la foglia e il picciolo: rossa normale, gialla quella d'oro. */
+function Apple({ x, y, cell, color }: { x: number; y: number; cell: number; color: string }) {
+  const cx = x * cell + cell / 2;
+  const cy = y * cell + cell * 0.56;
+  const r = cell * 0.32;
+  const line = Math.max(1.5, cell * 0.08);
+  return (
+    <G>
+      <Path d={`M${cx} ${cy - r * 0.9} Q${cx + r * 0.1} ${cy - r * 1.5} ${cx + r * 0.35} ${cy - r * 1.6}`} stroke={STEM} strokeWidth={line} strokeLinecap="round" fill="none" />
+      <Ellipse cx={cx + r * 0.6} cy={cy - r * 1.25} rx={r * 0.45} ry={r * 0.24} fill={LEAF} stroke={INK} strokeWidth={line * 0.7} transform={`rotate(-25 ${cx + r * 0.6} ${cy - r * 1.25})`} />
+      <Circle cx={cx} cy={cy} r={r} fill={color} stroke={INK} strokeWidth={line} />
+      <Circle cx={cx - r * 0.38} cy={cy - r * 0.35} r={r * 0.2} fill="#FFFFFF" opacity={0.7} />
+    </G>
   );
 }

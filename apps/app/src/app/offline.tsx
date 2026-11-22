@@ -1,10 +1,11 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
 import { CharacterAvatar } from '../ui/avatars';
-import { focusRing, RoundButton, Screen, T, tap } from '../ui/kit';
-import { SOFT, shellColors as colors } from '../ui/theme';
+import { focusRing, onColor, RoundButton, Screen, T, tap } from '../ui/kit';
+import { FIRE, HARD, shellColors as colors } from '../ui/theme';
 
-function Choice({ mode, label, children, text }: { mode: 'bots' | 'two' | 'many'; label: string; children: React.ReactNode; text: string }) {
+/** Una scelta come card colorata di Fireship: colore pieno, scritte scure o crema, ombra piena spostata. */
+function Choice({ mode, label, children, text, color }: { mode: 'bots' | 'two' | 'many'; label: string; children: React.ReactNode; text: string; color: string }) {
   return (
     <Pressable
       accessibilityRole="button"
@@ -13,13 +14,13 @@ function Choice({ mode, label, children, text }: { mode: 'bots' | 'two' | 'many'
         tap();
         router.push({ pathname: '/giochi', params: { mode } });
       }}
-      style={(state) => [styles.choice, { transform: [{ translateY: state.pressed ? 4 : 0 }], boxShadow: SOFT }, focusRing((state as { focused?: boolean }).focused ?? false)]}
+      style={(state) => [styles.choice, { backgroundColor: color, transform: [{ translateX: state.pressed ? 4 : 0 }, { translateY: state.pressed ? 4 : 0 }], boxShadow: state.pressed ? 'none' : HARD }, focusRing((state as { focused?: boolean }).focused ?? false)]}
     >
       {children}
-      <T size={21} weight="900" center>
+      <T size={21} weight="900" center color={onColor(color)}>
         {label}
       </T>
-      <T size={15} weight="800" color={colors.muted} center>
+      <T size={15} weight="800" color={onColor(color)} center>
         {text}
       </T>
     </Pressable>
@@ -53,7 +54,7 @@ export default function Offline() {
       <T size={30} weight="900" center>
         Con chi giochi?
       </T>
-      <Choice mode="bots" label="Contro i bot" text="Tu contro i mostrini">
+      <Choice mode="bots" label="Contro i bot" text="Tu contro i mostrini" color={FIRE.sky}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
           <CharacterAvatar id="bobo" size={62} />
           <View style={{ flexDirection: 'row' }}>
@@ -64,17 +65,17 @@ export default function Offline() {
           </View>
         </View>
       </Choice>
-      <Choice mode="two" label="2 giocatori, un telefono" text="Stessa scacchiera, o telefono che passa">
+      <Choice mode="two" label="2 giocatori, un telefono" text="Stessa scacchiera, o telefono che passa" color={FIRE.green}>
         <Digits>
-          <Digit value="1" color={colors.accent} />
-          <Digit value="vs" color={colors.text} size={26} />
-          <Digit value="1" color={colors.accent2} />
+          <Digit value="1" color={colors.onAccent} />
+          <Digit value="vs" color={colors.onAccent} size={26} />
+          <Digit value="1" color={FIRE.cream} />
         </Digits>
       </Choice>
-      <Choice mode="many" label="In tanti, un telefono" text="Il telefono gira, come in Mr. White">
+      <Choice mode="many" label="In tanti, un telefono" text="Il telefono gira, come in Mr. White" color={FIRE.purple}>
         <Digits>
-          <Digit value="2" color={colors.accent3} />
-          <Digit value="+" color={colors.accent2} />
+          <Digit value="2" color={FIRE.cream} />
+          <Digit value="+" color={FIRE.yellow} />
         </Digits>
       </Choice>
     </Screen>
@@ -83,6 +84,6 @@ export default function Offline() {
 
 const styles = StyleSheet.create({
   top: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  tag: { paddingVertical: 8, paddingHorizontal: 14, borderRadius: 18, backgroundColor: colors.accent, borderWidth: 1, borderColor: colors.line },
-  choice: { flexGrow: 1, alignItems: 'center', justifyContent: 'center', gap: 6, minHeight: 170, padding: 12, borderRadius: 30, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.surface, marginBottom: 7 },
+  tag: { paddingVertical: 8, paddingHorizontal: 14, borderRadius: 999, backgroundColor: colors.accent },
+  choice: { flexGrow: 1, alignItems: 'center', justifyContent: 'center', gap: 6, minHeight: 170, padding: 12, borderRadius: 24, marginBottom: 7, marginRight: 6 },
 });

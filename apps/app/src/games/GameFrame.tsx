@@ -13,7 +13,7 @@ import { AnchorProvider, PopIn } from '../ui/motion';
 import { sfx } from '../ui/sound';
 import { Bounce, Confetti } from '../ui/Celebration';
 import { setSettings, TvContext, useIsTv, useSettings } from '../ui/settings';
-import { SOFT, PaletteContext, radius, seatColor, SHELL, shellColors as colors, TABLE } from '../ui/theme';
+import { HARD, SOFT, PaletteContext, radius, seatColor, SHELL, shellColors as colors, TABLE } from '../ui/theme';
 import Svg from 'react-native-svg';
 import { Place } from '../ui/morbido/draw';
 import { MOSTRINI } from '../ui/morbido/shapes';
@@ -424,8 +424,8 @@ const styles = StyleSheet.create({
   cover: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: colors.scrim, alignItems: 'center', justifyContent: 'center', padding: 16 },
   card: { backgroundColor: colors.surface, borderRadius: radius.l, padding: 24, gap: 14, width: '100%', maxWidth: 460, borderWidth: 1, borderColor: colors.line, boxShadow: SOFT },
   endWrap: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, alignItems: 'center', justifyContent: 'center', zIndex: 40 },
-  endSticker: { backgroundColor: colors.accent2, borderWidth: 1, borderColor: colors.line, borderRadius: 18, paddingHorizontal: 22, paddingVertical: 10, transform: [{ rotate: '-5deg' }], boxShadow: SOFT },
-  winSticker: { maxWidth: 330, backgroundColor: colors.accent, paddingHorizontal: 22, paddingVertical: 18, gap: 4, transform: [{ rotate: '-4deg' }], borderWidth: 1, boxShadow: SOFT },
+  endSticker: { backgroundColor: colors.accent2, borderRadius: 18, paddingHorizontal: 22, paddingVertical: 10, transform: [{ rotate: '-5deg' }], boxShadow: HARD },
+  winSticker: { maxWidth: 330, backgroundColor: colors.accent, paddingHorizontal: 22, paddingVertical: 18, gap: 4, transform: [{ rotate: '-4deg' }], boxShadow: HARD },
   endBar: { position: 'absolute', left: 12, right: 12, bottom: 12, zIndex: 40, flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'center', padding: 10, borderRadius: 20, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.line },
   winCat: { alignSelf: 'stretch', alignItems: 'center', backgroundColor: colors.accent, borderRadius: 20, borderWidth: 1, borderColor: colors.line, paddingVertical: 6 },
 });

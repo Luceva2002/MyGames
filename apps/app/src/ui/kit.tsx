@@ -5,7 +5,7 @@ import Svg, { Path } from 'react-native-svg';
 import * as Haptics from 'expo-haptics';
 import { getSettings, TEXT_SCALE, useIsTv, useSettings } from './settings';
 import { SeatAvatar } from './avatars';
-import { colors, DISPLAY_SCALE, font as appFont, SOFT, MIN_TEXT, MIN_TOUCH, OUTLINE, PaletteContext, radius, seatColor, SHELL, TV_MIN_TEXT, TV_SCALE, usePalette } from './theme';
+import { colors, DISPLAY_SCALE, font as appFont, HARD, SOFT, MIN_TEXT, MIN_TOUCH, OUTLINE, PaletteContext, radius, seatColor, SHELL, TV_MIN_TEXT, TV_SCALE, usePalette } from './theme';
 
 const PIXEL = appFont.display;
 
@@ -31,7 +31,7 @@ export function onColor(bg: string) {
 
 /** Bordo di focus visibile per tastiera e telecomando, non solo colore (V-IN-5). */
 export const focusRing = (focused: boolean): ViewStyle | null =>
-  focused && Platform.OS === 'web' && keyboardNav ? ({ outlineColor: '#FFC933', outlineWidth: 3, outlineStyle: 'solid', outlineOffset: 3 } as ViewStyle) : null;
+  focused && Platform.OS === 'web' && keyboardNav ? ({ outlineColor: '#F2BD4D', outlineWidth: 3, outlineStyle: 'solid', outlineOffset: 3 } as ViewStyle) : null;
 
 /**
  * Il bordo di focus serve a chi usa tastiera o telecomando: con mouse e dita non si vede
@@ -113,15 +113,16 @@ export function Button({ label, onPress, color: colorProp, kind = 'solid', disab
       style={(state) => [
         styles.button,
         small && styles.buttonSmall,
-        solid ? { backgroundColor: color, borderColor: c.line, ...(shell ? null : shadowOf(c.line, state.pressed ? 1 : 6)) } : { borderColor: shell ? c.line : color, backgroundColor: c.surface },
-        shell && { borderWidth: solid ? 0 : 1, borderRadius: 18, opacity: state.pressed ? 0.85 : 1 },
+        solid ? { backgroundColor: color, borderColor: c.line, ...(shell ? null : shadowOf(c.line, state.pressed ? 1 : 6)) } : { borderColor: shell ? color : color, backgroundColor: shell ? 'transparent' : c.surface },
+        // Guscio come Fireship: pillole, la principale piena con l'ombra piena spostata, la secondaria col bordo del suo colore.
+        shell && { borderWidth: solid ? 0 : 2, borderRadius: 999, boxShadow: solid && !state.pressed && !disabled ? HARD : SOFT },
         hc && { borderColor: c.text },
-        { opacity: disabled ? 0.5 : 1, transform: [{ translateY: solid && !shell && state.pressed ? 3 : 0 }, { scale: shell && state.pressed ? 0.98 : 1 }] },
+        { opacity: disabled ? 0.5 : 1, transform: [{ translateY: solid && !shell && state.pressed ? 3 : 0 }, { translateX: shell && solid && state.pressed ? 3 : 0 }, { translateY: shell && solid && state.pressed ? 3 : 0 }] },
         focusRing((state as { focused?: boolean }).focused ?? false),
         style,
       ]}
     >
-      <T size={small ? 15 : 18} weight={shell ? '900' : '800'} color={solid ? onColor(color) : shell ? c.text : color} center>
+      <T size={small ? 14 : 16} weight="800" color={solid ? onColor(color) : color} center style={shell ? { fontFamily: appFont.button, textTransform: 'uppercase', letterSpacing: 0.6 } : undefined}>
         {icon ? `${icon}  ` : ''}
         {label}
       </T>
@@ -161,7 +162,7 @@ export function Chip({ label, active, onPress, color: colorProp }: { label: stri
         onPress();
       }}
       // Scelto: pieno del suo colore; non scelto: bordo del suo colore, così la categoria si riconosce sempre.
-      style={(state) => [styles.chip, { backgroundColor: c.surface }, shell && { borderWidth: 1, borderColor: c.line }, active ? { backgroundColor: color, borderColor: shell ? color : c.line } : shell ? null : { borderColor: color === c.line ? c.dim : color }, focusRing((state as { focused?: boolean }).focused ?? false)]}
+      style={(state) => [styles.chip, { backgroundColor: c.surface }, shell && { borderWidth: 0 }, active ? { backgroundColor: color, borderColor: shell ? color : c.line } : shell ? null : { borderColor: color === c.line ? c.dim : color }, focusRing((state as { focused?: boolean }).focused ?? false)]}
     >
       <T size={15} weight="700" color={active ? onColor(color) : shell ? c.text : c.muted}>
         {active ? '✓ ' : ''}
@@ -192,7 +193,7 @@ export function PlayerTag({ seat, name, size = 15, active, suffix }: { seat: num
 export function Panel({ children, style }: { children: ReactNode; style?: StyleProp<ViewStyle> }) {
   const hc = useSettings().highContrast;
   const { colors: c, shell } = usePalette();
-  return <View style={[styles.panel, { backgroundColor: c.surface, borderColor: c.line, boxShadow: shell ? SOFT : `0px 6px 16px rgba(0,0,0,0.35)` }, shell && { borderWidth: 1, borderRadius: 22 }, hc && { borderColor: c.muted }, style]}>{children}</View>;
+  return <View style={[styles.panel, { backgroundColor: c.surface, borderColor: c.line, boxShadow: shell ? SOFT : `0px 6px 16px rgba(0,0,0,0.35)` }, shell && { borderWidth: 0, borderRadius: 20 }, hc && { borderColor: c.muted, borderWidth: 1 }, style]}>{children}</View>;
 }
 
 export function Row({ children, gap = 8, style, wrap }: { children: ReactNode; gap?: number; style?: StyleProp<ViewStyle>; wrap?: boolean }) {
@@ -277,8 +278,8 @@ export function Confirm({ visible, title, message, confirmLabel, onConfirm, onCa
 
 /** Ombra piena verso il basso, del colore del contorno. */
 const shadowOf = (_line: string, y: number) => ({ boxShadow: `0px ${y}px ${y * 3}px rgba(0,0,0,0.35)` }) as const;
-/** Finestre del guscio Pop: superficie scura, filo sottile, ombra morbida. */
-const sheetShell: ViewStyle = { backgroundColor: SHELL.colors.surface, borderColor: SHELL.colors.line, borderWidth: 1, boxShadow: '0px 18px 48px rgba(0,0,0,0.5)' };
+/** Finestre del guscio: superficie scura senza bordo, ombra larga per staccarle dal fondo. */
+const sheetShell: ViewStyle = { backgroundColor: SHELL.colors.surface, borderColor: SHELL.colors.line, borderWidth: 0, boxShadow: '0px 18px 48px rgba(0,0,0,0.6)' };
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },

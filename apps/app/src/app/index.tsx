@@ -8,7 +8,7 @@ import { Copertina } from '../ui/Copertina';
 import { useIsTable } from '../ui/device';
 import { focusRing, onColor, RoundButton, Screen, T, tap } from '../ui/kit';
 import { getSettings } from '../ui/settings';
-import { SOFT, shellColors as colors, MIN_TOUCH } from '../ui/theme';
+import { FIRE, HARD, shellColors as colors, shellFont as font, MIN_TOUCH } from '../ui/theme';
 
 /** Una delle grandi scelte: Offline o Multiplayer. */
 function BigChoice({ title, text, color, wide, onPress, children }: { title: string; text: string; color: string; wide?: boolean; onPress: () => void; children: React.ReactNode }) {
@@ -23,7 +23,7 @@ function BigChoice({ title, text, color, wide, onPress, children }: { title: str
       style={(state) => [
         styles.choice,
         wide && styles.choiceWide,
-        { backgroundColor: color, transform: [{ translateY: state.pressed ? 4 : 0 }], boxShadow: SOFT },
+        { backgroundColor: color, transform: [{ translateX: state.pressed ? 4 : 0 }, { translateY: state.pressed ? 4 : 0 }], boxShadow: state.pressed ? 'none' : HARD },
         focusRing((state as { focused?: boolean }).focused ?? false),
       ]}
     >
@@ -60,9 +60,9 @@ function AllGames() {
         tap();
         router.push({ pathname: '/giochi', params: { mode: 'all' } });
       }}
-      style={(state) => [styles.allGames, { transform: [{ translateY: state.pressed ? 3 : 0 }] }, focusRing((state as { focused?: boolean }).focused ?? false)]}
+      style={(state) => [styles.allGames, { opacity: state.pressed ? 0.8 : 1 }, focusRing((state as { focused?: boolean }).focused ?? false)]}
     >
-      <T size={20} weight="900" color={colors.text}>
+      <T size={16} weight="800" color={colors.accent} style={{ fontFamily: font.button, textTransform: 'uppercase', letterSpacing: 0.6 }}>
         Tutti i giochi
       </T>
     </Pressable>
@@ -99,7 +99,7 @@ function CodeRow({ code, setCode, go }: { code: string; setCode: (c: string) => 
             style={styles.codeInput}
           />
           <Pressable accessibilityRole="button" onPress={() => go(code)} style={styles.enter}>
-            <T size={15} weight="800" color={colors.onAccent}>
+            <T size={14} weight="800" color={colors.onAccent} style={{ fontFamily: font.button, textTransform: 'uppercase', letterSpacing: 0.6 }}>
               Entra
             </T>
           </Pressable>
@@ -171,7 +171,7 @@ export default function Home() {
         {settings}
       </View>
       <T size={30} weight="900" center>
-        Come giochiamo?
+        Come <T size={30} weight="900" color={FIRE.sky}>giochiamo?</T>
       </T>
       <BigChoice title="Offline" text="Contro i bot o con gli amici, su un telefono." color={colors.accent} onPress={() => router.push('/offline')}>
         <Masks ids={['bobo']} size={76} />
@@ -225,10 +225,11 @@ function HomeCover({ width, height, settings, skipRoom }: { width: number; heigh
 const styles = StyleSheet.create({
   phoneTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   wordmark: {},
-  choice: { flexGrow: 1, alignItems: 'center', justifyContent: 'center', gap: 10, minHeight: 170, padding: 14, borderRadius: 30, borderWidth: 1, borderColor: colors.line, marginBottom: 7 },
+  choice: { flexGrow: 1, alignItems: 'center', justifyContent: 'center', gap: 10, minHeight: 170, padding: 14, borderRadius: 24, marginBottom: 7, marginRight: 6 },
   choiceWide: { flex: 1, flexDirection: 'row', gap: 20, minHeight: 130 },
-  allGames: { minHeight: 68, alignItems: 'center', justifyContent: 'center', borderRadius: 22, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.surface, boxShadow: SOFT, marginBottom: 5 },
-  codeRow: { minHeight: 68, flexDirection: 'row', alignItems: 'center', gap: 8, paddingLeft: 14, paddingRight: 8, borderRadius: 22, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.surface, boxShadow: SOFT, marginBottom: 5 },
-  codeInput: { width: 104, height: MIN_TOUCH, minWidth: 0, borderRadius: 14, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.surface2, color: colors.text, fontSize: 20, fontWeight: '900', letterSpacing: 3, textAlign: 'center' },
-  enter: { width: 64, height: MIN_TOUCH, alignItems: 'center', justifyContent: 'center', borderRadius: 14, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.accent },
+  allGames: { minHeight: 60, alignItems: 'center', justifyContent: 'center', borderRadius: 999, borderWidth: 2, borderColor: colors.accent, marginBottom: 5 },
+  codeRow: { minHeight: 68, flexDirection: 'row', alignItems: 'center', gap: 8, paddingLeft: 16, paddingRight: 8, borderRadius: 22, backgroundColor: colors.surface, marginBottom: 5 },
+  // Il codice della stanza è sempre in Silkscreen.
+  codeInput: { width: 104, height: MIN_TOUCH, minWidth: 0, borderRadius: 14, borderWidth: 0, backgroundColor: colors.surface2, color: colors.text, fontFamily: font.display, fontSize: 17, letterSpacing: 2, textAlign: 'center' },
+  enter: { width: 72, height: MIN_TOUCH, alignItems: 'center', justifyContent: 'center', borderRadius: 14, backgroundColor: colors.accent },
 });

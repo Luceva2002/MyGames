@@ -10,7 +10,7 @@ import { useIsTable } from '../ui/device';
 import { GameGrid, GameIcon, useIconSize } from '../ui/GameIcon';
 import { focusRing, onColor, RoundButton, Screen, Sheet, SheetOption, T, tap } from '../ui/kit';
 import { getSettings } from '../ui/settings';
-import { SOFT, shellColors as colors } from '../ui/theme';
+import { HARD, SOFT, shellColors as colors } from '../ui/theme';
 
 type Mode = 'bots' | 'two' | 'many' | 'all';
 
@@ -193,5 +193,5 @@ export default function Games() {
 const styles = StyleSheet.create({
   top: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   tag: { minHeight: 44, flexShrink: 1, justifyContent: 'center', paddingHorizontal: 14, borderRadius: 22, borderWidth: 1, borderColor: colors.line },
-  again: { minHeight: 70, flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 12, borderRadius: 22, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.accent, boxShadow: SOFT, marginBottom: 5 },
+  again: { minHeight: 70, flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 12, borderRadius: 22, backgroundColor: colors.accent, boxShadow: HARD, marginBottom: 5 },
 });

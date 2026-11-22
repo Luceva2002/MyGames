@@ -6,6 +6,7 @@
     "@colyseus/sdk": "^0.18.5",
     "@expo-google-fonts/figtree": "^0.4.1",
     "@expo-google-fonts/fredoka": "^0.4.1",
+    "@expo-google-fonts/outfit": "^0.4.3",
     "@expo-google-fonts/silkscreen": "^0.4.2",
     "@giochi/engine": "*",
     "@react-native-async-storage/async-storage": "2.2.0",
