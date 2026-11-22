@@ -22,7 +22,7 @@ export default function GameDetail() {
   const onlyPeople = !!meta?.humansOnly || persone === '1';
   const [count, setCount] = useState(meta ? Math.max(meta.minPlayers, Math.min(meta.humansOnly ? 4 : persone === '1' ? 3 : 2, meta.maxPlayers)) : 2);
   const [seats, setSeats] = useState<SeatConfig[]>([]);
-  // Una maschera diversa per ogni posto, scelta a caso e cambiabile con un tocco.
+  // Un mostrino diverso per ogni posto, scelta a caso e cambiabile con un tocco.
   const [masks, setMasks] = useState(() => pickBots(10, Math.random, [getSettings().avatar]).map((b) => b.name));
   const [picking, setPicking] = useState<number | null>(null);
   const online = useOnline();
@@ -46,7 +46,7 @@ export default function GameDetail() {
 
   const ready = entry.status === 'ready';
   const active = seats.slice(0, count);
-  // Ogni posto ha la sua maschera: i computer la loro, le persone quella scelta (il primo posto
+  // Ogni posto ha il suo mostrino: i computer il loro, le persone quella scelta (il primo posto
   // parte da quella del profilo) o una libera assegnata in automatico.
   const avatars = assignAvatars(active.map((s, i) => (s.bot ? { name: masks[i], bot: true } : { ...s, avatar: s.avatar ?? (i === 0 ? getSettings().avatar : undefined) })));
   const counts = playerCounts(meta);

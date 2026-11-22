@@ -5,7 +5,7 @@ import { applyMove, assignAvatars, botMove, getGame, narrate, newSeed, type Game
 export interface SeatConfig {
   name: string;
   bot: boolean;
-  /** Maschera scelta come avatar (id). */
+  /** Mostrino scelto come avatar (id). */
   avatar?: string;
 }
 
@@ -43,7 +43,7 @@ export function useLocalMatch(config: MatchConfig) {
   const game = getGame(config.gameId) as Game;
   const [state, setState] = useState(() => game.setup({ players: config.seats.length, seed: newSeed(), options: config.options }));
   const [error, setError] = useState<string | null>(null);
-  // L'ultima mossa raccontata ("Pulcinella gioca 7 di denari"), per seguire cosa fanno gli altri.
+  // L'ultima mossa raccontata ("Bobo gioca 7 di denari"), per seguire cosa fanno gli altri.
   const [lastAction, setLastAction] = useState<LastAction | null>(null);
   const tell = (before: unknown, after: unknown, seat: Seat, move: unknown) => {
     const text = narrate(config.gameId, before, after, seat, move);

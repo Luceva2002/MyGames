@@ -7,7 +7,9 @@ web-build/
 *.log
 .env*
 
-# immagini intermedie di Higgsfield (gli originali restano sul Mac)
+# immagini di riferimento e prove grafiche: restano sul Mac, non nel repo
+Grafiche/
+design-proposte/
 
 # file generati da Expo e dagli strumenti
 expo-env.d.ts

@@ -10,7 +10,7 @@ export interface BotCharacter {
 }
 
 /**
- * I 10 mostrini, uno per elemento (22/11/2026): Luca ha tolto Rocco e Spino e ha scelto i disegni nuovi.
+ * I 10 mostrini, uno per elemento (22/11/2026).
  * Fanno da computer e da avatar.
  */
 export const BOT_CHARACTERS: BotCharacter[] = [
@@ -26,29 +26,12 @@ export const BOT_CHARACTERS: BotCharacter[] = [
   { id: 'fio', name: 'Fiò', trait: 'Una fiammella: si accende subito, gioca fortissimo', level: 'imprevedibile' },
 ];
 
-/**
- * Le maschere e i mostrini di prima, salvati nelle impostazioni o mandati da un'app non aggiornata:
- * ognuno diventa uno dei mostrini di adesso, così nessuno resta senza avatar.
- */
-export const LEGACY_CHARACTERS: Record<string, string> = {
-  // Le maschere del Carnevale.
-  pulcinella: 'bobo', forzuto: 'gnaf', colombina: 'zap', arlecchina: 'gelo', medico: 'gelo',
-  rosaura: 'gnaf', pantalone: 'bit', arlecchino: 'ombra', capitano: 'dado', giullare: 'fio',
-  // I mostrini del 20/11/2026 che non sono rimasti.
-  ugo: 'gnaf', lulu: 'otto', zuzu: 'zap', pim: 'gelo', bolla: 'gelo', tic: 'bit', trio: 'ombra', lola: 'dado', mimi: 'morso',
-  // Rocco e Spino, tolti il 22/11/2026.
-  rocco: 'gnaf', spino: 'gelo',
-};
+/** Ritrova un mostrino dal suo id (per l'avatar scelto da chi gioca). */
+export const characterById = (id: string | null | undefined) => (id ? BOT_CHARACTERS.find((b) => b.id === id) : undefined);
 
-/** Ritrova un mostrino dal suo id (per l'avatar scelto da chi gioca), anche dal nome di una vecchia maschera. */
-export const characterById = (id: string | null | undefined) => {
-  const real = id ? LEGACY_CHARACTERS[id] ?? id : id;
-  return BOT_CHARACTERS.find((b) => b.id === real);
-};
-
-/** Sceglie `n` maschere diverse a caso, così ogni partita ha facce nuove. */
+/** Sceglie `n` mostrini diversi a caso, così ogni partita ha facce nuove. */
 export function pickBots(n: number, random: () => number = Math.random, exclude: (string | null | undefined)[] = []): BotCharacter[] {
-  // Le maschere già scelte da chi gioca restano a loro: i computer ne prendono altre.
+  // I mostrini già scelti da chi gioca restano a loro: i computer ne prendono altri.
   const ex = exclude.map((e) => characterById(e)?.id);
   const taken = BOT_CHARACTERS.filter((b) => !ex.includes(b.id));
   const pool = taken.length ? [...taken] : [...BOT_CHARACTERS];
@@ -59,20 +42,20 @@ export function pickBots(n: number, random: () => number = Math.random, exclude:
   return Array.from({ length: n }, (_, i) => pool[i % pool.length]);
 }
 
-/** Ritrova la maschera dal nome mostrato al tavolo (anche "Nome 🤖" per chi ha lasciato il posto). */
+/** Ritrova il mostrino dal nome mostrato al tavolo (anche "Nome 🤖" per chi ha lasciato il posto). */
 export function botByName(name: string): BotCharacter | undefined {
-  // Il nome può avere aggiunte come " " o " 🤝": basta che inizi col nome della maschera.
+  // Il nome può avere aggiunte come " " o " 🤝": basta che inizi col nome del mostrino.
   return BOT_CHARACTERS.find((b) => name === b.name || name.startsWith(`${b.name} `));
 }
 
 /**
- * Una maschera per ogni posto: i computer hanno la loro, chi gioca tiene quella scelta (se libera)
+ * Un mostrino per ogni posto: i computer hanno il loro, chi gioca tiene quello scelto (se libera)
  * e chi non ha scelto ne riceve una rimasta libera. Così al tavolo ognuno ha la sua icona.
  */
 export function assignAvatars(seats: { name: string; bot: boolean; avatar?: string | null }[]): string[] {
   const used = new Set<string>();
   const out: (string | null)[] = seats.map(() => null);
-  // Prima i computer (la loro maschera è il loro nome), poi le scelte delle persone.
+  // Prima i computer (il loro mostrino è il loro nome), poi le scelte delle persone.
   for (const bots of [true, false]) {
     seats.forEach((s, i) => {
       if (s.bot !== bots) return;

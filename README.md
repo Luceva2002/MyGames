@@ -41,20 +41,17 @@ Tutti i giochi si possono fare anche contro il computer, tranne quelli a voce e 
 
 ## Design
 
-Stile "Carnevale semplice" (specifica in `docs/SPEC-carnevale-semplice.md`): viola, giallo e magenta,
-font Bagel Fat One e Nunito, contorni spessi con ombre piene, carte alla Balatro col bollino del valore,
-velluto viola per i giochi di carte e computer-maschere della commedia dell'arte a figura intera (`assets/bots`).
+Stile ispirato a Fireship (22/11/2026): fondo quasi nero, testi crema, giallo per le cose importanti,
+bottoni a pillola con l'ombra piena spostata. Titoli e codici delle stanze in Silkscreen, testi e bottoni
+in Space Grotesk, carte in Fredoka. Colori e caratteri in `apps/app/src/ui/theme.ts`, componenti comuni
+in `kit.tsx`, impostazioni di accessibilità in `settings.ts` (testo in 3 misure, movimento ridotto,
+contrasto alto, vibrazione).
 
-Il design segue la skill `.claude/skills/game-ui-design` (pattern, errori tipici e regole con ID come `V-TXT-1`).
-Design system in `apps/app/src/ui/`: token e palette Okabe-Ito in `theme.ts`, componenti comuni in `kit.tsx`,
-impostazioni di accessibilità in `settings.ts` (testo in 3 misure, movimento ridotto, contrasto alto, vibrazione).
-Copertine, icona, banner, dorsi delle carte e tavoli da gioco sono generati con Higgsfield
-(`apps/app/assets/games`, `assets/images`, `assets/cards/back-*.jpg`, `assets/tables`).
-
-Facce delle carte:
-- piacentine: scansione di pubblico dominio delle carte Modiano, [Carte piacentine al completo.jpg](https://commons.wikimedia.org/wiki/File:Carte_piacentine_al_completo.jpg) (Wikimedia Commons);
-- francesi: [Vector Playing Cards](https://opengameart.org/content/playing-cards-vector-png) di Byron Knoll, CC0 (asso di picche nella versione semplice);
-- UNO: disegnate dal codice, senza grafica ufficiale.
+- Icone dei giochi in stile Inchiostro (contorno nero, colori veri, fondi pieni): `apps/app/assets/games`.
+- Dieci mostrini, uno per elemento, che fanno da avatar e da computer: `apps/app/assets/mostrini`,
+  usati in `ui/morbido/shapes.ts` anche nelle figure delle carte.
+- Copertina di PC e TV coi mostrini che giocano a poker: `apps/app/assets/copertina.jpg`.
+- Carte, semi e tavoli disegnati in codice (`ui/suits.tsx`, `ui/cards.tsx`, `ui/tables.tsx`).
 
 ## Come è fatto
 

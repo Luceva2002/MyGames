@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { AccessibilityInfo } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { characterById } from '@giochi/engine';
 
 /** Impostazioni di accessibilità (P-A11Y): valgono per l'app e per tutti i giochi. */
 export interface Settings {
@@ -11,7 +12,7 @@ export interface Settings {
   haptics: boolean;
   /** Effetti sonori nei giochi. */
   sound: boolean;
-  /** La maschera scelta come proprio personaggio (id), null se non scelta. */
+  /** Il mostrino scelto come proprio personaggio (id), null se non scelta. */
   avatar: string | null;
   /** Bordi e testi più marcati. */
   highContrast: boolean;
@@ -31,7 +32,10 @@ const listeners = new Set<(s: Settings) => void>();
 
 AsyncStorage.getItem(KEY)
   .then((raw) => {
-    if (raw) setSettings({ ...DEFAULT_SETTINGS, ...(JSON.parse(raw) as Partial<Settings>) });
+    if (!raw) return;
+    const saved = { ...DEFAULT_SETTINGS, ...(JSON.parse(raw) as Partial<Settings>) };
+    // Un personaggio che non c'è più si dimentica: al prossimo ingresso ne arriva uno a caso.
+    setSettings(characterById(saved.avatar) ? saved : { ...saved, avatar: null });
   })
   .catch(() => {});
 AccessibilityInfo.isReduceMotionEnabled?.()

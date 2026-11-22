@@ -1,8 +1,7 @@
 /**
- * Forme dello stile Morbido (approvato da Luca il 20/11/2026): semi, mostrini e costumi
- * delle figure. Ogni forma vive in un quadrato 100×100 ed è una lista di parti: le forme piene hanno
- * il contorno scuro morbido, i dettagli (occhi, bocche, guance) no. Le disegna Parts in draw.tsx.
- * Originali in design: scratchpad mostrini.html, pubblicato su claude.ai.
+ * Forme delle carte (stile Morbido, approvato da Luca il 20/11/2026): semi, mostrini e costumi delle figure.
+ * Ogni forma vive in un quadrato 100×100 ed è una lista di parti: le forme piene hanno il contorno scuro,
+ * i dettagli no; i mostrini sono le loro immagini (assets/mostrini). Le disegna drawParts in draw.tsx.
  */
 
 export const INK = '#2A2D34';
@@ -32,7 +31,6 @@ export interface Part {
 }
 
 export const circ = (cx: number, cy: number, r: number) => `M${cx - r} ${cy} A${r} ${r} 0 1 0 ${cx + r} ${cy} A${r} ${r} 0 1 0 ${cx - r} ${cy} Z`;
-export const ell = (cx: number, cy: number, rx: number, ry: number) => `M${cx - rx} ${cy} A${rx} ${ry} 0 1 0 ${cx + rx} ${cy} A${rx} ${ry} 0 1 0 ${cx - rx} ${cy} Z`;
 /** Schiarisce (f > 1) o scurisce (f < 1) un colore. */
 export function shade(hex: string, f: number) {
   const n = parseInt(hex.slice(1), 16);

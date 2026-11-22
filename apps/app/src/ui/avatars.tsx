@@ -6,10 +6,10 @@ import { Place } from './morbido/draw';
 import { MOSTRINI } from './morbido/shapes';
 import { colors, OUTLINE, seatColor } from './theme';
 
-/** La maschera di ogni posto al tavolo (scelta da chi gioca o del computer), data dalla partita. */
+/** Il mostrino di ogni posto al tavolo (scelto da chi gioca o del computer), data dalla partita. */
 export const SeatAvatars = createContext<(string | null)[]>([]);
 
-/** L'avatar di un posto: la maschera scelta, quella del computer o, se manca, il simbolo del posto. */
+/** L'avatar di un posto: il mostrino scelto, quello del computer o, se manca, il simbolo del posto. */
 export function SeatAvatar({ seat, name, size }: { seat: number; name: string; size: number }) {
   const avatars = useContext(SeatAvatars);
   const id = avatars[seat] ?? botByName(name)?.id;
@@ -27,7 +27,7 @@ export const avatarBg = (id: string) => {
   return ch ? MOSTRINI[ch.id].tone : colors.brand;
 };
 
-/** Tondo col mostrino, scelto per id (anche il nome di una vecchia maschera). */
+/** Tondo col mostrino, scelto per id (anche l'id di un personaggio di prima). */
 export function CharacterAvatar({ id, size, seat }: { id: string; size: number; seat?: number }) {
   const ch = characterById(id);
   const clip = 'av' + useId().replace(/[^a-zA-Z0-9]/g, '');

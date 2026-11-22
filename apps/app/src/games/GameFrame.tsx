@@ -41,7 +41,7 @@ export function GameFrame({ meta, view, me, names, avatars, myTurn, active, onMo
   view: unknown;
   me: Seat | null;
   names: string[];
-  /** Maschera di ogni posto, per avatar e punteggi. */
+  /** Mostrino di ogni posto, per avatar e punteggi. */
   avatars?: (string | null)[];
   myTurn: boolean;
   /** Chi deve muovere adesso, per la barra di stato (V-ST-1). */
@@ -364,7 +364,7 @@ function TurnPill({ active, names, me, myTurn }: { active: Seat[]; names: string
 }
 
 /**
- * Cosa ha appena fatto un avversario, in una riga sola sul bordo del tavolo: icona, nome e mossa ("Pulcinella gioca 7 di denari e prende 2 carte"). Le mie mosse non si ripetono.
+ * Cosa ha appena fatto un avversario, in una riga sola sul bordo del tavolo: icona, nome e mossa ("Bobo gioca 7 di denari e prende 2 carte"). Le mie mosse non si ripetono.
  */
 /** Di quanto scende la striscia delle mosse nei giochi con la riga in alto più alta. */
 const STRIP_LOW: Record<string, number> = { setteemezzo: 90, battaglia: 50 };

@@ -47,12 +47,6 @@ export const FIRE = { cream: '#F7F2DF', green: '#4FA663', pink: '#E592A7', purpl
 export const SOFT = '0px 0px 0px rgba(0,0,0,0)';
 export const HARD = '6px 6px 0px #2A292C';
 
-/** I colori pieni delle tessere: si alternano dove servono più colori vicini. */
-export const POP_TILES = [FIRE.purple, FIRE.pink, FIRE.green, FIRE.sky, FIRE.orange, FIRE.red, FIRE.yellow] as const;
-
-/** Colore di ogni categoria: è lo sfondo delle copertine e dei filtri in home (palette brand-alt, SPEC §7 e §9). */
-export const CATEGORY_COLORS = { carte: FIRE.green, tavolo: FIRE.purple, dadi: FIRE.yellow, abilita: FIRE.pink, party: FIRE.sky } as const;
-
 /** Contorno sottile dello stile. */
 export const OUTLINE = 1.5;
 export const shadow = (y: number) => ({ boxShadow: `0px ${y}px ${y * 3}px rgba(0,0,0,0.35)` }) as const;

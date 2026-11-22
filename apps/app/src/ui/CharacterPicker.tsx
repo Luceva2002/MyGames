@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Modal, Pressable, ScrollView, TextInput, View } from 'react-native';
-import { BOT_CHARACTERS, characterById } from '@giochi/engine';
+import { BOT_CHARACTERS } from '@giochi/engine';
 import { CharacterAvatar } from './avatars';
 import { Button, focusRing, T, tap } from './kit';
 import { shellColors as colors } from './theme';
@@ -10,8 +10,7 @@ export function CharacterPicker({ value, onChange, size = 64, disabled = [] }: {
   return (
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
       {BOT_CHARACTERS.map((c) => {
-        // Anche un mostrino tolto (Rocco, Spino) resta segnato come quello che l'ha sostituito.
-        const selected = characterById(value)?.id === c.id;
+        const selected = value === c.id;
         const off = disabled.includes(c.id);
         return (
           <Pressable
@@ -40,17 +39,17 @@ export function CharacterPicker({ value, onChange, size = 64, disabled = [] }: {
   );
 }
 
-/** Finestra per scegliere la maschera di un posto (partita sullo stesso telefono, stanza online). */
+/** Finestra per scegliere il mostrino di un posto (partita sullo stesso telefono, stanza online). */
 export function CharacterPickerModal({ visible, title, value, taken = [], onPick, onClose, name, onRename, header }: {
   visible: boolean;
   title: string;
   value: string | null;
-  /** Se c'è, sopra le maschere si può cambiare anche il nome (nella stanza). */
+  /** Se c'è, sopra i mostrini si può cambiare anche il nome (nella stanza). */
   name?: string;
   onRename?: (name: string) => void;
-  /** Altro da scegliere sopra le maschere (la bravura di un computer). */
+  /** Altro da scegliere sopra i mostrini (la bravura di un computer). */
   header?: React.ReactNode;
-  /** Maschere già prese da altri posti: si vedono ma non si scelgono. */
+  /** Mostrini già presi da altri posti: si vedono ma non si scelgono. */
   taken?: string[];
   onPick: (id: string) => void;
   onClose: () => void;

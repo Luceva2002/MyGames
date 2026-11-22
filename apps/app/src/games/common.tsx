@@ -48,7 +48,7 @@ export function othersOf(players: number, me: Seat | null): Seat[] {
 }
 
 /**
- * Il posto di un giocatore nella barra dei punteggi: la sua maschera, il nome, il punteggio grande
+ * Il posto di un giocatore nella barra dei punteggi: il suo mostrino, il nome, il punteggio grande
  * e, sotto, altre informazioni. Chi è di turno ha il nome colorato e la freccia.
  */
 export function PlayerBadge({ seat, name, active, score, scoreLabel, isMe, children }: {

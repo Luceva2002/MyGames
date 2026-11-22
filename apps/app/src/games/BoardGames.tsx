@@ -121,7 +121,7 @@ const GLYPH: Record<string, string> = { k: '♚', q: '♛', r: '♜', b: '♝', 
 const glyph = (p: string) => GLYPH[p.toLowerCase()] + '︎';
 
 /**
- * Pezzo degli scacchi col contorno spesso del Carnevale: il simbolo pieno ripetuto sotto, spostato
+ * Pezzo degli scacchi col contorno spesso: il simbolo pieno ripetuto sotto, spostato
  * tutto intorno, fa da bordo. Bianchi crema col bordo inchiostro, neri inchiostro col bordo giallo.
  */
 function Piece({ p, size }: { p: string; size: number }) {

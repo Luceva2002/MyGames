@@ -4,7 +4,6 @@
   "version": "1.0.0",
   "dependencies": {
     "@colyseus/sdk": "^0.18.5",
-    "@expo-google-fonts/figtree": "^0.4.1",
     "@expo-google-fonts/fredoka": "^0.4.1",
     "@expo-google-fonts/silkscreen": "^0.4.2",
     "@expo-google-fonts/space-grotesk": "^0.4.1",

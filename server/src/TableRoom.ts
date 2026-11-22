@@ -58,9 +58,9 @@ export class TableRoom extends Room {
   private gameId: string | null = null;
   private bots = 0;
   private botNames = pickBots(16).map((b) => b.name);
-  /** Bravura di ogni maschera che gioca come computer (per nome); se manca è Normale. */
+  /** Bravura di ogni mostrino che gioca come computer (per nome); se manca è Normale. */
   private botLevels: Record<string, BotLevel> = {};
-  /** I computer al tavolo, senza le maschere già scelte da chi gioca. */
+  /** I computer al tavolo, senza i mostrini già scelti da chi gioca. */
   private seatedBots() {
     const taken = new Set(this.members.map((m) => m.avatar).filter(Boolean));
     return this.botNames.filter((n) => !taken.has(botByName(n)?.id)).slice(0, this.bots);
@@ -90,7 +90,7 @@ export class TableRoom extends Room {
       this.bots = Math.max(0, Math.min(9, Math.floor(msg.count)));
       this.broadcastRoom();
     });
-    // Il capotavola cambia la maschera o la bravura di un computer seduto al tavolo.
+    // Il capotavola cambia il mostrino o la bravura di un computer seduto al tavolo.
     this.onMessage('setBot', (client, msg: { index: number; name?: string; level?: BotLevel }) => {
       if (!this.isHost(client) || this.game) return;
       const current = this.seatedBots()[msg.index];
@@ -101,7 +101,7 @@ export class TableRoom extends Room {
         const j = this.botNames.indexOf(msg.name);
         if (j >= 0) [this.botNames[i], this.botNames[j]] = [this.botNames[j], this.botNames[i]];
         name = msg.name;
-        // La bravura resta al posto, non alla maschera.
+        // La bravura resta al posto, non al mostrino.
         if (this.botLevels[current]) this.botLevels[name] = this.botLevels[current];
         delete this.botLevels[current];
       }

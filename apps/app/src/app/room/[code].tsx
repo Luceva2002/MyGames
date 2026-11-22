@@ -171,7 +171,7 @@ function Lobby({ snapshot, myId, isHost, tv, error, onExit, reconnecting }: {
     if (players.length > seen.current) sfx('turn');
     seen.current = players.length;
   }, [players.length]);
-  // Le maschere di tutti al tavolo: chi non ha scelto ne riceve una libera, come in partita.
+  // I mostrini di tutti al tavolo: chi non ha scelto ne riceve uno libero, come in partita.
   const avatars = assignAvatars([...players.map((m) => ({ name: m.name, bot: false, avatar: m.avatar })), ...snapshot.botNames.map((name) => ({ name, bot: true }))]);
   const canBots = isHost && !game?.meta.humansOnly;
   const addBot = () => send('setBots', { count: snapshot.bots + 1 });

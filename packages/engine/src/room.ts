@@ -11,7 +11,7 @@ export interface RoomMember {
   name: string;
   role: MemberRole;
   connected: boolean;
-  /** Id della maschera scelta come avatar. */
+  /** Id del mostrino scelto come avatar. */
   avatar?: string;
 }
 
@@ -27,7 +27,7 @@ export interface RoomSnapshot {
   hostId: string;
   gameId: string | null;
   bots: number;
-  /** Le maschere che siederanno al tavolo come computer, già scelte per mostrarle in lobby. */
+  /** I mostrini che siederanno al tavolo come computer, già scelte per mostrarle in lobby. */
   botNames: string[];
   /** Bravura di ciascuno di quei computer, nello stesso ordine. */
   botLevels?: BotLevel[];
@@ -43,7 +43,7 @@ export interface SeatView {
   me: Seat | null;
   myTurn: boolean;
   names: string[];
-  /** Maschera di ogni posto (null: nessuna scelta). */
+  /** Mostrino di ogni posto (null: nessuna scelta). */
   avatars?: (string | null)[];
   active: Seat[];
   result: GameResult | null;

@@ -207,7 +207,7 @@ function friendly(e: unknown): string {
   return msg;
 }
 
-/** Chi gioca porta con sé la maschera scelta nelle impostazioni (lo schermo condiviso no). */
+/** Chi gioca porta con sé il mostrino scelto nelle impostazioni (lo schermo condiviso no). */
 const withAvatar = <T extends JoinOptions>(o: T): T => (o.role === 'player' && getSettings().avatar ? { ...o, avatar: getSettings().avatar! } : o);
 
 /** Si sta in una stanza alla volta: chi ne apre un'altra lascia quella di prima, senza restare seduto al vecchio tavolo. */
@@ -247,7 +247,7 @@ export async function joinRoom(code: string, options: JoinOptions) {
 
 /**
  * Entrare al volo (link, QR o codice scritto in home): col nome salvato o, la prima volta, col
- * nome di una maschera a caso; anche il personaggio, se non c'è, è scelto a caso.
+ * nome di un mostrino a caso; anche il personaggio, se non c'è, è scelto a caso.
  */
 export async function quickJoin(code: string): Promise<string | null> {
   const { loadNames, saveNames } = await import('./names');
