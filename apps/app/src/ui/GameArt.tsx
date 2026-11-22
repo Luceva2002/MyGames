@@ -1,9 +1,8 @@
 import { Image, View, type ImageSourcePropType } from 'react-native';
 
 /**
- * Le icone dei giochi in stile adesivo (22/11/2026): un disegno con contorno scuro, ombra e luce e il bordo crema
- * fustellato, su un riquadro quasi nero dentro una cornice colorata. La cornice non è mai del colore principale del disegno.
- * Disegnate in SVG ed esportate come immagini 480×480.
+ * Le icone dei giochi in stile Inchiostro (22/11/2026), come i loghi in Grafiche/loghi giochi: contorno nero, niente ombre,
+ * oggetti nei loro colori veri su un fondo pieno che cambia da gioco a gioco. Disegnate in SVG ed esportate a 480×480.
  */
 const ART: Record<string, ImageSourcePropType> = {
   scopa: require('../../assets/games/scopa.jpg'),
