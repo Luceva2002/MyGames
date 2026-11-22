@@ -66,17 +66,17 @@ export const seatColor = (seat: number) => seatColors[seat % seatColors.length];
 
 /**
  * Caratteri di tutta l'app: Silkscreen, a pixel da cabinato arcade, per il nome, i titoli e i punteggi (21/11/2026);
- * Outfit per i testi e i bottoni, come su Fireship (22/11/2026). Fredoka resta sulle carte.
+ * Space Grotesk per i testi e i bottoni (scelto da Luca il 22/11/2026 al posto di Outfit). Fredoka resta sulle carte.
  * Silkscreen è solo maiuscolo e largo: `T` lo rimpicciolisce un po' (DISPLAY_SCALE).
  */
 export const font = {
   display: 'Silkscreen_700Bold',
-  body: 'Outfit_500Medium',
+  body: 'SpaceGrotesk_500Medium',
   /** Fredoka per valori e nomi sulle carte dello stile Morbido. */
   card: 'Fredoka_600SemiBold',
-  bold: 'Outfit_700Bold',
-  /** Outfit pieno, maiuscolo, per le scritte dei bottoni. */
-  button: 'Outfit_800ExtraBold',
+  bold: 'SpaceGrotesk_700Bold',
+  /** Space Grotesk pieno (il più pesante che ha), maiuscolo, per le scritte dei bottoni. */
+  button: 'SpaceGrotesk_700Bold',
 };
 export const DISPLAY_SCALE = 0.8;
 export const shellFont: typeof font = font;
