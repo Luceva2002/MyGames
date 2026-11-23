@@ -19,7 +19,8 @@ export default function SettingsScreen() {
           {hint}
         </T>
       </View>
-      <Switch accessibilityLabel={label} value={value} onValueChange={onChange} trackColor={{ true: colors.accent3, false: colors.surface2 }} thumbColor="#fff" />
+      {/* Da spento il binario è grigio chiaro velato: col grigio del pannello si vedeva solo il pallino. */}
+      <Switch accessibilityLabel={label} value={value} onValueChange={onChange} trackColor={{ true: colors.accent3, false: `${colors.muted}66` }} thumbColor="#fff" />
     </Row>
   );
 
