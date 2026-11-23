@@ -38,7 +38,9 @@ export function GameIcon({ meta, size: fallback, onPress, selected, dim, caption
   const { colors } = usePalette();
   const size = useContext(GridSize) ?? fallback;
   // Il nome sta su due righe al massimo, con lo spazio sempre riservato: così le righe di icone non si toccano mai.
-  const line = Math.round(useTextSize(12) * 1.2);
+  // Sulle icone grandi di PC e TV il nome cresce con loro, se no da lontano non si legge.
+  const label = size >= 120 ? 15 : 12;
+  const line = Math.round(useTextSize(label) * 1.2);
   return (
     <Pressable
       accessibilityRole="button"
@@ -57,7 +59,7 @@ export function GameIcon({ meta, size: fallback, onPress, selected, dim, caption
       <View style={{ width: size, height: size, borderRadius: size * 0.27, padding: selected ? 3 : 0, backgroundColor: selected ? colors.accent : 'transparent', opacity: dim ? 0.45 : 1 }}>
         <GameArt id={meta.id} size={selected ? size - 6 : size} />
       </View>
-      <T size={12} weight="800" center lines={2} color={dim ? colors.muted : colors.text} style={{ lineHeight: line, minHeight: line * 2 }}>
+      <T size={label} weight="800" center lines={2} color={dim ? colors.muted : colors.text} style={{ lineHeight: line, minHeight: line * 2 }}>
         {caption ?? meta.name}
       </T>
     </Pressable>
