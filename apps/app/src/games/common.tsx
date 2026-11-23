@@ -137,6 +137,7 @@ export function OpponentHand({ seat, cards, deck = 'it', width, max = 10, drawFr
 export function TableSeat({ info, compact }: { info: SeatInfo; compact?: boolean }) {
   const { seat, name, active, score, scoreLabel, cards, deck = 'it', drawFrom } = info;
   const m = useMorbidoFelt();
+  const { width: screenWidth } = useWindowDimensions();
   const label = `${name}${score !== undefined ? `, ${score} ${scoreLabel ?? ''}` : ''}${cards !== undefined ? `, ${cards} carte` : ''}${active ? ', è il suo turno' : ''}`;
   const hand = cards !== undefined && cards > 0 ? <OpponentHand seat={seat} cards={cards} deck={deck} width={compact ? 18 : 30} max={compact ? 7 : 10} drawFrom={drawFrom} /> : null;
   if (compact) {
@@ -160,8 +161,10 @@ export function TableSeat({ info, compact }: { info: SeatInfo; compact?: boolean
       </View>
     );
   }
+  // Sul telefono le carte coperte stanno accanto alla pillola: sotto finirebbero dietro la striscia dell'ultima mossa.
+  const beside = screenWidth < 600;
   return (
-    <View style={{ alignItems: 'flex-start', gap: 6 }} accessibilityLabel={label}>
+    <View style={beside ? { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6 } : { alignItems: 'flex-start', gap: 6 }} accessibilityLabel={label}>
       <View style={[styles.seatPill, m && pillM(active)]}>
         <SeatAvatar seat={seat} name={name} size={30} />
         <View style={{ flexShrink: 1 }}>
