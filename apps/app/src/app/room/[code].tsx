@@ -599,7 +599,8 @@ function SeatCard({ size, avatar, seat, mine, name, note, onPress, a11y }: { siz
       style={(state) => [styles.seatCard, { width: size + (size > 70 ? 36 : 12), transform: [{ translateY: (state as { pressed: boolean }).pressed ? 2 : 0 }] }]}
     >
       <View style={mine ? { borderRadius: size, borderWidth: 1, borderColor: colors.accent } : undefined}>
-        <CharacterAvatar id={avatar} size={mine ? size - 6 : size} seat={seat} />
+        {/* Col bordo dell'anello il mio cerchio è largo come gli altri: i nomi sotto stanno sulla stessa riga. */}
+        <CharacterAvatar id={avatar} size={mine ? size - 2 : size} seat={seat} />
       </View>
       <T size={14} weight="800" lines={1} center>
         {name}
