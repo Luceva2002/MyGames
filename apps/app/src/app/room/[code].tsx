@@ -329,8 +329,9 @@ function Lobby({ snapshot, myId, isHost, tv, error, onExit, reconnecting }: {
   if (big) {
     // Sulla TV si usa tutto lo schermo, dentro il margine di sicurezza del 5%.
     const coverWidth = tv ? Math.round(width * 0.9) : Math.min(width, 1100) - 32;
+    // Il blocco sta al centro dello schermo, come nella home.
     return (
-      <Screen>
+      <Screen style={{ flexGrow: 1, justifyContent: 'center' }}>
         <Copertina
           width={coverWidth}
           height={Math.max(360, Math.round(height * 0.5))}
