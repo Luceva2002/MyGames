@@ -139,8 +139,9 @@ export default function Home() {
 
   if (isTable) {
     const contentWidth = Math.min(width, 1100) - 32;
+    // Su PC e TV il blocco sta al centro dello schermo, non appiccicato in alto con il vuoto sotto.
     return (
-      <Screen>
+      <Screen style={{ flexGrow: 1, justifyContent: 'center' }}>
         <HomeCover width={contentWidth} height={Math.max(340, Math.min(430, Math.round(height * 0.56)))} settings={settings} skipRoom={linkCode.length === CODE_LENGTH} />
         <View style={{ flexDirection: 'row', gap: 16 }}>
           <BigChoice wide title="Offline" text="Contro i bot, qui su questo schermo." color={colors.accent} onPress={() => router.push({ pathname: '/giochi', params: { mode: 'bots' } })}>
