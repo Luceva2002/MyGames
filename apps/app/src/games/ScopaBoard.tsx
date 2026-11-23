@@ -13,10 +13,13 @@ import { colors } from '../ui/theme';
 
 export function ScopaBoard({ view, me, names, myTurn, onMove }: BoardProps<ScopaView, ScopaMove>) {
   const [selected, setSelected] = useState<string | null>(null);
-  const handWidth = useCardWidth(3, 100);
+  const { width: screenW, height: screenH } = useWindowDimensions();
+  // Sugli schermi grandi le carte crescono: a 76 punti in mezzo a un panno di un metro sparivano.
+  const large = Math.min(screenW, screenH * 1.6) >= 1200;
+  const handWidth = useCardWidth(3, large ? 150 : 100);
   // Sul telefono il mazzo sta sul bordo sinistro: le carte in tavola gli lasciano posto.
-  const narrow = useWindowDimensions().width < 600;
-  const tableWidth = useCardWidth(Math.max(view.table.length, 5), 76);
+  const narrow = screenW < 600;
+  const tableWidth = useCardWidth(Math.max(view.table.length, 5), large ? 120 : 76);
   useEffect(() => setSelected(null), [view.turn, view.phase]);
 
   const card = view.hand.find((c) => c.id === selected);
