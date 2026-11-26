@@ -89,6 +89,18 @@ Variabili utili (in `apps/app/.env`):
 
 Link diretto per provare un gioco contro il computer: `/play/<gioco>?bots=<quanti>`, es. `/play/scopa?bots=1`.
 
+## Sul server di casa (Docker)
+
+```
+./hosta.sh
+```
+
+Installa Docker se manca (Linux), scarica l'ultima versione da GitHub, costruisce le due immagini (sito con
+nginx e server delle stanze) e le avvia, poi controlla che rispondano. Al primo avvio sceglie la prima porta
+libera da 8080 in su per il sito e la ricorda in `.env`; le stanze usano sempre la 2567. I container ripartono
+da soli quando il server si riaccende. Lo script funziona anche copiato da solo sul server: scarica il
+progetto in `~/tavolata`. Altri comandi: `./hosta.sh --stop`, `./hosta.sh --logs`, `./hosta.sh --no-update`.
+
 ## Test
 
 ```bash

@@ -1,0 +1,28 @@
+# Tavolata sul server di casa. Avvio consigliato: ./hosta.sh (prepara tutto e controlla che parta).
+# A mano: docker compose up -d --build
+name: tavolata
+
+services:
+  web:
+    build:
+      context: .
+      target: web
+      args:
+        EXPO_PUBLIC_SERVER_URL: ${SERVER_URL:-}
+        EXPO_PUBLIC_WEB_URL: ${WEB_URL:-}
+    image: tavolata-web
+    ports:
+      - "${WEB_PORT:-8080}:80"
+    depends_on:
+      - server
+    restart: unless-stopped
+
+  server:
+    build:
+      context: .
+      target: server
+    image: tavolata-server
+    # Il sito cerca le stanze su questa porta dello stesso computer: non cambiarla senza fissare SERVER_URL.
+    ports:
+      - "2567:2567"
+    restart: unless-stopped

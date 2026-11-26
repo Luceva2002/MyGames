@@ -1,0 +1,11 @@
+**/node_modules
+.git
+dist
+web-build
+**/.expo
+Grafiche
+design-proposte
+*.log
+.env*
+.vscode
+.idea
